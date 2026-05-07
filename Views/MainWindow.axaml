@@ -1,0 +1,122 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:firebird_tracelog_viewer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:firebird_tracelog_viewer.Converters"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="firebird_tracelog_viewer.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="firebird_tracelog_viewer">
+
+    <Design.DataContext>
+        
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="30 Auto * 30">
+        
+        <Menu Grid.Row="0">
+            <MenuItem Header="Открыть">
+                <MenuItem Header="Открыть локальный файл"/>
+                <MenuItem Header="Открыть удалённый файл" IsEnabled="False"/>
+            </MenuItem>
+            <MenuItem Header="Редактировать">
+                <MenuItem Header="Заново обработать все файлы"/>
+                <MenuItem Header="Заново обработать выделенные файлы"/>
+            </MenuItem>
+            <MenuItem Header="Окна и панели">
+                <MenuItem Header="Панель файлов" ToggleType="CheckBox" StaysOpenOnClick="True"/>
+                <MenuItem Header="Панель поиска" ToggleType="CheckBox" StaysOpenOnClick="True"/>
+                <MenuItem Header="Панель фильтров" ToggleType="CheckBox" StaysOpenOnClick="True"/>
+                <MenuItem Header="Основная панель событий" ToggleType="CheckBox" StaysOpenOnClick="True"/>
+                <MenuItem Header="Панель общей информации" ToggleType="CheckBox" StaysOpenOnClick="True"/>
+                <Separator/>
+                <MenuItem Header="Сбросить расположение"/>
+            </MenuItem>
+            
+            <MenuItem Header="Настройки">
+                <MenuItem Header="Настроить удаленный доступ"/>
+                <MenuItem Header="Настроить обновление открытого файла"/>
+            </MenuItem>
+        </Menu>
+        
+        
+        <ListBox 
+            Grid.Row="1" 
+            SelectionMode="Multiple" 
+            Background="White"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            ItemsSource="{Binding TraceFileInfos}">
+            
+            <!-- Задаем горизонтальную ориентацию панели элементов -->
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                            CornerRadius="8"
+                            Padding="5">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*,Auto"
+                              RowSpacing="1">
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="{Binding FileName}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <Button Grid.Row="0"
+                                    Grid.Column="1"
+                                    Width="28"
+                                    Height="28"
+                                    Content="⋯"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center" />
+
+                            <StackPanel Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StartTrace, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                <TextBlock Text="→"
+                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
+                                <TextBlock Text="{Binding EndTrace, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
+                                           TextWrapping="NoWrap"
+                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2"
+                                        Grid.ColumnSpan="2"
+                                        Orientation="Horizontal"
+                                        Spacing="12"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="Размер:"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding FileSize, Converter={x:Static converters:BytesToReadableSizeConverter.Instance}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Text="Событий:"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding EventCount, StringFormat={}{0:N0}}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            
+        </ListBox>
+        
+    </Grid>
+    
+    
+</Window>
