@@ -4,18 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:firebird_tracelog_viewer.Converters"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="450"
         x:Class="firebird_tracelog_viewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="firebird_tracelog_viewer">
+        Title="Просмотр журнала трассировки"
+        MinWidth="1000">
 
     <Design.DataContext>
         
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="30 Auto * 30">
+    <Grid RowDefinitions="30 Auto Auto * 30" RowSpacing="5">
         
         <Menu Grid.Row="0">
             <MenuItem Header="Открыть">
@@ -113,9 +114,100 @@
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
-            
         </ListBox>
         
+        <Grid Grid.Row="2" ColumnDefinitions="* *">
+    
+            <!-- Поиск -->
+            <Grid Grid.Column="0" RowDefinitions="Auto Auto" Margin="10,5,10,0">
+                
+                <!-- Строка поиска (растягивается на всю ширину столбца Grid.Column="0") -->
+                <Grid Grid.Row="0" ColumnDefinitions="* Auto" ColumnSpacing="10">
+                    <TextBox Grid.Column="0"
+                             PlaceholderText="Поиск..."
+                             HorizontalAlignment="Stretch"
+                             Margin="0,2,0,2" />
+                    <Button Grid.Column="1"
+                            Content="🔍"
+                            Width="30"
+                            Height="30"
+                            HorizontalAlignment="Left" />
+                </Grid>
+                
+                <!-- Режимы поиска -->
+                <Grid Grid.Row="1" 
+                      ColumnDefinitions="Auto 10* Auto" 
+                      ColumnSpacing="20"
+                      Margin="0,8,0,0">
+                    
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <RadioButton Content="Классический поиск" 
+                                     GroupName="SearchType" 
+                                     HorizontalAlignment="Stretch" />
+                        <RadioButton Content="Поиск рег. выражениями" 
+                                     GroupName="SearchType"
+                                     HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                    
+                    <CheckBox Grid.Column="2"
+                              Content="Поиск в выбранных файлах"
+                              VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+            
+            <!-- Фильтрация -->
+            <Grid Grid.Column="1" Margin="0,5,10,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding FilterCardModels}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemSpacing="10"/> <!-- вместо StackPanel -->
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10" BorderBrush="Black" BorderThickness="1" Padding="10 2 10 2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" 
+                                                   FontWeight="Bold" 
+                                                   Text="{Binding FilterName}"/>
+                                        <TextBlock VerticalAlignment="Center" 
+                                                   Text=" : "/>
+                                        <TextBlock VerticalAlignment="Center" 
+                                                   Text="{Binding FilterValue}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    
+        <StackPanel Spacing="20" Grid.Row="4" Margin="10,5,10,0" Orientation="Horizontal">
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Файлов:" FontWeight="Bold"/>
+                <TextBlock Text="3"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Всего событий:" FontWeight="Bold"/>
+                <TextBlock Text="983 031"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Отфильтрованных событий:" FontWeight="Bold"/>
+                <TextBlock Text="183 031"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Время парсинга" FontWeight="Bold"/>
+                <TextBlock Text="1 мин 19 сек"/>
+            </StackPanel>
+            
+        </StackPanel>
     </Grid>
     
     

@@ -7,6 +7,7 @@ namespace firebird_tracelog_viewer.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     public ObservableCollection<TraceFileInfoModel> TraceFileInfos { get; set; }
+    public ObservableCollection<FilterCardModel> FilterCardModels { get; set; }
 
     public MainWindowViewModel()
     {
@@ -32,6 +33,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 new DateTime(year: 2026, month: 5, day: 7, hour: 0, minute: 40, second: 1),
                 new DateTime(year: 2026, month: 5, day: 7, hour: 1, minute: 0, second: 0),
                 121357)
+        ];
+
+        FilterCardModels =
+        [
+            new FilterCardModel("Пользователь", "BERDIN.A"),
+            new FilterCardModel("Адрес подключения", "10.0.1.102")
         ];
     }
 }
