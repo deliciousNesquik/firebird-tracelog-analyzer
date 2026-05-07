@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using firebird_tracelog_viewer.ViewModels;
+using FTV.ViewModels;
 
-namespace firebird_tracelog_viewer;
+namespace FTV;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.

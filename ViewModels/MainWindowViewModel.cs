@@ -1,13 +1,26 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using firebird_tracelog_viewer.Models;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FTV.Enums;
+using FTV.Models;
 
-namespace firebird_tracelog_viewer.ViewModels;
+namespace FTV.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
     public ObservableCollection<TraceFileInfoModel> TraceFileInfos { get; set; }
     public ObservableCollection<FilterCardModel> FilterCardModels { get; set; }
+    public ObservableCollection<StatisticInfoModel> StatisticInfoModels { get; set; }
+
+    [ObservableProperty] public partial SearchType CurrentSearchType { get; set; }
+    [ObservableProperty] public partial bool IsClassicSearch { get; set; }
+
+    [RelayCommand]
+    public void SwitchSearchType()
+    {
+        CurrentSearchType = CurrentSearchType == SearchType.Classic ? SearchType.Regexp : SearchType.Classic;
+    }
 
     public MainWindowViewModel()
     {
@@ -40,5 +53,16 @@ public partial class MainWindowViewModel : ViewModelBase
             new FilterCardModel("Пользователь", "BERDIN.A"),
             new FilterCardModel("Адрес подключения", "10.0.1.102")
         ];
+
+        StatisticInfoModels =
+        [
+            new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("Всего событий", TraceFileInfos.Sum(p => p.EventCount).ToString("N0")),
+            new StatisticInfoModel("Отфильтрованных событий", TraceFileInfos.Sum(p => p.EventCount).ToString("N0")),
+            new StatisticInfoModel("Время парсинга", "2мин 32сек")
+        ];
+        
+        CurrentSearchType = SearchType.Classic;
+        IsClassicSearch = CurrentSearchType == SearchType.Classic;
     }
 }

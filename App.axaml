@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="firebird_tracelog_viewer.App"
-             xmlns:local="using:firebird_tracelog_viewer"
+             x:Class="FTV.App"
+             xmlns:local="using:FTV"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -11,5 +11,9 @@
   
     <Application.Styles>
         <FluentTheme />
+        
+        <StyleInclude Source="avares://FTV/Controls/FilterCard.axaml" />
+        <StyleInclude Source="avares://FTV/Controls/FileCard.axaml" />
+        <StyleInclude Source="avares://FTV/Controls/FocusTextBlock.axaml" />
     </Application.Styles>
 </Application>

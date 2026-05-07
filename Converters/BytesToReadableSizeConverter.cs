@@ -3,7 +3,7 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace firebird_tracelog_viewer.Converters;
+namespace FTV.Converters;
 
 public sealed class BytesToReadableSizeConverter : IValueConverter
 {

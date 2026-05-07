@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace firebird_tracelog_viewer.Views;
+namespace FTV.Views;
 
 public partial class MainWindow : Window
 {

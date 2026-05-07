@@ -1,14 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:firebird_tracelog_viewer.ViewModels"
+        xmlns:vm="using:FTV.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:firebird_tracelog_viewer.Converters"
+        xmlns:converters="clr-namespace:FTV.Converters"
+        xmlns:controls="clr-namespace:FTV.Controls" 
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="450"
-        x:Class="firebird_tracelog_viewer.Views.MainWindow"
+        x:Class="FTV.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Просмотр журнала трассировки"
+        Title="FTV (firebird trace log viewer)"
         MinWidth="1000">
 
     <Design.DataContext>
@@ -16,7 +17,7 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="30 Auto Auto * 30" RowSpacing="5">
+    <Grid RowDefinitions="30 Auto Auto * 40" RowSpacing="5">
         
         <Menu Grid.Row="0">
             <MenuItem Header="Открыть">
@@ -47,7 +48,7 @@
         <ListBox 
             Grid.Row="1" 
             SelectionMode="Multiple" 
-            Background="White"
+            
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ItemsSource="{Binding TraceFileInfos}">
             
@@ -59,59 +60,12 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                            CornerRadius="8"
-                            Padding="5">
-                        <Grid RowDefinitions="Auto,Auto,Auto"
-                              ColumnDefinitions="*,Auto"
-                              RowSpacing="1">
-
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="{Binding FileName}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis" />
-
-                            <Button Grid.Row="0"
-                                    Grid.Column="1"
-                                    Width="28"
-                                    Height="28"
-                                    Content="⋯"
-                                    HorizontalContentAlignment="Center"
-                                    VerticalContentAlignment="Center" />
-
-                            <StackPanel Grid.Row="1"
-                                        Grid.ColumnSpan="2"
-                                        Orientation="Horizontal"
-                                        Spacing="6"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="{Binding StartTrace, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
-                                           TextWrapping="NoWrap"
-                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                <TextBlock Text="→"
-                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
-                                <TextBlock Text="{Binding EndTrace, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"
-                                           TextWrapping="NoWrap"
-                                           Foreground="{DynamicResource ThemeForegroundBrush}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2"
-                                        Grid.ColumnSpan="2"
-                                        Orientation="Horizontal"
-                                        Spacing="12"
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="Размер:"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding FileSize, Converter={x:Static converters:BytesToReadableSizeConverter.Instance}}"
-                                           TextWrapping="NoWrap" />
-                                <TextBlock Text="Событий:"
-                                           FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding EventCount, StringFormat={}{0:N0}}" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                    <controls:FileCard 
+                        FileName="{Binding FileName}" 
+                        FileSize="{Binding FileSize}" 
+                        EventCount="{Binding EventCount}"
+                        StartTrace="{Binding StartTrace}"
+                        EndTrace="{Binding EndTrace}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
@@ -125,12 +79,11 @@
                 <Grid Grid.Row="0" ColumnDefinitions="* Auto" ColumnSpacing="10">
                     <TextBox Grid.Column="0"
                              PlaceholderText="Поиск..."
-                             HorizontalAlignment="Stretch"
-                             Margin="0,2,0,2" />
+                             HorizontalAlignment="Stretch"/>
                     <Button Grid.Column="1"
                             Content="🔍"
-                            Width="30"
-                            Height="30"
+                            Width="34"
+                            Height="34"
                             HorizontalAlignment="Left" />
                 </Grid>
                 
@@ -140,18 +93,20 @@
                       ColumnSpacing="20"
                       Margin="0,8,0,0">
                     
-                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <StackPanel VerticalAlignment="Top" Grid.Column="0" Orientation="Vertical">
                         <RadioButton Content="Классический поиск" 
                                      GroupName="SearchType" 
+                                     IsChecked="{Binding IsClassicSearch}"
+                                     Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
-                        <RadioButton Content="Поиск рег. выражениями" 
+                        <RadioButton Content="Поиск регул. выражениями" 
                                      GroupName="SearchType"
+                                     Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
                     </StackPanel>
                     
-                    <CheckBox Grid.Column="2"
-                              Content="Поиск в выбранных файлах"
-                              VerticalAlignment="Center" />
+                    <CheckBox VerticalAlignment="Top" Grid.Column="2"
+                              Content="Поиск в выбранных файлах"/>
                 </Grid>
             </Grid>
             
@@ -161,53 +116,32 @@
                     <ItemsControl ItemsSource="{Binding FilterCardModels}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel ItemSpacing="10"/> <!-- вместо StackPanel -->
+                                <WrapPanel Orientation="Horizontal" ItemSpacing="10"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
-                        
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="10" BorderBrush="Black" BorderThickness="1" Padding="10 2 10 2">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock VerticalAlignment="Center" 
-                                                   FontWeight="Bold" 
-                                                   Text="{Binding FilterName}"/>
-                                        <TextBlock VerticalAlignment="Center" 
-                                                   Text=" : "/>
-                                        <TextBlock VerticalAlignment="Center" 
-                                                   Text="{Binding FilterValue}"/>
-                                    </StackPanel>
-                                </Border>
+                                <controls:FilterCard Title="{Binding Name}" Value="{Binding Value}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
             </Grid>
         </Grid>
-    
-        <StackPanel Spacing="20" Grid.Row="4" Margin="10,5,10,0" Orientation="Horizontal">
-            
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Файлов:" FontWeight="Bold"/>
-                <TextBlock Text="3"/>
-            </StackPanel>
-            
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Всего событий:" FontWeight="Bold"/>
-                <TextBlock Text="983 031"/>
-            </StackPanel>
-            
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Отфильтрованных событий:" FontWeight="Bold"/>
-                <TextBlock Text="183 031"/>
-            </StackPanel>
-            
-            <StackPanel Orientation="Horizontal" Spacing="5">
-                <TextBlock Text="Время парсинга" FontWeight="Bold"/>
-                <TextBlock Text="1 мин 19 сек"/>
-            </StackPanel>
-            
-        </StackPanel>
+        
+        
+        <ItemsControl Grid.Row="4" Margin="10,5,10,10" ItemsSource="{Binding StatisticInfoModels}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" ItemSpacing="20"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <controls:FocusTextBlock Header="{Binding Header}" Value="{Binding Value}"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
     
     

@@ -1,0 +1,66 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:FTV.Controls"
+        xmlns:converters="clr-namespace:FTV.Converters">
+    <Design.PreviewWith>
+        <controls:FileCard FileName="2026_05_07__00_00_01.log" FileSize="234567860" StartTrace="2026-05-07 00:00:01" EndTrace="2026-05-07 00:20:00" EventCount="943000"/>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|FileCard">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{DynamicResource ThemeBackgroundBrush}"
+                            CornerRadius="8"
+                            Padding="5">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="*,Auto"
+                              RowSpacing="1">
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="{TemplateBinding FileName}"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <Button Grid.Row="0"
+                                    Grid.Column="1"
+                                    Width="28"
+                                    Height="28"
+                                    Content="⋯"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center" />
+
+                            <StackPanel Grid.Column="0" Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{TemplateBinding StartTrace}"
+                                           TextWrapping="NoWrap"/>
+                                <TextBlock Text="→"/>
+                                <TextBlock Text="{TemplateBinding EndTrace}"
+                                           TextWrapping="NoWrap"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="0" Grid.Row="2"
+                                        Grid.ColumnSpan="2"
+                                        Orientation="Horizontal"
+                                        Spacing="12"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="Размер:"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{TemplateBinding FileSize, Converter={x:Static converters:BytesToReadableSizeConverter.Instance}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Text="Событий:"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="{TemplateBinding EventCount}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

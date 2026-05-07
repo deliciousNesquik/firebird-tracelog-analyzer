@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace firebird_tracelog_viewer;
+namespace FTV;
 
 sealed class Program
 {
