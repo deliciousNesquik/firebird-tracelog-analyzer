@@ -25,13 +25,15 @@
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" />
 
-                            <Button Grid.Row="0"
-                                    Grid.Column="1"
-                                    Width="28"
-                                    Height="28"
-                                    Content="⋯"
-                                    HorizontalContentAlignment="Center"
-                                    VerticalContentAlignment="Center" />
+                            <DropDownButton Grid.Row="0" Grid.Column="1" Width="32" Height="28" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout>
+                                        <MenuItem Header="Заново обработать"/>
+                                        <MenuItem Header="Закрыть" Command="{TemplateBinding RemoveFileCommand}"/>
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
+                            
 
                             <StackPanel Grid.Column="0" Grid.Row="1"
                                         Grid.ColumnSpan="2"

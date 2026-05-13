@@ -17,11 +17,11 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="30 Auto Auto * 40" RowSpacing="5">
+    <Grid RowDefinitions="30 Auto Auto * 40, Auto" RowSpacing="5">
         
         <Menu Grid.Row="0">
             <MenuItem Header="Открыть">
-                <MenuItem Header="Открыть локальный файл"/>
+                <MenuItem Header="Открыть локальный файл" Command="{Binding OpenLocalFileCommand}"/>
                 <MenuItem Header="Открыть удалённый файл" IsEnabled="False"/>
             </MenuItem>
             <MenuItem Header="Редактировать">
@@ -61,11 +61,12 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <controls:FileCard 
-                        FileName="{Binding FileName}" 
-                        FileSize="{Binding FileSize}" 
-                        EventCount="{Binding EventCount}"
-                        StartTrace="{Binding StartTrace}"
-                        EndTrace="{Binding EndTrace}"/>
+                        FileName="{Binding FileInfo.FileName}" 
+                        FileSize="{Binding FileInfo.FileSize}" 
+                        EventCount="{Binding FileInfo.EventCount}"
+                        StartTrace="{Binding FileInfo.StartTrace}"
+                        EndTrace="{Binding FileInfo.EndTrace}"
+                        RemoveFileCommand="{Binding RemoveFileCommand}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
@@ -142,6 +143,8 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        
+        <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5"/>
     </Grid>
     
     
