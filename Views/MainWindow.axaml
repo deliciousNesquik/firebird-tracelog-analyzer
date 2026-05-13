@@ -3,8 +3,7 @@
         xmlns:vm="using:FTV.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:FTV.Converters"
-        xmlns:controls="clr-namespace:FTV.Controls" 
+        xmlns:controls="clr-namespace:FTV.Controls"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="450"
         x:Class="FTV.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -13,45 +12,45 @@
         MinWidth="1000">
 
     <Design.DataContext>
-        
-        <vm:MainWindowViewModel/>
+
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
     <Grid RowDefinitions="30 Auto Auto * 40, Auto" RowSpacing="5">
-        
+
         <Menu Grid.Row="0">
             <MenuItem Header="Открыть">
-                <MenuItem Header="Открыть локальный файл" Command="{Binding OpenLocalFileCommand}"/>
-                <MenuItem Header="Открыть удалённый файл" IsEnabled="False"/>
+                <MenuItem Header="Открыть локальный файл" Command="{Binding OpenLocalFileCommand}" />
+                <MenuItem Header="Открыть удалённый файл" IsEnabled="False" />
             </MenuItem>
             <MenuItem Header="Редактировать">
-                <MenuItem Header="Заново обработать все файлы"/>
-                <MenuItem Header="Заново обработать выделенные файлы"/>
+                <MenuItem Header="Заново обработать все файлы" />
+                <MenuItem Header="Заново обработать выделенные файлы" />
             </MenuItem>
             <MenuItem Header="Окна и панели">
-                <MenuItem Header="Панель файлов" ToggleType="CheckBox" StaysOpenOnClick="True"/>
-                <MenuItem Header="Панель поиска" ToggleType="CheckBox" StaysOpenOnClick="True"/>
-                <MenuItem Header="Панель фильтров" ToggleType="CheckBox" StaysOpenOnClick="True"/>
-                <MenuItem Header="Основная панель событий" ToggleType="CheckBox" StaysOpenOnClick="True"/>
-                <MenuItem Header="Панель общей информации" ToggleType="CheckBox" StaysOpenOnClick="True"/>
-                <Separator/>
-                <MenuItem Header="Сбросить расположение"/>
+                <MenuItem Header="Панель файлов" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem Header="Панель поиска" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem Header="Панель фильтров" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem Header="Основная панель событий" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem Header="Панель общей информации" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <Separator />
+                <MenuItem Header="Сбросить расположение" />
             </MenuItem>
-            
+
             <MenuItem Header="Настройки">
-                <MenuItem Header="Настроить удаленный доступ"/>
-                <MenuItem Header="Настроить обновление открытого файла"/>
+                <MenuItem Header="Настроить удаленный доступ" />
+                <MenuItem Header="Настроить обновление открытого файла" />
             </MenuItem>
         </Menu>
-        
-        
-        <ListBox 
-            Grid.Row="1" 
-            SelectionMode="Multiple" 
-            
+
+
+        <ListBox
+            Grid.Row="1"
+            SelectionMode="Multiple"
+
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ItemsSource="{Binding TraceFileInfos}">
-            
+
             <!-- Задаем горизонтальную ориентацию панели элементов -->
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -60,77 +59,89 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <controls:FileCard 
-                        FileName="{Binding FileInfo.FileName}" 
-                        FileSize="{Binding FileInfo.FileSize}" 
+                    <controls:FileCard
+                        FileName="{Binding FileInfo.FileName}"
+                        FileSize="{Binding FileInfo.FileSize}"
                         EventCount="{Binding FileInfo.EventCount}"
                         StartTrace="{Binding FileInfo.StartTrace}"
                         EndTrace="{Binding FileInfo.EndTrace}"
-                        RemoveFileCommand="{Binding RemoveFileCommand}"/>
+                        RemoveFileCommand="{Binding RemoveFileCommand}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        
+
         <Grid Grid.Row="2" ColumnDefinitions="* *">
-    
+
             <!-- Поиск -->
             <Grid Grid.Column="0" RowDefinitions="Auto Auto" Margin="10,5,10,0">
-                
+
                 <!-- Строка поиска (растягивается на всю ширину столбца Grid.Column="0") -->
                 <Grid Grid.Row="0" ColumnDefinitions="* Auto" ColumnSpacing="10">
                     <TextBox Grid.Column="0"
                              PlaceholderText="Поиск..."
-                             HorizontalAlignment="Stretch"/>
+                             HorizontalAlignment="Stretch" />
                     <Button Grid.Column="1"
                             Content="🔍"
                             Width="34"
                             Height="34"
                             HorizontalAlignment="Left" />
                 </Grid>
-                
+
                 <!-- Режимы поиска -->
-                <Grid Grid.Row="1" 
-                      ColumnDefinitions="Auto 10* Auto" 
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="Auto 10* Auto"
                       ColumnSpacing="20"
                       Margin="0,8,0,0">
-                    
+
                     <StackPanel VerticalAlignment="Top" Grid.Column="0" Orientation="Vertical">
-                        <RadioButton Content="Классический поиск" 
-                                     GroupName="SearchType" 
+                        <RadioButton Content="Классический поиск"
+                                     GroupName="SearchType"
                                      IsChecked="{Binding IsClassicSearch}"
                                      Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
-                        <RadioButton Content="Поиск регул. выражениями" 
+                        <RadioButton Content="Поиск регул. выражениями"
                                      GroupName="SearchType"
                                      Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
                     </StackPanel>
-                    
+
                     <CheckBox VerticalAlignment="Top" Grid.Column="2"
-                              Content="Поиск в выбранных файлах"/>
+                              Content="Поиск в выбранных файлах" />
                 </Grid>
             </Grid>
-            
+
             <!-- Фильтрация -->
             <Grid Grid.Column="1" Margin="0,5,10,0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding FilterCardModels}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" ItemSpacing="10"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <controls:FilterCard Title="{Binding Name}" Value="{Binding Value}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <StackPanel Orientation="Vertical" Spacing="15">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="100">
+                        <ItemsControl ItemsSource="{Binding FilterCardModels}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <controls:FilterCard Title="{Binding Name}" Value="{Binding Value}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel Orientation="Vertical" Spacing="5">
+                        <Button Content="Настроить фильтры" FontWeight="Bold" BorderBrush="Black" BorderThickness="1"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                Command="{Binding AddFilter}" />
+                        <Button Content="Сбросить все фильтры" FontWeight="Bold" Background="Red" Foreground="White"
+                                BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" Command="{Binding ClearFilters}" />
+                    </StackPanel>
+
+                </StackPanel>
             </Grid>
         </Grid>
-        
-        
+
+
         <ItemsControl Grid.Row="4" Margin="10,5,10,10" ItemsSource="{Binding StatisticInfoModels}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -139,13 +150,13 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <controls:FocusTextBlock Header="{Binding Header}" Value="{Binding Value}"/>
+                    <controls:FocusTextBlock Header="{Binding Header}" Value="{Binding Value}" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        
-        <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5"/>
+
+        <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5" />
     </Grid>
-    
-    
+
+
 </Window>

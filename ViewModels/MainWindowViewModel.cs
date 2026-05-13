@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Security.Cryptography;
+using Avalonia.Controls.Converters;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,6 +27,53 @@ public partial class MainWindowViewModel : ViewModelBase
     public void SwitchSearchType()
     {
         CurrentSearchType = CurrentSearchType == SearchType.Classic ? SearchType.Regexp : SearchType.Classic;
+    }
+
+    [RelayCommand]
+    public void ClearFilters()
+    {
+        // TODO: Вызвать метод для обновления списка событий без фильтров
+        FilterCardModels.Clear();
+    }
+
+    [RelayCommand]
+    public void AddFilter()
+    {
+        try
+        {
+            var random = new Random();
+
+            // Случайный ключ и значение
+            var keys = new[] { "Пользователь", "Адрес", "Тип события", "Время события" };
+            var key = keys[random.Next(keys.Length)];
+
+            string value;
+            switch (key)
+            {
+                case "Пользователь":
+                    value = new[] { "BERDIN.A", "IVANOV.B", "PETROV.C" }[random.Next(3)];
+                    break;
+                case "Адрес":
+                    value = $"{random.Next(1, 255)}.0.0.{random.Next(1, 255)}";
+                    break;
+                case "Тип события":
+                    value = new[] { "AttachDatabase", "DetachDatabase", "Login" }[random.Next(3)];
+                    break;
+                case "Время события":
+                    var now = DateTime.Now;
+                    value = now.AddHours(random.Next(-24, 25)).ToString("yyyy-MM-ddTHH:mm:ss.ffff");
+                    break;
+                default:
+                    value = "Unknown";
+                    break;
+            }
+
+            FilterCardModels.Add(new FilterCardModel(key, value)); // Один элемент: название + значение
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
+        }
     }
 
     [RelayCommand]
