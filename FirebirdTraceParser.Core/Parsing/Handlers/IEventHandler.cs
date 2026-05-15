@@ -1,0 +1,15 @@
+﻿namespace FirebirdTraceParser.Core.Parsing.Handlers;
+
+using System.Text.RegularExpressions;
+using FirebirdTraceParser.Core.Models.Events;
+
+/// <summary>
+/// Обработчик блока события.
+/// </summary>
+public interface IEventHandler
+{
+    EventBase? Handle(
+        Match blockHeader,
+        IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules);
+}
