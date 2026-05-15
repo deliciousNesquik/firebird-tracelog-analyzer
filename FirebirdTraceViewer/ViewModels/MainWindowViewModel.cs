@@ -1,41 +1,46 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using Avalonia.Threading;
+﻿using FirebirdTraceParser.Core.Parsing.Engine;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceParser.Core.Parsing.Engine;
-using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
+using System.Collections.ObjectModel;
+using System.Security.Cryptography;
+using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceViewer.Models;
+using FirebirdTraceViewer.Enums;
+using Avalonia.Threading; 
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    // логгер для регистрации всех действий и событий NLog
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    // сервис для открытия файлов локально
     private readonly IFileDialogService _fileDialogService;
+
+    // сервис парсер, выполняющий обработку файлов трейс логов
     private readonly ITraceLogParser _parser;
-    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
+    // коллекция трейс файлов для отображений в виде карточек
     public ObservableCollection<FileCardViewModel> TraceFileInfos { get; set; } = [];
+
+    // коллекция фильтров для отображения в виде карточек
     public ObservableCollection<FilterCardModel> FilterCardModels { get; set; }
+
+    // коллекция статистических данных для отображения в интерфейсе
     public ObservableCollection<StatisticInfoModel> StatisticInfoModels { get; set; }
+    [ObservableProperty] public partial SearchType CurrentSearchType { get; set; }
+    [ObservableProperty] public partial bool IsClassicSearch { get; set; }
+    [ObservableProperty] public partial string StatusMessage { get; set; }
+    [ObservableProperty] public partial bool IsFileLoading { get; set; }
+    [ObservableProperty] public partial double LoadProgress { get; set; }
 
-    [ObservableProperty] private SearchType _currentSearchType;
-    [ObservableProperty] private bool _isClassicSearch;
-    [ObservableProperty] private string _statusMessage = string.Empty;
-    [ObservableProperty] private bool _isFileLoading;
-    [ObservableProperty] private double _loadProgress;
 
-    // ========== Конструкторы ==========
+    #region DesignTime
 
     /// <summary>
-    /// Design-time конструктор для XAML превью.
+    ///     Design-time конструктор для XAML превью.
     /// </summary>
     public MainWindowViewModel()
     {
@@ -45,46 +50,35 @@ public partial class MainWindowViewModel : ViewModelBase
         // Design-time данные
         TraceFileInfos =
         [
-            CreateFileCardViewModel(new TraceFileInfoModel(
-                "2026_05_13__00_01_00.log",
-                string.Empty,
-                123456890,
-                new DateTime(2026, 5, 13, 0, 0, 1),
-                new DateTime(2026, 5, 13, 0, 20, 0),
-                12345,
-                "design-sample-1"
-            ))
+            CreateFileCardViewModel(new TraceFileInfoModel("2026_05_13__00_01_00.log", string.Empty, 123456890,
+                new DateTime(2026, 5, 13, 0, 0, 1), new DateTime(2026, 5, 13, 0, 20, 0), 12345, "design-sample-1"))
         ];
-
         FilterCardModels =
         [
-            new FilterCardModel("Пользователь", "BERDIN.A"),
-            new FilterCardModel("Адрес подключения", "10.0.1.102")
+            new FilterCardModel("Пользователь", "BERDIN.A"), new FilterCardModel("Адрес подключения", "10.0.1.102")
         ];
-
         StatisticInfoModels = CreateStatisticInfoModels();
-        StatusMessage = "Готово (Design Mode).";
+        StatusMessage = "Готово (Design Time).";
     }
 
+    #endregion
+    
+
     /// <summary>
-    /// Runtime конструктор с DI.
+    ///     Runtime конструктор с DI.
     /// </summary>
     public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser)
     {
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
-
         FilterCardModels =
         [
-            new FilterCardModel("Пользователь", "BERDIN.A"),
-            new FilterCardModel("Адрес подключения", "10.0.1.102")
+            new FilterCardModel("Пользователь", "BERDIN.A"), new FilterCardModel("Адрес подключения", "10.0.1.102")
         ];
-
         StatisticInfoModels = CreateStatisticInfoModels();
         CurrentSearchType = SearchType.Classic;
         IsClassicSearch = CurrentSearchType == SearchType.Classic;
         StatusMessage = "Готово.";
-
         Logger.Info("MainWindowViewModel инициализирован");
     }
 
@@ -112,8 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var random = new Random();
             var keys = new[] { "Пользователь", "Адрес", "Тип события", "Время события" };
             var key = keys[random.Next(keys.Length)];
-
-            string value = key switch
+            var value = key switch
             {
                 "Пользователь" => new[] { "BERDIN.A", "IVANOV.B", "PETROV.C" }[random.Next(3)],
                 "Адрес" => $"{random.Next(1, 255)}.0.0.{random.Next(1, 255)}",
@@ -121,7 +114,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 "Время события" => DateTime.Now.AddHours(random.Next(-24, 25)).ToString("yyyy-MM-ddTHH:mm:ss.ffff"),
                 _ => "Unknown"
             };
-
             FilterCardModels.Add(new FilterCardModel(key, value));
         }
         catch (Exception ex)
@@ -142,29 +134,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var addedCount = 0;
         var duplicateCount = 0;
-
         IsFileLoading = true;
         LoadProgress = 0;
-
         try
         {
-            for (int i = 0; i < files.Count; i++)
+            for (var i = 0; i < files.Count; i++)
             {
                 var file = files[i];
                 var path = file.Path.LocalPath;
-
-                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-                {
-                    continue;
-                }
-
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) continue;
                 StatusMessage = $"Обработка файла {i + 1}/{files.Count}: {Path.GetFileName(path)}";
-
                 var fileInfo = new FileInfo(path);
                 var fileHash = await CalculateFileHashAsync(path);
 
                 // Проверка дубликатов
-                if (TraceFileInfos.Any(info => string.Equals(info.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase)))
+                if (TraceFileInfos.Any(info =>
+                        string.Equals(info.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase)))
                 {
                     duplicateCount++;
                     Logger.Warn("Дубликат файла пропущен: {FilePath}", path);
@@ -174,36 +159,17 @@ public partial class MainWindowViewModel : ViewModelBase
                 // ========== ПАРСИНГ ФАЙЛА ==========
                 StatusMessage = $"Парсинг файла: {fileInfo.Name}";
                 LoadProgress = 0;
-
                 var progress = new Progress<double>(p => LoadProgress = p * 100);
+                var parseResult = await _parser.ParseFileAsync(path, progress);
+                Logger.Info("Файл распарсен: {FileName}, события: {EventCount}", fileInfo.Name,
+                    parseResult.Events.Count);
 
-                var parseResult = await _parser.ParseFileAsync(
-                    path,
-                    progress,
-                    cancellationToken: default
-                );
-
-                Logger.Info("Файл распарсен: {FileName}, события: {EventCount}", fileInfo.Name, parseResult.Events.Count);
-                
-                
                 // Определение временных границ
                 var startTrace = parseResult.Events.FirstOrDefault()?.Timestamp ?? DateTime.MinValue;
                 var endTrace = parseResult.Events.LastOrDefault()?.Timestamp ?? DateTime.MinValue;
-
-                TraceFileInfos.Add(
-                    CreateFileCardViewModel(
-                        new TraceFileInfoModel(
-                            fileName: fileInfo.Name,
-                            filePath: fileInfo.FullName,
-                            fileSize: fileInfo.Length,
-                            eventCount: parseResult.Events.Count,
-                            startTrace: startTrace,
-                            endTrace: endTrace,
-                            fileHash: fileHash
-                        )
-                    )
-                );
-
+                TraceFileInfos.Add(CreateFileCardViewModel(new TraceFileInfoModel(fileInfo.Name, fileInfo.FullName,
+                    fileInfo.Length, eventCount: parseResult.Events.Count, startTrace: startTrace, endTrace: endTrace,
+                    fileHash: fileHash)));
                 addedCount++;
             }
         }
@@ -216,7 +182,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsFileLoading = false;
             LoadProgress = 0;
-            
             UpdateStatistics();
             StatusMessage = BuildFileAddingStatusMessage(addedCount, duplicateCount);
         }
@@ -227,13 +192,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private static async Task<string> CalculateFileHashAsync(string filePath)
     {
         await using var stream = new FileStream(
-            filePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            bufferSize: 1024 * 1024,
-            useAsync: true);
-
+            filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024, true);
         var hashBytes = await SHA256.HashDataAsync(stream);
         return Convert.ToHexString(hashBytes);
     }
@@ -264,12 +223,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private async void UpdateStatistics()
     {
         StatisticInfoModels.Clear();
-        
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             StatisticInfoModels.Add(new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()));
-            StatisticInfoModels.Add(new StatisticInfoModel("Всего событий", TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")));
-            StatisticInfoModels.Add(new StatisticInfoModel("Отфильтрованных событий", TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")));
+            StatisticInfoModels.Add(new StatisticInfoModel("Всего событий",
+                TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")));
+            StatisticInfoModels.Add(new StatisticInfoModel("Отфильтрованных событий",
+                TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")));
             StatisticInfoModels.Add(new StatisticInfoModel("Время парсинга", "0сек"));
         });
     }
@@ -280,7 +240,8 @@ public partial class MainWindowViewModel : ViewModelBase
         [
             new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()),
             new StatisticInfoModel("Всего событий", TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")),
-            new StatisticInfoModel("Отфильтрованных событий", TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")),
+            new StatisticInfoModel("Отфильтрованных событий",
+                TraceFileInfos.Sum(p => p.FileInfo.EventCount).ToString("N0")),
             new StatisticInfoModel("Время парсинга", "0сек")
         ];
     }

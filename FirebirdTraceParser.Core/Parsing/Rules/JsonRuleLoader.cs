@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using FirebirdTraceParser.Core.Exceptions;
 using Microsoft.Extensions.Caching.Memory;
 using NLog;
-using FirebirdTraceParser.Core.Exceptions;
 
 namespace FirebirdTraceParser.Core.Parsing.Rules;
 

@@ -1,10 +1,10 @@
 ﻿using System.Text.RegularExpressions;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using NLog;
 using FirebirdTraceParser.Core.Parsing.Engine;
 using FirebirdTraceParser.Core.Parsing.Handlers;
 using FirebirdTraceParser.Core.Parsing.Rules;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using NLog;
 
 namespace FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 

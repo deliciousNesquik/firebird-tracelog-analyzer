@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Avalonia;
-using Microsoft.Extensions.DependencyInjection;
-using NLog;
-using FirebirdTraceViewer.ViewModels;
+using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Services;
-using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
+using FirebirdTraceViewer.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
+using NLog;
 
 namespace FirebirdTraceViewer;
 

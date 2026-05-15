@@ -1,10 +1,10 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
-using NLog;
 using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceParser.Core.Models.Results;
 using FirebirdTraceParser.Core.Parsing.Handlers;
+using NLog;
 
 namespace FirebirdTraceParser.Core.Parsing.Engine;
 
