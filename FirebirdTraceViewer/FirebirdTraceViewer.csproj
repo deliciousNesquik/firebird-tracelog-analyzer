@@ -72,5 +72,9 @@
         <DependentUpon>StatementStartEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\StatementFinishEventCard.axaml.cs">
+        <DependentUpon>StatementFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>
