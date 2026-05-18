@@ -6,7 +6,10 @@ using System.Security.Cryptography;
 using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Enums;
-using Avalonia.Threading; 
+using Avalonia.Threading;
+using FirebirdTraceParser.Core.Models.Enums;
+using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Core.Models.ValueObjects;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
@@ -27,6 +30,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     // коллекция фильтров для отображения в виде карточек
     public ObservableCollection<FilterCardModel> FilterCardModels { get; set; }
+    
+    // коллекция событий полученных после обработки
+    public ObservableCollection<EventBase> Events { get; set; } = [];
 
     // коллекция статистических данных для отображения в интерфейсе
     public ObservableCollection<StatisticInfoModel> StatisticInfoModels { get; set; }
@@ -59,6 +65,30 @@ public partial class MainWindowViewModel : ViewModelBase
         ];
         StatisticInfoModels = CreateStatisticInfoModels();
         StatusMessage = "Готово (Design Time).";
+
+        Events =
+        [
+            new AttachDatabaseEvent
+            {
+                Attachment = new AttachmentInfo
+                {
+                    Address = "192.168.3.5",
+                    AttachmentId = 123,
+                    Charset = "UTF-8",
+                    DatabasePath = "Path",
+                    Port = 1010,
+                    Protocol = "TCP",
+                    ProcessId = 12,
+                    ProcessPath = "Process Path",
+                    User = "BERDIN.A",
+                    Role = "MON",
+                },
+                EventType = EventType.AttachDatabase,
+                Timestamp = DateTime.Now,
+                TraceId = 437236,
+                HexTraceId = "0x7f3133ba1dc0"
+            },
+        ];
     }
 
     #endregion
@@ -163,7 +193,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 var parseResult = await _parser.ParseFileAsync(path, progress);
                 Logger.Info("Файл распарсен: {FileName}, события: {EventCount}", fileInfo.Name,
                     parseResult.Events.Count);
+                
+                //Events.Clear();
 
+                foreach (var evt in parseResult.Events)
+                {
+                    Events.Add(evt);
+                }
+                
                 // Определение временных границ
                 var startTrace = parseResult.Events.FirstOrDefault()?.Timestamp ?? DateTime.MinValue;
                 var endTrace = parseResult.Events.LastOrDefault()?.Timestamp ?? DateTime.MinValue;

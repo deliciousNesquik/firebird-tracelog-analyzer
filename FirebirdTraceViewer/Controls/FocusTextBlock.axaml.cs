@@ -7,10 +7,10 @@ namespace FirebirdTraceViewer.Controls;
 public class FocusTextBlock : TemplatedControl
 {
     public static readonly StyledProperty<string> HeaderProperty =
-        AvaloniaProperty.Register<FilterCard, string>(nameof(Header), "");
+        AvaloniaProperty.Register<FocusTextBlock, string>(nameof(Header), "");
     
     public static readonly StyledProperty<string> ValueProperty =
-        AvaloniaProperty.Register<FilterCard, string>(nameof(Value), "");
+        AvaloniaProperty.Register<FocusTextBlock, string>(nameof(Value), "");
  
     
     public string Header

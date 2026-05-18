@@ -58,4 +58,11 @@
       <EmbeddedResource Include="Configuration\rules.json" />
       <EmbeddedResource Include="Configuration\rules.schema.json" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Controls\TraceFiniEventCard.axaml.cs">
+        <DependentUpon>TraceFiniEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

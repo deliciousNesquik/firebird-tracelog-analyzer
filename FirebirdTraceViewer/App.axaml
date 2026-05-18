@@ -15,5 +15,9 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FilterCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FileCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FocusTextBlock.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TraceInitEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TraceFiniEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/AttachDatabaseEventCard.axaml" />
+        
     </Application.Styles>
 </Application>

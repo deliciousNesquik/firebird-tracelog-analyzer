@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="450"
+        xmlns:local="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -15,6 +16,665 @@
 
         <vm:MainWindowViewModel />
     </Design.DataContext>
+
+    <Window.DataTemplates>
+
+        <DataTemplate DataType="local:TraceInitEvent">
+            <controls:TraceInitEventCard 
+                Timestamp="{Binding Timestamp}" 
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                SessionId="{Binding Session.SessionId}"/>
+        </DataTemplate>
+
+        <DataTemplate DataType="local:TraceFinishEvent">
+            <controls:TraceFiniEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                SessionId="{Binding Session.SessionId}"/>
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- ATTACH DATABASE -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:AttachDatabaseEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#1565C0"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="ATTACH"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    Margin="12,0,0,0">
+
+                            <TextBlock Text="{Binding Attachment.DatabasePath}"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Text="{Binding Attachment.User}"
+                                       Foreground="#A0A0A0"/>
+
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="150,*"
+                          RowDefinitions="Auto,Auto,Auto">
+
+                        <TextBlock Text="Address:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Attachment.Address}"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Protocol:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Attachment.Protocol}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Charset:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="{Binding Attachment.Charset}"/>
+
+                    </Grid>
+
+                    <Expander Header="Подробнее">
+
+                        <Grid ColumnDefinitions="150,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+                            <TextBlock Text="Process:"
+                                       FontWeight="Bold"/>
+
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding Attachment.ProcessPath}"
+                                       TextWrapping="Wrap"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Text="PID:"
+                                       FontWeight="Bold"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="1"
+                                       Text="{Binding Attachment.ProcessId}"/>
+
+                            <TextBlock Grid.Row="2"
+                                       Text="Role:"
+                                       FontWeight="Bold"/>
+
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="1"
+                                       Text="{Binding Attachment.Role}"/>
+
+                            <TextBlock Grid.Row="3"
+                                       Text="Attachment ID:"
+                                       FontWeight="Bold"/>
+
+                            <TextBlock Grid.Row="3"
+                                       Grid.Column="1"
+                                       Text="{Binding Attachment.AttachmentId}"/>
+
+                            <TextBlock Grid.Row="4"
+                                       Text="Hex Trace:"
+                                       FontWeight="Bold"/>
+
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="1"
+                                       Text="{Binding HexTraceId}"/>
+
+                        </Grid>
+
+                    </Expander>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- DETACH DATABASE -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:DetachDatabaseEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#455A64"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="DETACH"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    Margin="12,0,0,0">
+
+                            <TextBlock Text="{Binding Attachment.DatabasePath}"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Text="{Binding Attachment.User}"
+                                       Foreground="#A0A0A0"/>
+
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="150,*"
+                          RowDefinitions="Auto,Auto">
+
+                        <TextBlock Text="Address:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Attachment.Address}"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Attachment ID:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Attachment.AttachmentId}"/>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- STATEMENT START -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:StatementStartEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#EF6C00"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="SQL START"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Attachment.User}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Border Background="#252525"
+                            Padding="10"
+                            CornerRadius="6">
+
+                        <TextBlock Text="{Binding Sql}"
+                                   FontFamily="Consolas"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="120"/>
+
+                    </Border>
+
+                    <Expander Header="Параметры">
+
+                        <ItemsControl ItemsSource="{Binding Params}">
+
+                            <ItemsControl.ItemTemplate>
+
+                                <DataTemplate>
+
+                                    <Grid ColumnDefinitions="200,*">
+
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Value}"
+                                                   TextWrapping="Wrap"/>
+
+                                    </Grid>
+
+                                </DataTemplate>
+
+                            </ItemsControl.ItemTemplate>
+
+                        </ItemsControl>
+
+                    </Expander>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- STATEMENT FINISH -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:StatementFinishEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#FB8C00"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="SQL FINISH"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Attachment.User}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Border Background="#252525"
+                            Padding="10"
+                            CornerRadius="6">
+
+                        <TextBlock Text="{Binding Sql}"
+                                   FontFamily="Consolas"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="120"/>
+
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*,*,*">
+
+                        <StackPanel>
+                            <TextBlock Text="Elapsed"/>
+                            <TextBlock Text="{Binding Performance.ExecuteMs}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Reads"/>
+                            <TextBlock Text="{Binding Performance.ReadCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Writes"/>
+                            <TextBlock Text="{Binding Performance.WriteCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="Fetches"/>
+                            <TextBlock Text="{Binding Performance.FetchCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- PROCEDURE START -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:ProcedureStartEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#2E7D32"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="PROCEDURE START"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   Text="{Binding ProcedureName}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <TextBlock Text="{Binding Attachment.User}"/>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- PROCEDURE FINISH -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:ProcedureFinishEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#43A047"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="PROCEDURE FINISH"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   Text="{Binding ProcedureName}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*">
+
+                        <StackPanel>
+                            <TextBlock Text="Elapsed"/>
+                            <TextBlock Text="{Binding Performance.ExecuteMs}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Reads"/>
+                            <TextBlock Text="{Binding Performance.ReadCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Writes"/>
+                            <TextBlock Text="{Binding Performance.WriteCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- TRIGGER START -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:TriggerStartEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#7B1FA2"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="TRIGGER START"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   Text="{Binding TriggerName}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="140,*"
+                          RowDefinitions="Auto,Auto,Auto">
+
+                        <TextBlock Text="Table:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Table}"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Timing:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Timing}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Event:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="{Binding Event}"/>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+
+
+        <!-- ========================================================= -->
+        <!-- TRIGGER FINISH -->
+        <!-- ========================================================= -->
+
+        <DataTemplate DataType="local:TriggerFinishEvent">
+
+            <Border Margin="0,0,0,8"
+                    Padding="12"
+                    CornerRadius="8"
+                    BorderThickness="1">
+
+                <StackPanel Spacing="10">
+
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                        <Border Background="#8E24AA"
+                                CornerRadius="4"
+                                Padding="10,4">
+
+                            <TextBlock Text="TRIGGER FINISH"
+                                       Foreground="White"
+                                       FontWeight="Bold"/>
+
+                        </Border>
+
+                        <TextBlock Grid.Column="1"
+                                   Margin="12,0,0,0"
+                                   Text="{Binding TriggerName}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Timestamp}"
+                                   Foreground="#A0A0A0"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="140,*"
+                          RowDefinitions="Auto,Auto,Auto">
+
+                        <TextBlock Text="Table:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Table}"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="Timing:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="1"
+                                   Text="{Binding Timing}"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Event:"
+                                   FontWeight="Bold"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="1"
+                                   Text="{Binding Event}"/>
+
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*">
+
+                        <StackPanel>
+                            <TextBlock Text="Elapsed"/>
+                            <TextBlock Text="{Binding Performance.ExecuteMs}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Reads"/>
+                            <TextBlock Text="{Binding Performance.ReadCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Writes"/>
+                            <TextBlock Text="{Binding Performance.WriteCount}"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+
+                    </Grid>
+
+                </StackPanel>
+
+            </Border>
+
+        </DataTemplate>
+
+    </Window.DataTemplates>
 
     <Grid RowDefinitions="30 Auto Auto * 40, Auto" RowSpacing="5">
 
@@ -117,7 +777,7 @@
                         <ItemsControl ItemsSource="{Binding FilterCardModels}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10"/>
+                                    <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
@@ -141,10 +801,24 @@
             </Grid>
         </Grid>
 
+        <ListBox Grid.Row="3"
+                 ItemsSource="{Binding Events}"
+                 Margin="10"
+                 SelectionMode="Multiple"
+                 HorizontalAlignment="Stretch">
+
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+
+        </ListBox>
+
         <ItemsControl Grid.Row="4" Margin="10,5,10,10" ItemsSource="{Binding StatisticInfoModels}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Horizontal" ItemSpacing="20"/>
+                    <WrapPanel Orientation="Horizontal" ItemSpacing="20" />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
