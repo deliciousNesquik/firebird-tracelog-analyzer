@@ -4,7 +4,7 @@
     <Design.PreviewWith>
         
         <Border Padding="20">
-            <controls:AttachDatabaseEventCard 
+            <controls:DetachDatabaseEventCard 
                 Width="900" 
                 DatabasePath="/interbas/reid_2022.gdb"
                 ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
@@ -18,7 +18,7 @@
         </Border>
     </Design.PreviewWith>
 
-    <Style Selector="controls|AttachDatabaseEventCard">
+    <Style Selector="controls|DetachDatabaseEventCard">
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
@@ -31,11 +31,11 @@
 
                             <!-- EVENT TYPE -->
                             <Border Grid.Column="0"
-                                    Background="#1565C0"
+                                    Background="#455A64"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 
-                                <TextBlock Text="ATTACH DATABASE"
+                                <TextBlock Text="DETACH DATABASE"
                                            Foreground="White"
                                            FontWeight="Bold"
                                            FontSize="16" />

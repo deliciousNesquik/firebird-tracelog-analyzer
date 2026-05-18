@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
         xmlns:local="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="1000"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -43,192 +43,32 @@
 
         <DataTemplate DataType="local:AttachDatabaseEvent">
 
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#1565C0"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="ATTACH"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                                    Margin="12,0,0,0">
-
-                            <TextBlock Text="{Binding Attachment.DatabasePath}"
-                                       FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis"/>
-
-                            <TextBlock Text="{Binding Attachment.User}"
-                                       Foreground="#A0A0A0"/>
-
-                        </StackPanel>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="150,*"
-                          RowDefinitions="Auto,Auto,Auto">
-
-                        <TextBlock Text="Address:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Attachment.Address}"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Text="Protocol:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="{Binding Attachment.Protocol}"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="Charset:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Grid.Column="1"
-                                   Text="{Binding Attachment.Charset}"/>
-
-                    </Grid>
-
-                    <Expander Header="Подробнее">
-
-                        <Grid ColumnDefinitions="150,*"
-                              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-
-                            <TextBlock Text="Process:"
-                                       FontWeight="Bold"/>
-
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding Attachment.ProcessPath}"
-                                       TextWrapping="Wrap"/>
-
-                            <TextBlock Grid.Row="1"
-                                       Text="PID:"
-                                       FontWeight="Bold"/>
-
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="1"
-                                       Text="{Binding Attachment.ProcessId}"/>
-
-                            <TextBlock Grid.Row="2"
-                                       Text="Role:"
-                                       FontWeight="Bold"/>
-
-                            <TextBlock Grid.Row="2"
-                                       Grid.Column="1"
-                                       Text="{Binding Attachment.Role}"/>
-
-                            <TextBlock Grid.Row="3"
-                                       Text="Attachment ID:"
-                                       FontWeight="Bold"/>
-
-                            <TextBlock Grid.Row="3"
-                                       Grid.Column="1"
-                                       Text="{Binding Attachment.AttachmentId}"/>
-
-                            <TextBlock Grid.Row="4"
-                                       Text="Hex Trace:"
-                                       FontWeight="Bold"/>
-
-                            <TextBlock Grid.Row="4"
-                                       Grid.Column="1"
-                                       Text="{Binding HexTraceId}"/>
-
-                        </Grid>
-
-                    </Expander>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:AttachDatabaseEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"/>
         </DataTemplate>
-
-
-
-        <!-- ========================================================= -->
-        <!-- DETACH DATABASE -->
-        <!-- ========================================================= -->
+        
 
         <DataTemplate DataType="local:DetachDatabaseEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#455A64"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="DETACH"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <StackPanel Grid.Column="1"
-                                    Margin="12,0,0,0">
-
-                            <TextBlock Text="{Binding Attachment.DatabasePath}"
-                                       FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis"/>
-
-                            <TextBlock Text="{Binding Attachment.User}"
-                                       Foreground="#A0A0A0"/>
-
-                        </StackPanel>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="150,*"
-                          RowDefinitions="Auto,Auto">
-
-                        <TextBlock Text="Address:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Attachment.Address}"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Text="Attachment ID:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="{Binding Attachment.AttachmentId}"/>
-
-                    </Grid>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:DetachDatabaseEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"/>
         </DataTemplate>
 
 
@@ -806,7 +646,7 @@
                  Margin="10"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">
-
+            
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <VirtualizingStackPanel />

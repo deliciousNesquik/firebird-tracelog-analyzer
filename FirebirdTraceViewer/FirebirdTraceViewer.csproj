@@ -64,5 +64,9 @@
         <DependentUpon>TraceFiniEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\DetachDatabaseEventCard.axaml.cs">
+        <DependentUpon>DetachDatabaseEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

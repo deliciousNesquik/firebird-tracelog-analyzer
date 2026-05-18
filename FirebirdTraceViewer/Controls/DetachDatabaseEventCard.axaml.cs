@@ -4,46 +4,46 @@ using Avalonia.Controls.Primitives;
 
 namespace FirebirdTraceViewer.Controls;
 
-public class AttachDatabaseEventCard : TemplatedControl
+public class DetachDatabaseEventCard : TemplatedControl
 {
     public static readonly StyledProperty<DateTime> TimestampProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
+        AvaloniaProperty.Register<DetachDatabaseEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
     
     public static readonly StyledProperty<int> TraceIdProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, int>(nameof(TraceId), 0);
+        AvaloniaProperty.Register<DetachDatabaseEventCard, int>(nameof(TraceId), 0);
     
     public static readonly StyledProperty<string> HexTraceIdProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(HexTraceId), "0");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(HexTraceId), "0");
     
     public static readonly StyledProperty<string> DatabasePathProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(DatabasePath), "database_path");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(DatabasePath), "database_path");
     
     public static readonly StyledProperty<string> UserProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(User), "user_name");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(User), "user_name");
     
     public static readonly StyledProperty<string> RoleProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(Role), "role_name");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(Role), "role_name");
     
     public static readonly StyledProperty<int> AttachmentIdProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, int>(nameof(AttachmentId), 0);
+        AvaloniaProperty.Register<DetachDatabaseEventCard, int>(nameof(AttachmentId), 0);
     
     public static readonly StyledProperty<string> ProtocolProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(Protocol), "TCPv4");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(Protocol), "TCPv4");
     
     public static readonly StyledProperty<string> AddressProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(Address), "192.168.3.5");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(Address), "192.168.3.5");
     
     public static readonly StyledProperty<int> PortProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, int>(nameof(Port), 3050);
+        AvaloniaProperty.Register<DetachDatabaseEventCard, int>(nameof(Port), 3050);
     
     public static readonly StyledProperty<string> CharsetProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(Charset), "WIN1251");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(Charset), "WIN1251");
     
     public static readonly StyledProperty<string> ProcessPathProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
+        AvaloniaProperty.Register<DetachDatabaseEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
     
     public static readonly StyledProperty<int> ProcessIdProperty =
-        AvaloniaProperty.Register<AttachDatabaseEventCard, int>(nameof(ProcessId), 12341);
+        AvaloniaProperty.Register<DetachDatabaseEventCard, int>(nameof(ProcessId), 12341);
     
     
     public DateTime Timestamp
