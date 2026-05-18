@@ -19,6 +19,7 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TraceFiniEventCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/AttachDatabaseEventCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/DetachDatabaseEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/StatementStartEventCard.axaml"/>
         
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0"/>

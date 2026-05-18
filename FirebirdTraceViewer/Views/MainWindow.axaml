@@ -78,80 +78,25 @@
         <!-- ========================================================= -->
 
         <DataTemplate DataType="local:StatementStartEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#EF6C00"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="SQL START"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <TextBlock Grid.Column="1"
-                                   Margin="12,0,0,0"
-                                   VerticalAlignment="Center"
-                                   Text="{Binding Attachment.User}"
-                                   FontWeight="SemiBold"/>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Border Background="#252525"
-                            Padding="10"
-                            CornerRadius="6">
-
-                        <TextBlock Text="{Binding Sql}"
-                                   FontFamily="Consolas"
-                                   TextWrapping="Wrap"
-                                   MaxHeight="120"/>
-
-                    </Border>
-
-                    <Expander Header="Параметры">
-
-                        <ItemsControl ItemsSource="{Binding Params}">
-
-                            <ItemsControl.ItemTemplate>
-
-                                <DataTemplate>
-
-                                    <Grid ColumnDefinitions="200,*">
-
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontWeight="Bold"/>
-
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Value}"
-                                                   TextWrapping="Wrap"/>
-
-                                    </Grid>
-
-                                </DataTemplate>
-
-                            </ItemsControl.ItemTemplate>
-
-                        </ItemsControl>
-
-                    </Expander>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:StatementStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Params}"/>
         </DataTemplate>
 
 

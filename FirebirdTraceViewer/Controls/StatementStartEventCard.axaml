@@ -1,0 +1,404 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:FirebirdTraceViewer.Controls"
+        xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <controls:StatementStartEventCard
+                Width="900"
+                Timestamp="2026 05 18 11:30:00"
+                TraceId="437236" HexTraceId="0x7f3133ba1dc0" StatementId="329549018"
+                DatabasePath="/interbas/reid_2022.gdb"
+                ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
+                ProcessId="5432"
+                Charset="WIN1251"
+                User="BERDIN.A"
+                Sql="select * from rdbasd"
+                TransactionId="13605966"
+                IsolationLevel="READ_COMMITTED"
+                ConsistencyMode="READ_CONSISTENCY"
+                LockMode="WAIT"
+                AccessMode="READ_WRITE"
+                Role="ORDINARY USER"
+                AttachmentId="11335646" />
+        </Border>
+
+    </Design.PreviewWith>
+
+    <Style Selector="controls|StatementStartEventCard">
+
+        <Setter Property="Template">
+
+            <ControlTemplate>
+
+                <Border BorderThickness="1" Padding="10" BorderBrush="Black">
+
+                    <StackPanel Spacing="10">
+
+                        <!-- HEADER -->
+                        <Grid ColumnDefinitions="Auto Auto *">
+
+                            <!-- EVENT TYPE -->
+                            <Border Grid.Column="0"
+                                    Background="#EF6C00"
+                                    CornerRadius="5"
+                                    Padding="16, 8, 16, 12">
+
+                                <TextBlock Text="STATEMENT START"
+                                           Foreground="White"
+                                           FontWeight="Bold"
+                                           FontSize="16" />
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    HorizontalAlignment="Center"
+                                    Padding="10 0 0 0">
+
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+
+                                    <TextBlock Text="STATEMENT"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Cursor="Hand"
+                                               Foreground="#2D2D2D"
+                                               VerticalAlignment="Center" />
+
+                                    <Border CornerRadius="10" Background="#FF5141" Padding="6 2 6 2"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{TemplateBinding StatementId}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+
+                                </StackPanel>
+                            </Border>
+
+                            <!-- TIMESTAMP -->
+                            <TextBlock Grid.Column="2"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Timestamp, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:yyyy-MM-ddTHH:mm:ss.ffff}'}"
+                                       FontFamily="Consolas"
+                                       FontSize="16"
+                                       FontWeight="DemiBold" />
+
+                        </Grid>
+
+                        <!-- IDENTIFIERS -->
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemSpacing="25">
+
+                            <!-- TRACE -->
+                            <Border>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+                                    <TextBlock Text="IDENTIFIER"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock Text="{TemplateBinding TraceId}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- HEX -->
+                            <Border>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+                                    <TextBlock Text="HEX"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock Text="{TemplateBinding HexTraceId}"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+
+                        <Expander Header="ATTACHMENT INFO" FontWeight="Bold" HorizontalAlignment="Stretch" Margin="0 10 0 0">
+                            <StackPanel Orientation="Vertical" Spacing="10">
+                                <WrapPanel Orientation="Horizontal"
+                                           ItemSpacing="25">
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="USER"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding User}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="WITH ROLE"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding Role}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <WrapPanel Orientation="Horizontal"
+                                           ItemSpacing="25">
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="AT ADDRESS"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding Protocol}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding DatabasePath}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding Port}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <WrapPanel Orientation="Horizontal"
+                                           ItemSpacing="25" Margin="0 10 0 0">
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="CONNECT TO"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding DatabasePath}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <WrapPanel Orientation="Horizontal"
+                                           ItemSpacing="25">
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="USING CHARSET"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding Charset}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <WrapPanel Orientation="Horizontal"
+                                           ItemSpacing="25" Margin="0 10 0 0">
+
+                                    <Border>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6">
+                                            <TextBlock Text="FROM THE APPLICATION"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding ProcessPath}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+
+                                            <TextBlock Text="{TemplateBinding ProcessId}"
+                                                       FontWeight="Bold"
+                                                       FontFamily="Consolas"
+                                                       FontSize="14"
+                                                       Cursor="Hand"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Expander>
+                        
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemSpacing="25" Margin="0 10 0 0">
+
+                            <!-- TRACE -->
+                            <Border>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+                                    <TextBlock Text="TRANSACTION ID"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+
+                                    <TextBlock Text="{TemplateBinding TransactionId}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                        
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemSpacing="25" Margin="0 5 0 0">
+
+                            <!-- TRACE -->
+                            <Border>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+
+                                    <TextBlock Text="ISOLATION"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="{TemplateBinding IsolationLevel}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="|"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="CONSISTENCY"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="{TemplateBinding ConsistencyMode}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                        
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemSpacing="25">
+
+                            <!-- TRACE -->
+                            <Border>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="6">
+                                    
+                                    <TextBlock Text="LOCK MODE"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="{TemplateBinding LockMode}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="|"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="ACCESS MODE"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                    
+                                    <TextBlock Text="{TemplateBinding AccessMode}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="14"
+                                               Cursor="Hand"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                        
+                        <Expander Header="SQL STATEMENT" FontWeight="Bold" HorizontalAlignment="Stretch" Margin="0 20 0 0">
+                            <TextBlock Text="{TemplateBinding Sql}"/>
+                        </Expander>
+                        
+                        <Expander Header="SQL PARAMETERS" FontWeight="Bold" HorizontalAlignment="Stretch">
+                            <ItemsControl ItemsSource="{Binding Params, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SqlParam">
+                                        <Grid ColumnDefinitions="200,*">
+
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="Bold"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Value}"
+                                                       TextWrapping="Wrap"/>
+
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Expander>
+                        
+                    </StackPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>
