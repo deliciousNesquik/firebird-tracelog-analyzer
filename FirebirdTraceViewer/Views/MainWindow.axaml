@@ -318,7 +318,7 @@
             <!-- Фильтрация -->
             <Grid Grid.Column="1" Margin="0,5,10,0">
                 <StackPanel Orientation="Vertical" Spacing="15">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="100">
+                    <!--<ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="100">
                         <ItemsControl ItemsSource="{Binding FilterCardModels}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -331,14 +331,54 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                    </ScrollViewer>-->
+                    
+                    <!-- Фильтр типов событий -->
+                    <GroupBox Header="Тип события" Padding="10" Margin="0,0,0,10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="150">
+                            <ItemsControl ItemsSource="{Binding EventTypeFilterViewModel.EventTypeCheckBoxes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" Spacing="5" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox 
+                                            Content="{Binding DisplayName}"
+                                            IsChecked="{Binding IsSelected}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </GroupBox>
 
                     <StackPanel Orientation="Vertical" Spacing="5">
-                        <Button Content="Настроить фильтры" FontWeight="Bold" BorderBrush="Black" BorderThickness="1"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-                        <Button Content="Сбросить все фильтры" FontWeight="Bold" Background="Red" Foreground="White"
-                                BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" Command="{Binding ClearFilters}" />
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Button 
+                                Content="Выбрать все" 
+                                FontWeight="Bold"
+                                Command="{Binding EventTypeFilterViewModel.SelectAllEventTypesCommand}"
+                                HorizontalAlignment="Stretch" 
+                                HorizontalContentAlignment="Center"/>
+                            <Button 
+                                Content="Убрать все" 
+                                FontWeight="Bold"
+                                Command="{Binding EventTypeFilterViewModel.DeselectAllEventTypesCommand}"
+                                HorizontalAlignment="Stretch" 
+                                HorizontalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <Button 
+                            Content="Сбросить все фильтры" 
+                            FontWeight="Bold" 
+                            Background="Red" 
+                            Foreground="White"
+                            BorderBrush="Black" 
+                            BorderThickness="1" 
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center" 
+                            Command="{Binding ClearFilters}" />
                     </StackPanel>
 
                 </StackPanel>
@@ -346,7 +386,7 @@
         </Grid>
 
         <ListBox Grid.Row="3"
-                 ItemsSource="{Binding Events}"
+                 ItemsSource="{Binding FilteredEvents}"
                  Margin="10"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">

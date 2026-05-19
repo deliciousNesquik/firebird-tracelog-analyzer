@@ -11,6 +11,7 @@ using FirebirdTraceParser.Core.Parsing.Engine;
 using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
+using FirebirdTraceViewer.Models.Filters;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
@@ -21,6 +22,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private readonly IFileDialogService _fileDialogService;
     private readonly ITraceLogParser _parser;
+    
+    private readonly FilterManager _filterManager = new();
+    private EventTypeFilter _eventTypeFilter = new();
+    private UserNameFilter _userNameFilter = new();
+
+    [ObservableProperty]
+    public partial EventTypeFilterViewModel? EventTypeFilterViewModel { get; set; }
 
     // Хранит события по хешу файла для O(1) удаления группы событий
     // HashSet<EventBase> работает через record structural equality — 
@@ -32,6 +40,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ObservableCollection<FileCardViewModel> TraceFileInfos { get; } = [];
     public ObservableCollection<FilterCardModel> FilterCardModels { get; } = [];
+    
+    /// <summary>
+    /// Отфильтрованные события на основе всех активных фильтров.
+    /// Обновляется при изменении фильтров.
+    /// </summary>
+    public ObservableCollection<EventBase> FilteredEvents { get; } = [];
     public ObservableCollection<EventBase> Events { get; } = [];
     public StatisticsInfoSectionViewModel StatisticInfoModels { get; }
 
@@ -105,6 +119,9 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
     public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser)
     {
+        // Инициализируем фильтры
+        InitializeFilters();
+        
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
 
@@ -142,9 +159,69 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ClearFilters()
     {
-        FilterCardModels.Clear();
+        _filterManager.ResetAll();
+    
+        // Сбрасываем UI
+        if (EventTypeFilterViewModel != null)
+        {
+            foreach (var checkBox in EventTypeFilterViewModel.EventTypeCheckBoxes)
+                checkBox.IsSelected = false;
+        }
+
+        ApplyAllFilters();
         StatusMessage = "Все фильтры очищены.";
     }
+    
+    /// <summary>
+    /// Инициализирует все доступные фильтры.
+    /// Место, где добавляются новые фильтры в будущем.
+    /// </summary>
+    private void InitializeFilters()
+    {
+        // Регистрируем фильтр типов событий
+        _filterManager.RegisterFilter(_eventTypeFilter);
+        _filterManager.RegisterFilter(_userNameFilter);
+
+        // Создаём ViewModel для UI
+        EventTypeFilterViewModel = new EventTypeFilterViewModel(
+            _eventTypeFilter,
+            ApplyAllFilters // Callback при изменении
+        );
+
+        Logger.Info("Фильтры инициализированы");
+    }
+
+    /// <summary>
+    /// Применяет все активные фильтры к событиям.
+    /// Вызывается при изменении любого фильтра.
+    /// </summary>
+    private void ApplyAllFilters()
+    {
+        FilteredEvents.Clear();
+
+        // Фильтруем события через менеджер
+        foreach (var evt in Events)
+        {
+            if (_filterManager.IsEventVisible(evt))
+                FilteredEvents.Add(evt);
+        }
+
+        UpdateStatistics();
+        StatusMessage = $"Отфильтровано: {FilteredEvents.Count}/{Events.Count} событий";
+    }
+
+    /// <summary>
+    /// Добавляет новое событие и применяет фильтры.
+    /// Вызывается после парсинга файла.
+    /// </summary>
+    private void AddEventWithFiltering(EventBase evt)
+    {
+        Events.Add(evt);
+
+        if (_filterManager.IsEventVisible(evt))
+            FilteredEvents.Add(evt);
+    }
+    
 
     /// <summary>
     ///     Повторно парсит все загруженные файлы последовательно.
@@ -425,7 +502,7 @@ public partial class MainWindowViewModel : ViewModelBase
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             foreach (var evt in eventList)
-                Events.Add(evt);
+                AddEventWithFiltering(evt);
         });
 
         Logger.Info("Файл распарсен: {FileName}, событий: {Count}",
@@ -454,10 +531,19 @@ public partial class MainWindowViewModel : ViewModelBase
         // record EventBase использует structural equality — это корректно
         var eventsSet = eventsToRemove.ToHashSet();
 
-        // Удаляем с конца для минимизации сдвигов в коллекции
+        // Удаляем из обеих коллекций (исходной и отфильтрованной)
         for (var i = Events.Count - 1; i >= 0; i--)
+        {
             if (eventsSet.Contains(Events[i]))
                 Events.RemoveAt(i);
+        }
+
+        for (var i = FilteredEvents.Count - 1; i >= 0; i--)
+        {
+            if (eventsSet.Contains(FilteredEvents[i]))
+                FilteredEvents.RemoveAt(i);
+        }
+
 
         _eventsByFileHash.Remove(fileHash);
     }
@@ -554,9 +640,9 @@ public partial class MainWindowViewModel : ViewModelBase
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()),
             new StatisticInfoModel("Всего событий:", totalEvents.ToString("N0")),
-
-            // TODO: заменить на реальное количество после реализации фильтрации
-            new StatisticInfoModel("Отфильтрованных событий:", totalEvents.ToString("N0")),
+            new StatisticInfoModel(
+                "Отфильтрованных событий:", 
+                FilteredEvents.Count.ToString("N0")),
             new StatisticInfoModel("Время парсинга:", "0 сек")
         ]);
     }
