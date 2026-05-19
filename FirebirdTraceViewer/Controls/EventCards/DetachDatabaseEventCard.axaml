@@ -1,10 +1,10 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:event="using:FirebirdTraceViewer.Controls.EventCards">
+        xmlns:events="using:FirebirdTraceViewer.Controls.EventCards">
     <Design.PreviewWith>
         
         <Border Padding="20">
-            <event:DetachDatabaseEventCard 
+            <events:DetachDatabaseEventCard 
                 Width="900" 
                 DatabasePath="/interbas/reid_2022.gdb"
                 ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
@@ -18,7 +18,7 @@
         </Border>
     </Design.PreviewWith>
 
-    <Style Selector="event|DetachDatabaseEventCard">
+    <Style Selector="events|DetachDatabaseEventCard">
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>

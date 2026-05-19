@@ -1,11 +1,11 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:event="using:FirebirdTraceViewer.Controls.EventCards"
+        xmlns:events="using:FirebirdTraceViewer.Controls.EventCards"
         xmlns:controls="using:FirebirdTraceViewer.Controls"
         xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core">
     <Design.PreviewWith>
         <Border Padding="20">
-            <event:ProcedureFinishEventCard
+            <events:ProcedureFinishEventCard
                 Width="900"
                 Timestamp="2026 05 18 11:30:00"
                 TraceId="437236" HexTraceId="0x7f3133ba1dc0"
@@ -26,7 +26,7 @@
 
     </Design.PreviewWith>
 
-    <Style Selector="event|ProcedureFinishEventCard">
+    <Style Selector="events|ProcedureFinishEventCard">
 
         <Setter Property="Template">
 
