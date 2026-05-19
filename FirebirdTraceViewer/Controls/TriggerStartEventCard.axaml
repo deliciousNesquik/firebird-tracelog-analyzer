@@ -4,16 +4,19 @@
         xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core">
     <Design.PreviewWith>
         <Border Padding="20">
-            <controls:StatementStartEventCard
+            <controls:TriggerStartEventCard
                 Width="900"
                 Timestamp="2026 05 18 11:30:00"
-                TraceId="437236" HexTraceId="0x7f3133ba1dc0" StatementId="329549018"
+                TraceId="437236" HexTraceId="0x7f3133ba1dc0"
                 DatabasePath="/interbas/reid_2022.gdb"
                 ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
                 ProcessId="5432"
                 Charset="WIN1251"
                 User="BERDIN.A"
-                Sql="select * from rdb$database as rd where rd.int = 10"
+                TriggerName="KPK$SERVCHAINSHED_BU0"
+                Table="KPK$SERVCHAINSHED"
+                Timing="BEFORE"
+                Event="UPDATE"
                 TransactionId="13605966"
                 IsolationLevel="READ_COMMITTED"
                 ConsistencyMode="READ_CONSISTENCY"
@@ -25,7 +28,7 @@
 
     </Design.PreviewWith>
 
-    <Style Selector="controls|StatementStartEventCard">
+    <Style Selector="controls|TriggerStartEventCard">
 
         <Setter Property="Template">
 
@@ -40,11 +43,11 @@
 
                             <!-- EVENT TYPE -->
                             <Border Grid.Column="0"
-                                    Background="#EF6C00"
+                                    Background="#7B1FA2"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 
-                                <TextBlock Text="STATEMENT START"
+                                <TextBlock Text="TRIGGER START"
                                            Foreground="White"
                                            FontWeight="Bold"
                                            FontSize="16" />
@@ -62,7 +65,7 @@
                         </Grid>
                         
                         <Border>
-                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
+                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto"
                                   ColumnSpacing="30">
                                 <StackPanel Grid.Column="0" Spacing="4">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -92,23 +95,8 @@
                                                Cursor="Hand"
                                                FontFamily="Consolas" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2"
-                                            Spacing="4">
-                                    
-                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                        <TextBlock Text="STATEMENT ID"
-                                                   FontSize="11"
-                                                   Foreground="#777" />
-                                        <controls:InfoTip
-                                            Text="Identifies a single SQL statement execution inside a transaction. Multiple statements can belong to one transaction."/>
-                                    </StackPanel>
-                                    
-                                    <TextBlock Text="{TemplateBinding StatementId}"
-                                               Cursor="Hand"
-                                               FontFamily="Consolas" />
-                                </StackPanel>
                                 
-                                <StackPanel Grid.Column="3"
+                                <StackPanel Grid.Column="2"
                                             Spacing="4">
                                     
                                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -124,7 +112,7 @@
                                                FontFamily="Consolas" />
                                 </StackPanel>
                                 
-                                <StackPanel Grid.Column="4"
+                                <StackPanel Grid.Column="3"
                                             Spacing="4">
                                     
                                     <StackPanel Orientation="Horizontal" Spacing="5">
@@ -168,33 +156,44 @@
                         
                         <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
                             <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Row="0" Grid.RowSpan="2"
-                                           Grid.Column="0" Grid.ColumnSpan="2"
-                                           Cursor="Hand" FontWeight="Bold"
-                                           FontFamily="Consolas"
-                                           Text="{TemplateBinding Sql}"
-                                           TextWrapping="Wrap"/>
+                                
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+
+                                    <TextBlock Text="Trigger"
+                                               FontFamily="Consolas"
+                                               FontWeight="Medium"/>
+
+                                    <TextBlock Text="{TemplateBinding TriggerName}"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas"
+                                               FontWeight="Bold"/>
+
+                                    <TextBlock Text="FOR" FontFamily="Consolas"
+                                               FontWeight="Medium"/>
+
+                                    <TextBlock Text="{TemplateBinding Table}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"/>
+
+                                    <TextBlock Text="(" FontFamily="Consolas"
+                                               FontWeight="Medium"/>
+
+                                    <TextBlock Text="{TemplateBinding Timing}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"/>
+
+                                    <TextBlock Text="{TemplateBinding Event}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"/>
+
+                                    <TextBlock Text="):" FontFamily="Consolas"
+                                               FontWeight="Medium"/>
+
+                                </StackPanel>
                                 
                                 <Button Width="20" Height="20" Grid.Row="0" Grid.Column="1"/>
                             </Grid>
                         </Border>
-                        
-                        <ItemsControl ItemsSource="{Binding Params, RelativeSource={RelativeSource TemplatedParent}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:SqlParam">
-                                    <Grid ColumnDefinitions="200,*">
-
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontWeight="Bold"/>
-
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Value}"
-                                                   TextWrapping="Wrap"/>
-
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
                         
                     </StackPanel>
                 </Border>

@@ -126,116 +126,52 @@
                 MarkCount="{Binding Performance.MarkCount}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- PROCEDURE START -->
-        <!-- ========================================================= -->
-
+        
         <DataTemplate DataType="local:ProcedureStartEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#2E7D32"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="PROCEDURE START"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <TextBlock Grid.Column="1"
-                                   Margin="12,0,0,0"
-                                   Text="{Binding ProcedureName}"
-                                   FontWeight="SemiBold"/>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <TextBlock Text="{Binding Attachment.User}"/>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:ProcedureStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Params}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- PROCEDURE FINISH -->
-        <!-- ========================================================= -->
-
         <DataTemplate DataType="local:ProcedureFinishEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#43A047"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="PROCEDURE FINISH"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <TextBlock Grid.Column="1"
-                                   Margin="12,0,0,0"
-                                   Text="{Binding ProcedureName}"
-                                   FontWeight="SemiBold"/>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="*,*,*">
-
-                        <StackPanel>
-                            <TextBlock Text="Elapsed"/>
-                            <TextBlock Text="{Binding Performance.ExecuteMs}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Reads"/>
-                            <TextBlock Text="{Binding Performance.ReadCount}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Writes"/>
-                            <TextBlock Text="{Binding Performance.WriteCount}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                    </Grid>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:ProcedureFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Params}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}"/>
         </DataTemplate>
 
 
@@ -245,161 +181,54 @@
         <!-- ========================================================= -->
 
         <DataTemplate DataType="local:TriggerStartEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#7B1FA2"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="TRIGGER START"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <TextBlock Grid.Column="1"
-                                   Margin="12,0,0,0"
-                                   Text="{Binding TriggerName}"
-                                   FontWeight="SemiBold"/>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="140,*"
-                          RowDefinitions="Auto,Auto,Auto">
-
-                        <TextBlock Text="Table:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Table}"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Text="Timing:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="{Binding Timing}"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="Event:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Grid.Column="1"
-                                   Text="{Binding Event}"/>
-
-                    </Grid>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:TriggerStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- TRIGGER FINISH -->
-        <!-- ========================================================= -->
-
         <DataTemplate DataType="local:TriggerFinishEvent">
-
-            <Border Margin="0,0,0,8"
-                    Padding="12"
-                    CornerRadius="8"
-                    BorderThickness="1">
-
-                <StackPanel Spacing="10">
-
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-
-                        <Border Background="#8E24AA"
-                                CornerRadius="4"
-                                Padding="10,4">
-
-                            <TextBlock Text="TRIGGER FINISH"
-                                       Foreground="White"
-                                       FontWeight="Bold"/>
-
-                        </Border>
-
-                        <TextBlock Grid.Column="1"
-                                   Margin="12,0,0,0"
-                                   Text="{Binding TriggerName}"
-                                   FontWeight="SemiBold"/>
-
-                        <TextBlock Grid.Column="2"
-                                   Text="{Binding Timestamp}"
-                                   Foreground="#A0A0A0"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="140,*"
-                          RowDefinitions="Auto,Auto,Auto">
-
-                        <TextBlock Text="Table:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Table}"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Text="Timing:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="{Binding Timing}"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="Event:"
-                                   FontWeight="Bold"/>
-
-                        <TextBlock Grid.Row="2"
-                                   Grid.Column="1"
-                                   Text="{Binding Event}"/>
-
-                    </Grid>
-
-                    <Grid ColumnDefinitions="*,*,*">
-
-                        <StackPanel>
-                            <TextBlock Text="Elapsed"/>
-                            <TextBlock Text="{Binding Performance.ExecuteMs}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Reads"/>
-                            <TextBlock Text="{Binding Performance.ReadCount}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Writes"/>
-                            <TextBlock Text="{Binding Performance.WriteCount}"
-                                       FontWeight="Bold"/>
-                        </StackPanel>
-
-                    </Grid>
-
-                </StackPanel>
-
-            </Border>
-
+            <controls:TriggerFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}"/>
         </DataTemplate>
 
     </Window.DataTemplates>

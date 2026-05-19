@@ -76,5 +76,25 @@
         <DependentUpon>StatementFinishEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\ProcedureStartEventCard.axaml.cs">
+        <DependentUpon>ProcedureStartEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\ProcedureFinishEventCard.axaml.cs">
+        <DependentUpon>ProcedureFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\TriggerStartEventCard.axaml.cs">
+        <DependentUpon>TriggerStartEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\TriggerFinishEventCard.axaml.cs">
+        <DependentUpon>TriggerFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Styles\" />
     </ItemGroup>
 </Project>
