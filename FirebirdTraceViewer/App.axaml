@@ -15,16 +15,16 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FilterCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FileCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FocusTextBlock.axaml" />
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TraceInitEventCard.axaml" />
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TraceFiniEventCard.axaml" />
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/AttachDatabaseEventCard.axaml" />
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/DetachDatabaseEventCard.axaml" />
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/StatementStartEventCard.axaml"/>
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/StatementFinishEventCard.axaml"/>
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/ProcedureStartEventCard.axaml"/>
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/ProcedureFinishEventCard.axaml"/>
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TriggerStartEventCard.axaml"/>
-        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/TriggerFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TraceInitEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TraceFiniEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/AttachDatabaseEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/DetachDatabaseEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ProcedureStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ProcedureFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/InfoTip.axaml"/>
         
         <Style Selector="ListBoxItem">

@@ -3,22 +3,22 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using FirebirdTraceParser.Core.Models.Enums;
 
-namespace FirebirdTraceViewer.Controls;
+namespace FirebirdTraceViewer.Controls.EventCards;
 
-public class TraceInitEventCard : TemplatedControl
+public class TraceFiniEventCard : TemplatedControl
 {
     
     public static readonly StyledProperty<DateTime> TimestampProperty =
-        AvaloniaProperty.Register<TraceInitEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
+        AvaloniaProperty.Register<TraceFiniEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
     
     public static readonly StyledProperty<int> TraceIdProperty =
-        AvaloniaProperty.Register<TraceInitEventCard, int>(nameof(TraceId), 0);
+        AvaloniaProperty.Register<TraceFiniEventCard, int>(nameof(TraceId), 0);
     
     public static readonly StyledProperty<string> HexTraceIdProperty =
-        AvaloniaProperty.Register<TraceInitEventCard, string>(nameof(HexTraceId), "0");
+        AvaloniaProperty.Register<TraceFiniEventCard, string>(nameof(HexTraceId), "0");
     
     public static readonly StyledProperty<int> SessionIdProperty =
-        AvaloniaProperty.Register<TraceInitEventCard, int>(nameof(SessionId), 0);
+        AvaloniaProperty.Register<TraceFiniEventCard, int>(nameof(SessionId), 0);
     
     public DateTime Timestamp
     {

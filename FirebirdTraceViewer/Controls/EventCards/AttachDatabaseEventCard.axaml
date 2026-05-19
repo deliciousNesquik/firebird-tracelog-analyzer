@@ -1,10 +1,10 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:FirebirdTraceViewer.Controls">
+        xmlns:event="using:FirebirdTraceViewer.Controls.EventCards">
     <Design.PreviewWith>
         
         <Border Padding="20">
-            <controls:DetachDatabaseEventCard 
+            <event:AttachDatabaseEventCard 
                 Width="900" 
                 DatabasePath="/interbas/reid_2022.gdb"
                 ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
@@ -18,24 +18,27 @@
         </Border>
     </Design.PreviewWith>
 
-    <Style Selector="controls|DetachDatabaseEventCard">
-        <!-- Set Defaults -->
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border BorderThickness="1" Padding="10" BorderBrush="Black">
+
+<Style Selector="event|AttachDatabaseEventCard">
+
+    <Setter Property="Template">
+
+        <ControlTemplate>
+
+            <Border BorderThickness="1" Padding="10" BorderBrush="Black">
 
                 <StackPanel Spacing="18">
                     <Grid ColumnDefinitions="Auto * Auto">
                         
                         <Border Grid.Column="0"
-                                Background="#455A64"
+                                Background="#1565C0"
                                 CornerRadius="5"
                                 Padding="16, 8, 16, 12">
 
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8">
 
-                                <TextBlock Text="DETACH DATABASE"
+                                <TextBlock Text="ATTACH DATABASE"
                                            FontWeight="Bold"
                                            FontSize="15"
                                            Foreground="White"/>
@@ -188,7 +191,11 @@
                 </StackPanel>
 
             </Border>
-            </ControlTemplate>
-        </Setter>
-    </Style>
+
+        </ControlTemplate>
+
+    </Setter>
+
+</Style>
+
 </Styles>

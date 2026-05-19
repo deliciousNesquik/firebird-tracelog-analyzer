@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
+        xmlns:events="clr-namespace:FirebirdTraceViewer.Controls.EventCards"
         xmlns:local="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="1000"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
@@ -20,7 +21,7 @@
     <Window.DataTemplates>
 
         <DataTemplate DataType="local:TraceInitEvent">
-            <controls:TraceInitEventCard 
+            <events:TraceInitEventCard 
                 Timestamp="{Binding Timestamp}" 
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -28,22 +29,16 @@
         </DataTemplate>
 
         <DataTemplate DataType="local:TraceFinishEvent">
-            <controls:TraceFiniEventCard
+            <events:TraceFiniEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
                 SessionId="{Binding Session.SessionId}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- ATTACH DATABASE -->
-        <!-- ========================================================= -->
-
         <DataTemplate DataType="local:AttachDatabaseEvent">
 
-            <controls:AttachDatabaseEventCard
+            <events:AttachDatabaseEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -58,7 +53,7 @@
         
 
         <DataTemplate DataType="local:DetachDatabaseEvent">
-            <controls:DetachDatabaseEventCard
+            <events:DetachDatabaseEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -71,14 +66,8 @@
                 AttachmentId="{Binding Attachment.AttachmentId}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- STATEMENT START -->
-        <!-- ========================================================= -->
-
         <DataTemplate DataType="local:StatementStartEvent">
-            <controls:StatementStartEventCard
+            <events:StatementStartEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -100,7 +89,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="local:StatementFinishEvent">
-            <controls:StatementFinishEventCard
+            <events:StatementFinishEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -128,7 +117,7 @@
 
         
         <DataTemplate DataType="local:ProcedureStartEvent">
-            <controls:ProcedureStartEventCard
+            <events:ProcedureStartEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -149,7 +138,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="local:ProcedureFinishEvent">
-            <controls:ProcedureFinishEventCard
+            <events:ProcedureFinishEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -174,14 +163,8 @@
                 MarkCount="{Binding Performance.MarkCount}"/>
         </DataTemplate>
 
-
-
-        <!-- ========================================================= -->
-        <!-- TRIGGER START -->
-        <!-- ========================================================= -->
-
         <DataTemplate DataType="local:TriggerStartEvent">
-            <controls:TriggerStartEventCard
+            <events:TriggerStartEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
@@ -204,7 +187,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="local:TriggerFinishEvent">
-            <controls:TriggerFinishEventCard
+            <events:TriggerFinishEventCard
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"

@@ -60,36 +60,44 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Controls\TraceFiniEventCard.axaml.cs">
-        <DependentUpon>TraceFiniEventCard.axaml</DependentUpon>
+      <Compile Update="Controls\EventCards\AttachDatabaseEventCard.axaml.cs">
+        <DependentUpon>AttachDatabaseEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\DetachDatabaseEventCard.axaml.cs">
+      <Compile Update="Controls\EventCards\DetachDatabaseEventCard.axaml.cs">
         <DependentUpon>DetachDatabaseEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\StatementStartEventCard.axaml.cs">
-        <DependentUpon>StatementStartEventCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\StatementFinishEventCard.axaml.cs">
-        <DependentUpon>StatementFinishEventCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\ProcedureStartEventCard.axaml.cs">
-        <DependentUpon>ProcedureStartEventCard.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Controls\ProcedureFinishEventCard.axaml.cs">
+      <Compile Update="Controls\EventCards\ProcedureFinishEventCard.axaml.cs">
         <DependentUpon>ProcedureFinishEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\TriggerStartEventCard.axaml.cs">
-        <DependentUpon>TriggerStartEventCard.axaml</DependentUpon>
+      <Compile Update="Controls\EventCards\ProcedureStartEventCard.axaml.cs">
+        <DependentUpon>ProcedureStartEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\TriggerFinishEventCard.axaml.cs">
+      <Compile Update="Controls\EventCards\StatementFinishEventCard.axaml.cs">
+        <DependentUpon>StatementFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventCards\StatementStartEventCard.axaml.cs">
+        <DependentUpon>StatementStartEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventCards\TraceFiniEventCard.axaml.cs">
+        <DependentUpon>TraceFiniEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventCards\TraceInitEventCard.axaml.cs">
+        <DependentUpon>TraceInitEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventCards\TriggerFinishEventCard.axaml.cs">
         <DependentUpon>TriggerFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventCards\TriggerStartEventCard.axaml.cs">
+        <DependentUpon>TriggerStartEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

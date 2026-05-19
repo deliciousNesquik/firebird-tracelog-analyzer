@@ -4,85 +4,73 @@ using Avalonia.Controls.Primitives;
 using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 
-namespace FirebirdTraceViewer.Controls;
+namespace FirebirdTraceViewer.Controls.EventCards;
 
-public class ProcedureFinishEventCard : TemplatedControl
+public class StatementStartEventCard : TemplatedControl
 {
     
     public static readonly StyledProperty<DateTime> TimestampProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
+        AvaloniaProperty.Register<StatementStartEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
     
     public static readonly StyledProperty<int> TraceIdProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(TraceId), 0);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(TraceId), 0);
     
     public static readonly StyledProperty<string> HexTraceIdProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(HexTraceId), "0");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(HexTraceId), "0");
+    
+    public static readonly StyledProperty<int> StatementIdProperty =
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(StatementId), 0);
     
     public static readonly StyledProperty<string> DatabasePathProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(DatabasePath), "database_path");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(DatabasePath), "database_path");
     
     public static readonly StyledProperty<string> UserProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(User), "user_name");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(User), "user_name");
     
     public static readonly StyledProperty<string> RoleProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(Role), "role_name");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Role), "role_name");
     
     public static readonly StyledProperty<int> AttachmentIdProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(AttachmentId), 0);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(AttachmentId), 0);
     
     public static readonly StyledProperty<string> ProtocolProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(Protocol), "TCPv4");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Protocol), "TCPv4");
     
     public static readonly StyledProperty<string> AddressProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(Address), "192.168.3.5");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Address), "192.168.3.5");
     
     public static readonly StyledProperty<int> PortProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(Port), 3050);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(Port), 3050);
     
     public static readonly StyledProperty<string> CharsetProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(Charset), "WIN1251");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Charset), "WIN1251");
     
     public static readonly StyledProperty<string> ProcessPathProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
     
     public static readonly StyledProperty<int> ProcessIdProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(ProcessId), 12341);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(ProcessId), 12341);
     
     public static readonly StyledProperty<int> TransactionIdProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(TransactionId), 12341);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(TransactionId), 12341);
     
     public static readonly StyledProperty<string> IsolationLevelProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(IsolationLevel), "READ_COMMITTED");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(IsolationLevel), "READ_COMMITTED");
     
     public static readonly StyledProperty<string> ConsistencyModeProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(ConsistencyMode), "READ_CONSISTENCY");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ConsistencyMode), "READ_CONSISTENCY");
     
     public static readonly StyledProperty<string> LockModeProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(LockMode), "NOWAIT");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(LockMode), "NOWAIT");
     
     public static readonly StyledProperty<string> AccessModeProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(AccessMode), "READ_ONLY");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(AccessMode), "READ_ONLY");
     
-    public static readonly StyledProperty<string> ProcedureNameProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(ProcedureName), "SET_DOCPAY_AUTO_TORG2_NEW");
+    public static readonly StyledProperty<string> SqlProperty =
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Sql), "select * from rdb$database as rd where rd.int = 10");
     
     public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, IReadOnlyList<SqlParam>>(nameof(Params), new List<SqlParam>());
-    
-    public static readonly StyledProperty<int> ExecuteMsProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(ExecuteMs), 0);
-    
-    public static readonly StyledProperty<int> FetchCountProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(FetchCount), 0);
-    
-    public static readonly StyledProperty<int> ReadCountProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(ReadCount), 0);
-    
-    public static readonly StyledProperty<int> WriteCountProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(WriteCount), 0);
-    
-    public static readonly StyledProperty<int> MarkCountProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(MarkCount), 0);
+        AvaloniaProperty.Register<StatementStartEventCard, IReadOnlyList<SqlParam>>(nameof(Params), new List<SqlParam>());
     
     public DateTime Timestamp
     {
@@ -100,6 +88,12 @@ public class ProcedureFinishEventCard : TemplatedControl
     {
         get => GetValue(HexTraceIdProperty);
         set => SetValue(HexTraceIdProperty, value);
+    }
+    
+    public int StatementId
+    {
+        get => GetValue(StatementIdProperty);
+        set => SetValue(StatementIdProperty, value);
     }
     
     public string DatabasePath
@@ -192,46 +186,16 @@ public class ProcedureFinishEventCard : TemplatedControl
         set => SetValue(AccessModeProperty, value);
     }
     
-    public string ProcedureName
+    public string Sql
     {
-        get => GetValue(ProcedureNameProperty);
-        set => SetValue(ProcedureNameProperty, value);
+        get => GetValue(SqlProperty);
+        set => SetValue(SqlProperty, value);
     }
     
     public IReadOnlyList<SqlParam> Params
     {
         get => GetValue(ParamsProperty);
         set => SetValue(ParamsProperty, value);
-    }
-    
-    public int ExecuteMs
-    {
-        get => GetValue(ExecuteMsProperty);
-        set => SetValue(ExecuteMsProperty, value);
-    }
-    
-    public int FetchCount
-    {
-        get => GetValue(FetchCountProperty);
-        set => SetValue(FetchCountProperty, value);
-    }
-    
-    public int ReadCount
-    {
-        get => GetValue(ReadCountProperty);
-        set => SetValue(ReadCountProperty, value);
-    }
-    
-    public int WriteCount
-    {
-        get => GetValue(WriteCountProperty);
-        set => SetValue(WriteCountProperty, value);
-    }
-    
-    public int MarkCount
-    {
-        get => GetValue(MarkCountProperty);
-        set => SetValue(MarkCountProperty, value);
     }
     
 }

@@ -1,10 +1,11 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:FirebirdTraceViewer.Controls"
+        xmlns:event="using:FirebirdTraceViewer.Controls.EventCards"
         xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core">
     <Design.PreviewWith>
         <Border Padding="20">
-            <controls:TriggerStartEventCard
+            <event:TriggerStartEventCard
                 Width="900"
                 Timestamp="2026 05 18 11:30:00"
                 TraceId="437236" HexTraceId="0x7f3133ba1dc0"
@@ -28,7 +29,7 @@
 
     </Design.PreviewWith>
 
-    <Style Selector="controls|TriggerStartEventCard">
+    <Style Selector="event|TriggerStartEventCard">
 
         <Setter Property="Template">
 

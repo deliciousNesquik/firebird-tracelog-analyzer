@@ -2,7 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 
-namespace FirebirdTraceViewer.Controls;
+namespace FirebirdTraceViewer.Controls.EventCards;
 
 public class DetachDatabaseEventCard : TemplatedControl
 {

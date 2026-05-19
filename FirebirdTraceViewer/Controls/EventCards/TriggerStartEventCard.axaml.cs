@@ -4,7 +4,7 @@ using Avalonia.Controls.Primitives;
 using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 
-namespace FirebirdTraceViewer.Controls;
+namespace FirebirdTraceViewer.Controls.EventCards;
 
 public class TriggerStartEventCard : TemplatedControl
 {
