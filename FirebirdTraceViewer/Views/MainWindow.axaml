@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
+        xmlns:usercontrols="clr-namespace:FirebirdTraceViewer.UserControls"
         xmlns:events="clr-namespace:FirebirdTraceViewer.Controls.EventCards"
         xmlns:local="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="1000"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -222,10 +223,14 @@
             <MenuItem Header="Открыть">
                 <MenuItem Header="Открыть локальный файл" Command="{Binding OpenLocalFileCommand}" />
                 <MenuItem Header="Открыть удалённый файл" IsEnabled="False" />
+                <MenuItem Header="Отменить загрузку"
+                          Command="{Binding CancelLoadingCommand}" />
             </MenuItem>
             <MenuItem Header="Редактировать">
-                <MenuItem Header="Заново обработать все файлы" />
-                <MenuItem Header="Заново обработать выделенные файлы" />
+                <MenuItem Header="Заново обработать все файлы"
+                          Command="{Binding ReparseAllFilesCommand}" />
+                <MenuItem Header="Заново обработать выделенные файлы"
+                          Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
             <MenuItem Header="Окна и панели">
                 <MenuItem Header="Панель файлов" ToggleType="CheckBox" StaysOpenOnClick="True" />
@@ -247,7 +252,7 @@
         <ListBox
             Grid.Row="1"
             SelectionMode="Multiple"
-
+            SelectedItems="{Binding SelectedFileCards}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ItemsSource="{Binding TraceFileInfos}">
 
@@ -330,8 +335,7 @@
 
                     <StackPanel Orientation="Vertical" Spacing="5">
                         <Button Content="Настроить фильтры" FontWeight="Bold" BorderBrush="Black" BorderThickness="1"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                                Command="{Binding AddFilter}" />
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
                         <Button Content="Сбросить все фильтры" FontWeight="Bold" Background="Red" Foreground="White"
                                 BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" Command="{Binding ClearFilters}" />
@@ -355,18 +359,7 @@
 
         </ListBox>
 
-        <ItemsControl Grid.Row="4" Margin="10,5,10,10" ItemsSource="{Binding StatisticInfoModels}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Horizontal" ItemSpacing="20" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <controls:FocusTextBlock Header="{Binding Header}" Value="{Binding Value}" />
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <usercontrols:StatisticInfoSection Grid.Row="4" Margin="10 0 0 0" DataContext="{Binding StatisticInfoModels}"/>
 
         <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5" />
     </Grid>
