@@ -568,18 +568,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanOpenFile))]
     private async Task OpenLocalFileAsync(CancellationToken cancellationToken)
     {
-        // Создаём связанный CTS: отмена через кнопку ИЛИ через cancellationToken фреймворка
-        _loadingCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var token = _loadingCts.Token;
-
         // Блокируем повторный вызов
         IsFileLoading = true;
         OpenLocalFileCommand.NotifyCanExecuteChanged();
 
         IReadOnlyList<IStorageFile>? files = null;
 
+        CancellationTokenSource? cts = null;
         try
         {
+            // Создаём связанный CTS: отмена через кнопку ИЛИ через cancellationToken фреймворка
+            cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _loadingCts = cts;
+            
+            var token = _loadingCts.Token;
+            
             files = await _fileDialogService.OpenTraceFilesAsync();
 
             if (files == null || files.Count == 0)
@@ -592,7 +595,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Загрузка отменена.";
+            StatusMessage = "Загрузка файлов отменена.";
             Logger.Info("Загрузка файлов отменена пользователем");
         }
         catch (Exception ex)
@@ -602,10 +605,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         finally
         {
+            if (cts != null)
+            {
+                _loadingCts = null;
+                cts.Dispose();
+            }
+            
             IsFileLoading = false;
             LoadProgress = 0;
-            _loadingCts.Dispose();
-            _loadingCts = null;
 
             // Разблокируем кнопку
             OpenLocalFileCommand.NotifyCanExecuteChanged();
@@ -723,8 +730,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Logger.Info("Файл распарсен: {FileName}, событий: {Count}",
             fileInfo.Name, eventList.Count);
-
-        ApplyAllFilters();
 
         return new TraceFileInfoModel(
             fileInfo.Name,
@@ -858,8 +863,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new StatisticInfoModel("Всего событий:", totalEvents.ToString("N0")),
             new StatisticInfoModel(
                 "Отфильтрованных событий:",
-                FilteredEvents.Count.ToString("N0")),
-            new StatisticInfoModel("Время парсинга:", "0 сек")
+                FilteredEvents.Count.ToString("N0"))
         ]);
     }
 
