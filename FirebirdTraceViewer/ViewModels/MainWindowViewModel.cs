@@ -85,6 +85,12 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial bool IsClassicSearch { get; set; }
 
     [ObservableProperty] public partial bool IsTraceFilesSectionVisible { get; set; }
+    [ObservableProperty] public partial bool IsSearchSectionVisible { get; set; }
+    [ObservableProperty] public partial bool IsEventsSectionVisible { get; set; }
+    [ObservableProperty] public partial bool IsStatisticsSectionVisible { get; set; }
+    [ObservableProperty] public partial bool IsLogsSectionVisible { get; set; }
+    
+    
 
     [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
 
@@ -136,6 +142,7 @@ public partial class MainWindowViewModel : ViewModelBase
         
         StatusMessage = "Готово (Design Time).";
         IsClassicSearch = true;
+        GoToFactorySettingsSection();
     }
 
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
@@ -173,6 +180,7 @@ public partial class MainWindowViewModel : ViewModelBase
         
         CurrentSearchType = SearchType.Classic;
         IsClassicSearch = true;
+        GoToFactorySettingsSection();
         StatusMessage = "Готов к работе!";
 
         Logger.Info("MainWindowViewModel инициализирован");
@@ -357,6 +365,39 @@ public partial class MainWindowViewModel : ViewModelBase
         IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
     }
 
+    [RelayCommand]
+    private void SwitchVisibleSearchSection()
+    {
+        IsSearchSectionVisible = !IsSearchSectionVisible;
+    }
+
+    [RelayCommand]
+    private void SwitchEventsSectionVisible()
+    {
+        IsEventsSectionVisible = !IsEventsSectionVisible;
+    }
+    
+    [RelayCommand]
+    private void SwitchStatisticsSectionVisible()
+    {
+        IsStatisticsSectionVisible = !IsStatisticsSectionVisible;
+    }
+    
+    [RelayCommand]
+    private void SwitchLogsSectionVisible()
+    {
+        IsLogsSectionVisible = !IsLogsSectionVisible;
+    }
+
+    [RelayCommand]
+    private void GoToFactorySettingsSection()
+    {
+        IsTraceFilesSectionVisible = true;
+        IsSearchSectionVisible = true;
+        IsEventsSectionVisible = true;
+        IsStatisticsSectionVisible = true;
+        IsLogsSectionVisible = false;
+    }
 
 
     [RelayCommand]

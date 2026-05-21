@@ -233,15 +233,43 @@
                           Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
             <MenuItem Header="Окна и панели">
-                <MenuItem Header="Панель файлов" Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
-                          IsSelected="True" ToggleType="CheckBox" StaysOpenOnClick="True" />
-
-                <MenuItem Header="Панель поиска" ToggleType="CheckBox" StaysOpenOnClick="True" />
-                <MenuItem Header="Панель фильтров" ToggleType="CheckBox" StaysOpenOnClick="True" />
-                <MenuItem Header="Основная панель событий" ToggleType="CheckBox" StaysOpenOnClick="True" />
-                <MenuItem Header="Панель общей информации" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem 
+                    Header="Панель файлов" 
+                    Command="{Binding SwitchVisibleTraceFilesSectionCommand}" 
+                    ToggleType="CheckBox" 
+                    IsChecked="{Binding IsTraceFilesSectionVisible}"
+                    StaysOpenOnClick="True" />
+                
+                <MenuItem 
+                    Header="Панель поиска сортировки и фильтров" 
+                    Command="{Binding SwitchVisibleSearchSectionCommand}" 
+                    ToggleType="CheckBox"
+                    IsChecked="{Binding IsSearchSectionVisible}"
+                    StaysOpenOnClick="True" />
+                
+                <MenuItem 
+                    Header="Основная панель событий" 
+                    IsChecked="{Binding IsEventsSectionVisible}" 
+                    Command="{Binding SwitchEventsSectionVisibleCommand}"
+                    ToggleType="CheckBox" 
+                    StaysOpenOnClick="True" />
+                
+                <MenuItem 
+                    Header="Панель общей информации" 
+                    IsChecked="{Binding IsStatisticsSectionVisible}"
+                    Command="{Binding SwitchStatisticsSectionVisibleCommand}"
+                    ToggleType="CheckBox" 
+                    StaysOpenOnClick="True" />
+                
+                <MenuItem 
+                    Header="Панель состояния" 
+                    IsChecked="{Binding IsLogsSectionVisible}"
+                    Command="{Binding SwitchLogsSectionVisibleCommand}"
+                    ToggleType="CheckBox" 
+                    StaysOpenOnClick="True" />
+                
                 <Separator />
-                <MenuItem Header="Сбросить расположение" />
+                <MenuItem Header="Сбросить расположение" Command="{Binding GoToFactorySettingsSectionCommand}" />
             </MenuItem>
 
             <MenuItem Header="Настройки">
@@ -278,7 +306,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Grid.Row="2"
+        <Border Grid.Row="2" IsVisible="{Binding IsSearchSectionVisible}"
                 Padding="10">
 
             <!--Поисковая строка с иконкой и кнопкой поиска-->
@@ -409,6 +437,7 @@
 
         <ListBox Grid.Row="3"
                  ItemsSource="{Binding FilteredEvents}"
+                 IsVisible="{Binding IsEventsSectionVisible}"
                  Margin="10"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">
@@ -421,9 +450,13 @@
 
         </ListBox>
 
-        <usercontrols:StatisticInfoSection Grid.Row="4" Margin="10 0 0 0" DataContext="{Binding StatisticInfoModels}" />
-
-        <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5" />
+        <usercontrols:StatisticInfoSection
+            Grid.Row="4"
+            Margin="10 0 0 0"
+            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStatisticsSectionVisible}"
+            DataContext="{Binding StatisticInfoModels}" />
+        
+        <TextBlock Grid.Row="5" IsVisible="{Binding IsLogsSectionVisible}" Text="{Binding StatusMessage}" Padding="10 0 0 5" />
     </Grid>
 
 
