@@ -12,6 +12,7 @@ using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Models.Filters;
+using FirebirdTraceViewer.Services.Sorting;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
@@ -20,9 +21,27 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    // Сервис для открытия файлов через стандартный проводник.
     private readonly IFileDialogService _fileDialogService;
+    
+    // Сервис парсера для обработки потока данных файла.
     private readonly ITraceLogParser _parser;
     
+    private readonly ISortingService _sortingService;
+    public ObservableCollection<SortDescriptor> AvailableSorts { get; } = [];
+    
+    [ObservableProperty]
+    private SortDescriptor? _selectedSort;
+    
+    [ObservableProperty]
+    private bool _isSortDescending;
+    
+    /// <summary>
+    /// Сортировки, сгруппированные по категориям
+    /// </summary>
+    public ObservableCollection<IGrouping<string, SortDescriptor>> AvailableSortsByCategory { get; } = [];
+    
+    // Менеджер фильтров
     private readonly FilterManager _filterManager = new();
     private EventTypeFilter _eventTypeFilter = new();
     private UserNameFilter _userNameFilter = new();
@@ -65,6 +84,8 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsClassicSearch { get; set; }
 
+    [ObservableProperty] public partial bool IsTraceFilesSectionVisible { get; set; }
+
     [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
 
     [ObservableProperty] public partial bool IsFileLoading { get; set; }
@@ -76,6 +97,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _parser = null!;
         _fileDialogService = null!;
+        _sortingService = null!;
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
 
         TraceFileInfos.Add(CreateFileCardViewModel(
@@ -111,33 +133,206 @@ public partial class MainWindowViewModel : ViewModelBase
             TraceId = 437_236,
             HexTraceId = "0x7f3133ba1dc0"
         });
-
+        
         StatusMessage = "Готово (Design Time).";
         IsClassicSearch = true;
     }
 
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
-    public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser)
+    public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser, ISortingService sortingService)
     {
         // Инициализируем фильтры
         InitializeFilters();
         
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+        _sortingService = sortingService;
 
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
 
         // Начальные фильтры — в реальном проекте загружаются из настроек
-        FilterCardModels.Add(new FilterCardModel("Пользователь", "BERDIN.A"));
-        FilterCardModels.Add(new FilterCardModel("Адрес подключения", "10.0.1.102"));
-
+        //FilterCardModels.Add(new FilterCardModel("Пользователь", "BERDIN.A"));
+        //FilterCardModels.Add(new FilterCardModel("Адрес подключения", "10.0.1.102"));
+        
+        // Регистрируем пользовательскую сортировку
+        _sortingService.RegisterCustomSort(new SortDescriptor(
+            id: "custom_user_activity",
+            displayName: "По активности пользователя",
+            comparer: CustomUserActivityComparer,
+            category: "Аналитика",
+            priority: 50));
+        
+        _sortingService.RegisterCustomSort(new SortDescriptor(
+            id: "heavy_queries",
+            displayName: "Тяжёлые запросы (ExecuteMs > 1000)",
+            comparer: HeavyQueriesComparer,
+            category: "Аналитика",
+            priority: 2));
+        
+        UpdateAvailableSorts();
+        
         CurrentSearchType = SearchType.Classic;
         IsClassicSearch = true;
         StatusMessage = "Готов к работе!";
 
         Logger.Info("MainWindowViewModel инициализирован");
     }
+    
+    private int HeavyQueriesComparer(EventBase a, EventBase b)
+    {
+        var msA = GetExecuteMs(a);
+        var msB = GetExecuteMs(b);
+    
+        // Сначала тяжёлые (по убыванию времени)
+        var result = msB.CompareTo(msA);
+        return result != 0 ? result : a.Timestamp.CompareTo(b.Timestamp);
+    }
 
+    private int GetExecuteMs(EventBase evt) => evt switch
+    {
+        StatementFinishEvent e => e.Performance.ExecuteMs,
+        ProcedureFinishEvent e => e.Performance.ExecuteMs,
+        TriggerFinishEvent e => e.Performance.ExecuteMs,
+        _ => 0
+    };
+    
+    [RelayCommand]
+    private void SelectSort(SortDescriptor? descriptor)
+    {
+        if (descriptor == null || descriptor == SelectedSort)
+            return;
+
+        // Снимаем выделение с предыдущей
+        if (SelectedSort != null)
+            SelectedSort.IsSelected = false;
+
+        // Устанавливаем новую
+        SelectedSort = descriptor;
+        descriptor.IsSelected = true;
+
+        Logger.Info("Выбрана сортировка: {DisplayName}", descriptor.DisplayName);
+    }
+
+    private void UpdateAvailableSorts()
+    {
+        var previousSelectedId = SelectedSort?.Id;
+
+        AvailableSorts.Clear();
+        AvailableSortsByCategory.Clear();
+    
+        var sorts = _sortingService.GetAvailableSorts(FilteredEvents);
+    
+        // Добавляем в обычную коллекцию
+        foreach (var sort in sorts)
+        {
+            AvailableSorts.Add(sort);
+        }
+
+        // Группируем по категориям
+        var grouped = sorts
+            .GroupBy(s => s.Category)
+            .OrderBy(g => g.Key);
+
+        foreach (var group in grouped)
+        {
+            AvailableSortsByCategory.Add(group);
+        }
+
+        // Восстанавливаем выбор
+        SortDescriptor? toSelect = null;
+    
+        if (previousSelectedId != null)
+            toSelect = sorts.FirstOrDefault(s => s.Id == previousSelectedId);
+
+        toSelect ??= sorts.FirstOrDefault(s => s.IsDefault) ?? sorts.FirstOrDefault();
+
+        if (toSelect != null)
+        {
+            toSelect.IsSelected = true;
+            SelectedSort = toSelect;
+        }
+    }
+    
+    /// <summary>
+    /// Применяет текущую сортировку.
+    /// </summary>
+    partial void OnSelectedSortChanged(SortDescriptor? value)
+    {
+        if (value == null) return;
+        ApplyCurrentSort();
+    }
+
+    partial void OnIsSortDescendingChanged(bool value)
+    {
+        ApplyCurrentSort();
+    }
+
+    private void ApplyCurrentSort()
+    {
+        if (SelectedSort == null) return;
+
+        var sorted = _sortingService.ApplySort(
+            FilteredEvents,
+            SelectedSort.Id,
+            IsSortDescending);
+
+        // Обновляем коллекцию
+        FilteredEvents.Clear();
+        foreach (var evt in sorted)
+        {
+            FilteredEvents.Add(evt);
+        }
+
+        StatusMessage = $"Применена сортировка: {SelectedSort.DisplayName}";
+    }
+
+    /// <summary>
+    /// Пример пользовательской сортировки.
+    /// </summary>
+    private int CustomUserActivityComparer(EventBase a, EventBase b)
+    {
+        // Приоритет: сначала события с User, потом без
+        var userA = GetUserFromEvent(a);
+        var userB = GetUserFromEvent(b);
+
+        if (userA == null && userB == null) return a.Timestamp.CompareTo(b.Timestamp);
+        if (userA == null) return 1;
+        if (userB == null) return -1;
+
+        var userCompare = string.Compare(userA, userB, StringComparison.OrdinalIgnoreCase);
+        return userCompare != 0 ? userCompare : a.Timestamp.CompareTo(b.Timestamp);
+    }
+
+    private string? GetUserFromEvent(EventBase evt)
+    {
+        return evt switch
+        {
+            AttachDatabaseEvent e => e.Attachment.User,
+            DetachDatabaseEvent e => e.Attachment.User,
+            StatementEventBase e => e.Attachment.User,
+            ProcedureEventBase e => e.Attachment.User,
+            TriggerEventBase e => e.Attachment.User,
+            _ => null
+        };
+    }
+
+    private void ApplyAllFilters()
+    {
+        FilteredEvents.Clear();
+
+        foreach (var evt in Events)
+        {
+            if (_filterManager.IsEventVisible(evt))
+                FilteredEvents.Add(evt);
+        }
+
+        UpdateStatistics();
+        UpdateAvailableSorts(); // ← Обновляем сортировки после фильтрации
+        ApplyCurrentSort(); // ← Применяем текущую сортировку
+        
+        StatusMessage = $"Отфильтровано: {FilteredEvents.Count}/{Events.Count} событий";
+    }
+    
     /// <summary>
     ///     Синхронизирует IsClassicSearch при изменении CurrentSearchType.
     ///     Единственное место управления состоянием поиска.
@@ -155,6 +350,14 @@ public partial class MainWindowViewModel : ViewModelBase
             : SearchType.Classic;
         // IsClassicSearch обновится через OnCurrentSearchTypeChanged
     }
+
+    [RelayCommand]
+    private void SwitchVisibleTraceFilesSection()
+    {
+        IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
+    }
+
+
 
     [RelayCommand]
     private void ClearFilters()
@@ -189,25 +392,6 @@ public partial class MainWindowViewModel : ViewModelBase
         );
 
         Logger.Info("Фильтры инициализированы");
-    }
-
-    /// <summary>
-    /// Применяет все активные фильтры к событиям.
-    /// Вызывается при изменении любого фильтра.
-    /// </summary>
-    private void ApplyAllFilters()
-    {
-        FilteredEvents.Clear();
-
-        // Фильтруем события через менеджер
-        foreach (var evt in Events)
-        {
-            if (_filterManager.IsEventVisible(evt))
-                FilteredEvents.Add(evt);
-        }
-
-        UpdateStatistics();
-        StatusMessage = $"Отфильтровано: {FilteredEvents.Count}/{Events.Count} событий";
     }
 
     /// <summary>
@@ -259,6 +443,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             StatusMessage = $"Все файлы обработаны заново: {allCards.Count} файл(ов).";
             Logger.Info("Повторная обработка всех файлов завершена: {Count}", allCards.Count);
+            
         }
         catch (OperationCanceledException)
         {
@@ -273,6 +458,7 @@ public partial class MainWindowViewModel : ViewModelBase
         finally
         {
             IsFileLoading = false;
+            ApplyAllFilters();
             ReparseAllFilesCommand.NotifyCanExecuteChanged();
             ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
             OpenLocalFileCommand.NotifyCanExecuteChanged();
@@ -331,6 +517,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsFileLoading = false;
             
             OnIsFileLoadingChanged(true);
+            ApplyAllFilters();
             UpdateStatistics();
         }
     }
@@ -507,6 +694,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Logger.Info("Файл распарсен: {FileName}, событий: {Count}",
             fileInfo.Name, eventList.Count);
+        
+        ApplyAllFilters();
 
         return new TraceFileInfoModel(
             fileInfo.Name,
@@ -583,6 +772,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
                 card.FileInfo = updatedModel);
+            
+            ApplyAllFilters();
         }
         catch (OperationCanceledException)
         {

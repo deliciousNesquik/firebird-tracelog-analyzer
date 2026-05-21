@@ -4,6 +4,7 @@ using Avalonia;
 using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
@@ -65,6 +66,7 @@ internal sealed class Program
 
         // ========== Avalonia сервисы ==========
         services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton<ISortingService, SortingService>();
 
         // ========== ViewModels ==========
         services.AddTransient<MainWindowViewModel>();

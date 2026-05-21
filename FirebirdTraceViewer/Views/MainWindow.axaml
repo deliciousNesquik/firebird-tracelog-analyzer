@@ -22,11 +22,11 @@
     <Window.DataTemplates>
 
         <DataTemplate DataType="local:TraceInitEvent">
-            <events:TraceInitEventCard 
-                Timestamp="{Binding Timestamp}" 
+            <events:TraceInitEventCard
+                Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
-                SessionId="{Binding Session.SessionId}"/>
+                SessionId="{Binding Session.SessionId}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:TraceFinishEvent">
@@ -34,7 +34,7 @@
                 Timestamp="{Binding Timestamp}"
                 TraceId="{Binding TraceId}"
                 HexTraceId="{Binding HexTraceId}"
-                SessionId="{Binding Session.SessionId}"/>
+                SessionId="{Binding Session.SessionId}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:AttachDatabaseEvent">
@@ -49,9 +49,9 @@
                 Charset="{Binding Attachment.Charset}"
                 User="{Binding Attachment.User}"
                 Role="{Binding Attachment.Role}"
-                AttachmentId="{Binding Attachment.AttachmentId}"/>
+                AttachmentId="{Binding Attachment.AttachmentId}" />
         </DataTemplate>
-        
+
 
         <DataTemplate DataType="local:DetachDatabaseEvent">
             <events:DetachDatabaseEventCard
@@ -64,7 +64,7 @@
                 Charset="{Binding Attachment.Charset}"
                 User="{Binding Attachment.User}"
                 Role="{Binding Attachment.Role}"
-                AttachmentId="{Binding Attachment.AttachmentId}"/>
+                AttachmentId="{Binding Attachment.AttachmentId}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:StatementStartEvent">
@@ -86,7 +86,7 @@
                 ConsistencyMode="{Binding Transaction.ConsistencyMode}"
                 LockMode="{Binding Transaction.LockMode}"
                 AccessMode="{Binding Transaction.AccessMode}"
-                Params="{Binding Params}"/>
+                Params="{Binding Params}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:StatementFinishEvent">
@@ -113,10 +113,10 @@
                 ReadCount="{Binding Performance.ReadCount}"
                 WriteCount="{Binding Performance.WriteCount}"
                 FetchCount="{Binding Performance.FetchCount}"
-                MarkCount="{Binding Performance.MarkCount}"/>
+                MarkCount="{Binding Performance.MarkCount}" />
         </DataTemplate>
 
-        
+
         <DataTemplate DataType="local:ProcedureStartEvent">
             <events:ProcedureStartEventCard
                 Timestamp="{Binding Timestamp}"
@@ -135,7 +135,7 @@
                 ConsistencyMode="{Binding Transaction.ConsistencyMode}"
                 LockMode="{Binding Transaction.LockMode}"
                 AccessMode="{Binding Transaction.AccessMode}"
-                Params="{Binding Params}"/>
+                Params="{Binding Params}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:ProcedureFinishEvent">
@@ -161,7 +161,7 @@
                 ReadCount="{Binding Performance.ReadCount}"
                 WriteCount="{Binding Performance.WriteCount}"
                 FetchCount="{Binding Performance.FetchCount}"
-                MarkCount="{Binding Performance.MarkCount}"/>
+                MarkCount="{Binding Performance.MarkCount}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:TriggerStartEvent">
@@ -184,7 +184,7 @@
                 IsolationLevel="{Binding Transaction.IsolationLevel}"
                 ConsistencyMode="{Binding Transaction.ConsistencyMode}"
                 LockMode="{Binding Transaction.LockMode}"
-                AccessMode="{Binding Transaction.AccessMode}"/>
+                AccessMode="{Binding Transaction.AccessMode}" />
         </DataTemplate>
 
         <DataTemplate DataType="local:TriggerFinishEvent">
@@ -212,7 +212,7 @@
                 ReadCount="{Binding Performance.ReadCount}"
                 WriteCount="{Binding Performance.WriteCount}"
                 FetchCount="{Binding Performance.FetchCount}"
-                MarkCount="{Binding Performance.MarkCount}"/>
+                MarkCount="{Binding Performance.MarkCount}" />
         </DataTemplate>
 
     </Window.DataTemplates>
@@ -233,7 +233,9 @@
                           Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
             <MenuItem Header="Окна и панели">
-                <MenuItem Header="Панель файлов" ToggleType="CheckBox" StaysOpenOnClick="True" />
+                <MenuItem Header="Панель файлов" Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
+                          IsSelected="True" ToggleType="CheckBox" StaysOpenOnClick="True" />
+
                 <MenuItem Header="Панель поиска" ToggleType="CheckBox" StaysOpenOnClick="True" />
                 <MenuItem Header="Панель фильтров" ToggleType="CheckBox" StaysOpenOnClick="True" />
                 <MenuItem Header="Основная панель событий" ToggleType="CheckBox" StaysOpenOnClick="True" />
@@ -251,6 +253,7 @@
 
         <ListBox
             Grid.Row="1"
+            IsVisible="{Binding IsTraceFilesSectionVisible}"
             SelectionMode="Multiple"
             SelectedItems="{Binding SelectedFileCards}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -275,12 +278,100 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Grid Grid.Row="2" ColumnDefinitions="* *">
+        <Border Grid.Row="2"
+                Padding="10">
 
-            <!-- Поиск -->
+            <!--Поисковая строка с иконкой и кнопкой поиска-->
+            <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
+                <TextBox Grid.Row="0" Grid.Column="0"
+                         PlaceholderText="Поиск" VerticalContentAlignment="Center" />
+                <Button Grid.Row="0" Grid.Column="1" Background="Transparent" VerticalContentAlignment="Center"
+                        Height="40" BorderThickness="1">
+                    <Svg Path="{DynamicResource SearchIcon}" />
+                </Button>
+
+                <Button Grid.Row="0"
+                        Grid.Column="2"
+                        Background="Transparent"
+                        Height="40"
+                        BorderThickness="1">
+
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <Border Padding="8" MinWidth="280" MaxHeight="400">
+                                <ScrollViewer MaxHeight="450">
+                                    <StackPanel Spacing="8">
+
+                                        <TextBlock Text="Сортировка событий"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Margin="4,2,4,8" />
+
+                                        <!-- Группируем по категориям -->
+                                        <ItemsControl ItemsSource="{Binding AvailableSortsByCategory}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Spacing="4" Margin="0,0,0,12">
+
+                                                        <!-- Заголовок категории -->
+                                                        <TextBlock Text="{Binding Key}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="12"
+                                                                   Foreground="{DynamicResource SystemAccentColor}"
+                                                                   Margin="4,4,4,2" />
+
+                                                        <!-- Сортировки в категории -->
+                                                        <ItemsControl ItemsSource="{Binding}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <RadioButton
+                                                                        GroupName="SortSelection"
+                                                                        Content="{Binding DisplayName}"
+                                                                        IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectSortCommand}"
+                                                                        CommandParameter="{Binding}"
+                                                                        Margin="8,2"
+                                                                        Padding="8,4" />
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Separator Margin="0,4" />
+
+                                        <CheckBox Content="По убыванию"
+                                                  IsChecked="{Binding IsSortDescending}"
+                                                  Margin="8,4" />
+
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <Svg Path="{DynamicResource SortIcon}" />
+                </Button>
+
+                <Button Grid.Row="0" Grid.Column="3" VerticalContentAlignment="Center" Background="Transparent"
+                        Height="40" BorderThickness="1">
+                    <Svg Path="{DynamicResource FilterIcon}" />
+                </Button>
+
+
+            </Grid>
+
+        </Border>
+
+        <!--<Grid Grid.Row="2" ColumnDefinitions="* *">
+
+            ~1~ Поиск @1@
             <Grid Grid.Column="0" RowDefinitions="Auto Auto" Margin="10,5,10,0">
 
-                <!-- Строка поиска (растягивается на всю ширину столбца Grid.Column="0") -->
+                ~1~ Строка поиска (растягивается на всю ширину столбца Grid.Column="0") @1@
                 <Grid Grid.Row="0" ColumnDefinitions="* Auto" ColumnSpacing="10">
                     <TextBox Grid.Column="0"
                              PlaceholderText="Поиск..."
@@ -292,105 +383,36 @@
                             HorizontalAlignment="Left" />
                 </Grid>
 
-                <!-- Режимы поиска -->
+                ~1~ Режимы поиска @1@
                 <Grid Grid.Row="1"
                       ColumnDefinitions="Auto 10* Auto"
                       ColumnSpacing="20"
                       Margin="0,8,0,0">
 
                     <StackPanel VerticalAlignment="Top" Grid.Column="0" Orientation="Vertical">
-                        <RadioButton Content="Классический поиск"
+                        <RadioButton Content="Classic"
                                      GroupName="SearchType"
                                      IsChecked="{Binding IsClassicSearch}"
                                      Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
-                        <RadioButton Content="Поиск регул. выражениями"
+                        <RadioButton Content="Regexp"
                                      GroupName="SearchType"
                                      Command="{Binding SwitchSearchType}"
                                      HorizontalAlignment="Stretch" />
                     </StackPanel>
 
                     <CheckBox VerticalAlignment="Top" Grid.Column="2"
-                              Content="Поиск в выбранных файлах" />
+                              Content="Find in selected files" />
                 </Grid>
             </Grid>
-
-            <!-- Фильтрация -->
-            <Grid Grid.Column="1" Margin="0,5,10,0">
-                <StackPanel Orientation="Vertical" Spacing="15">
-                    <!--<ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="100">
-                        <ItemsControl ItemsSource="{Binding FilterCardModels}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <controls:FilterCard Title="{Binding Name}" Value="{Binding Value}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>-->
-                    
-                    <!-- Фильтр типов событий -->
-                    <GroupBox Header="Тип события" Padding="10" Margin="0,0,0,10">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="150">
-                            <ItemsControl ItemsSource="{Binding EventTypeFilterViewModel.EventTypeCheckBoxes}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical" Spacing="5" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <CheckBox 
-                                            Content="{Binding DisplayName}"
-                                            IsChecked="{Binding IsSelected}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </GroupBox>
-
-                    <StackPanel Orientation="Vertical" Spacing="5">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <Button 
-                                Content="Выбрать все" 
-                                FontWeight="Bold"
-                                Command="{Binding EventTypeFilterViewModel.SelectAllEventTypesCommand}"
-                                HorizontalAlignment="Stretch" 
-                                HorizontalContentAlignment="Center"/>
-                            <Button 
-                                Content="Убрать все" 
-                                FontWeight="Bold"
-                                Command="{Binding EventTypeFilterViewModel.DeselectAllEventTypesCommand}"
-                                HorizontalAlignment="Stretch" 
-                                HorizontalContentAlignment="Center"/>
-                        </StackPanel>
-
-                        <Button 
-                            Content="Сбросить все фильтры" 
-                            FontWeight="Bold" 
-                            Background="Red" 
-                            Foreground="White"
-                            BorderBrush="Black" 
-                            BorderThickness="1" 
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" 
-                            Command="{Binding ClearFilters}" />
-                    </StackPanel>
-
-                </StackPanel>
-            </Grid>
-        </Grid>
+        </Grid>-->
 
         <ListBox Grid.Row="3"
                  ItemsSource="{Binding FilteredEvents}"
                  Margin="10"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">
-            
+
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <VirtualizingStackPanel CacheLength="0.5" />
@@ -399,7 +421,7 @@
 
         </ListBox>
 
-        <usercontrols:StatisticInfoSection Grid.Row="4" Margin="10 0 0 0" DataContext="{Binding StatisticInfoModels}"/>
+        <usercontrols:StatisticInfoSection Grid.Row="4" Margin="10 0 0 0" DataContext="{Binding StatisticInfoModels}" />
 
         <TextBlock Grid.Row="5" Text="{Binding StatusMessage}" Padding="10 0 0 5" />
     </Grid>

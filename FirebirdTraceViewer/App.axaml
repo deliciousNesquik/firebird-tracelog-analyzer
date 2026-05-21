@@ -9,7 +9,16 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
   
+    <Application.Resources>
+        <x:String x:Key="AppIcon">avares://FirebirdTraceViewer/Assets/app.ico</x:String>
+        <x:String x:Key="SearchIcon">avares://FirebirdTraceViewer/Assets/search.svg</x:String>
+        <x:String x:Key="SortIcon">avares://FirebirdTraceViewer/Assets/sort.svg</x:String>
+        <x:String x:Key="FilterIcon">avares://FirebirdTraceViewer/Assets/filter.svg</x:String>
+    </Application.Resources>         
+             
     <Application.Styles>
+        
+        
         <FluentTheme />
         
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/FilterCard.axaml" />
