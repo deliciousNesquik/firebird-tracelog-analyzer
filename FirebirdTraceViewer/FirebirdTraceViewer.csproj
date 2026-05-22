@@ -59,9 +59,18 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Configuration\nlog.config" />
-      <EmbeddedResource Include="Configuration\rules.json" />
-      <EmbeddedResource Include="Configuration\rules.schema.json" />
+        <!-- Копирование конфигураций -->
+        <None Update="Configuration\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+
+        <None Update="NLog.config">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>

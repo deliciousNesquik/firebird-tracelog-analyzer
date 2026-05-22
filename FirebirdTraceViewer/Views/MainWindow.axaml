@@ -220,61 +220,61 @@
     <Grid RowDefinitions="30 Auto Auto * 40, Auto" RowSpacing="5">
 
         <Menu Grid.Row="0">
-            <MenuItem Header="Открыть">
-                <MenuItem Header="Открыть локальный файл" Command="{Binding OpenLocalFileCommand}" />
-                <MenuItem Header="Открыть удалённый файл" IsEnabled="False" />
-                <MenuItem Header="Отменить загрузку"
+            <MenuItem Header="Open">
+                <MenuItem Header="Local File" Command="{Binding OpenLocalFileCommand}" />
+                <MenuItem Header="Remote File" IsEnabled="False" />
+                <MenuItem Header="Cancel Loading"
                           Command="{Binding CancelLoadingCommand}" />
             </MenuItem>
-            <MenuItem Header="Редактировать">
-                <MenuItem Header="Заново обработать все файлы"
+            <MenuItem Header="Edit">
+                <MenuItem Header="Reprocess all files"
                           Command="{Binding ReparseAllFilesCommand}" />
-                <MenuItem Header="Заново обработать выделенные файлы"
+                <MenuItem Header="Reprocess selected files"
                           Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
-            <MenuItem Header="Окна и панели">
+            <MenuItem Header="Window">
                 <MenuItem
-                    Header="Панель файлов"
+                    Header="Files"
                     Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsTraceFilesSectionVisible}"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Панель поиска сортировки и фильтров"
+                    Header="Search, Sort and Filters"
                     Command="{Binding SwitchVisibleSearchSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsSearchSectionVisible}"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Основная панель событий"
+                    Header="Events"
                     IsChecked="{Binding IsEventsSectionVisible}"
                     Command="{Binding SwitchEventsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Панель общей информации"
+                    Header="Statistics"
                     IsChecked="{Binding IsStatisticsSectionVisible}"
                     Command="{Binding SwitchStatisticsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Панель состояния"
+                    Header="Statuses"
                     IsChecked="{Binding IsLogsSectionVisible}"
                     Command="{Binding SwitchLogsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <Separator />
-                <MenuItem Header="Сбросить расположение" Command="{Binding GoToFactorySettingsSectionCommand}" />
+                <MenuItem Header="Reset" Command="{Binding GoToFactorySettingsSectionCommand}" />
             </MenuItem>
 
-            <MenuItem Header="Настройки">
-                <MenuItem Header="Настроить удаленный доступ" />
-                <MenuItem Header="Настроить обновление открытого файла" />
+            <MenuItem Header="Settings">
+                <MenuItem Header="Set up remote access" />
+                <MenuItem Header="Configure open file update" />
             </MenuItem>
         </Menu>
 

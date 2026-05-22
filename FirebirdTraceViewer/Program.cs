@@ -63,9 +63,9 @@ internal sealed class Program
         // Регистрируем IConfiguration
         services.AddSingleton<IConfiguration>(configuration);
 
-        // ✅ Strongly-typed Options (теперь работает!)
-        services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
-        services.Configure<UiSectionSettings>(configuration.GetSection("UI:Sections"));
+        // Strongly-typed Options
+        services.Configure<AppSettings>(config:configuration.GetSection("Settings"));
+        services.Configure<UiSectionSettings>(config:configuration.GetSection("UI:Sections"));
 
         // Парсер Firebird
         services.AddFirebirdTraceParser(

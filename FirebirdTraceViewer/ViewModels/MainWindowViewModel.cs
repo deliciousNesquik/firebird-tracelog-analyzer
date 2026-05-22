@@ -11,10 +11,10 @@ using FirebirdTraceParser.Core.Models.ValueObjects;
 using FirebirdTraceParser.Core.Parsing.Engine;
 using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
+using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Models.Filters;
 using FirebirdTraceViewer.Services.Sorting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using NLog;
 
@@ -109,18 +109,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _sortingService = null!;
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
 
-        TraceFileInfos.Add(CreateFileCardViewModel(
-            new TraceFileInfoModel(
-                "2026_05_13__00_01_00.log",
-                string.Empty,
-                123_456_890,
-                new DateTime(2026, 5, 13, 0, 0, 1),
-                new DateTime(2026, 5, 13, 0, 20, 0),
-                12_345,
-                "design-sample-1")));
-
-        FilterCardModels.Add(new FilterCardModel("Пользователь", "BERDIN.A"));
-        FilterCardModels.Add(new FilterCardModel("Адрес подключения", "10.0.1.102"));
+        foreach (var fileInfo in TraceFilesInfosMock.Mocks) { TraceFileInfos.Add(CreateFileCardViewModel(fileInfo)); }
 
         Events.Add(new AttachDatabaseEvent
         {
@@ -144,14 +133,16 @@ public partial class MainWindowViewModel : ViewModelBase
         });
 
         StatisticInfoModels.UpdateStatistics([
-            new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()),
-            new StatisticInfoModel("Всего событий:", "0"),
-            new StatisticInfoModel("Отфильтрованных событий:", "0"),
-            new StatisticInfoModel("Время парсинга:", "0 сек")
+            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("All Events:", "0"),
+            new StatisticInfoModel("Filtered Events:", "0")
         ]);
-        StatusMessage = "Готово (Design Time).";
-        IsClassicSearch = true;
-        GoToFactorySettingsSection();
+        
+        
+        // Загрузка всех настроек приложения
+        LoadSettings();
+        
+        StatusMessage = "Готов к работе (Design Time).";
     }
 
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
@@ -164,6 +155,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+        
         // Извлекаем значения из IOptions<T>
         _appSettings = appSettings.Value;
         _uiSettings = uiSettings.Value;
@@ -171,29 +163,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
 
-        // Регистрируем пользовательскую сортировку
-        _sortingService.RegisterCustomSort(new SortDescriptor(
-            "custom_user_activity",
-            "По активности пользователя",
-            (a, b, desc) => CustomUserActivityComparer(a, b, desc),
-            "Аналитика",
-            50));
-
-        _sortingService.RegisterCustomSort(new SortDescriptor(
-            "heavy_queries",
-            "Тяжёлые запросы",
-            (a, b, desc) => HeavyQueriesComparer(a, b, desc),
-            "Аналитика",
-            2));
-
+        // Создаем дополнительные ручные сортировки
+        CreateCustomSorting();
+        
+        // Выполняем обновление UI для получения всех возможных сортировок
         UpdateAvailableSorts();
-
-        CurrentSearchType = SearchType.Classic;
-        IsClassicSearch = true;
-        GoToFactorySettingsSection();
+        
+        // Загрузка всех настроек приложения
         LoadSettings();
+        
         StatusMessage = "Готов к работе!";
-
         Logger.Info("MainWindowViewModel инициализирован");
     }
     
@@ -202,16 +181,38 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void LoadSettings()
     {
-        // UI секции
+        // Настройка окон
         IsTraceFilesSectionVisible = _uiSettings.Files;
         IsSearchSectionVisible = _uiSettings.Search;
         IsEventsSectionVisible = _uiSettings.Events;
         IsStatisticsSectionVisible = _uiSettings.Statistics;
         IsLogsSectionVisible = _uiSettings.Logs;
 
-        Logger.Info("Настройки UI загружены: Files={Files}, Search={Search}, Events={Events}",
-            _uiSettings.Files, _uiSettings.Search, _uiSettings.Events);
+        // Настройки поиска
+        IsClassicSearch = _appSettings.IsClassicSearch;
+        CurrentSearchType = IsClassicSearch ? SearchType.Classic : SearchType.Regexp;
         
+        Logger.Info("Настройки приложения загружены");
+        StatusMessage = "Настройки приложения загружены";
+    }
+
+
+    private void CreateCustomSorting()
+    {
+        // Регистрируем пользовательскую сортировку
+        _sortingService.RegisterCustomSort(new SortDescriptor(
+            "custom_user_activity",
+            "По активности пользователя",
+            CustomUserActivityComparer,
+            "Аналитика",
+            50));
+
+        _sortingService.RegisterCustomSort(new SortDescriptor(
+            "heavy_queries",
+            "Тяжёлые запросы",
+            HeavyQueriesComparer,
+            "Аналитика",
+            2));
     }
 
     private int HeavyQueriesComparer(EventBase a, EventBase b, bool descending)
@@ -617,7 +618,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OpenLocalFileCommand.NotifyCanExecuteChanged();
 
         IReadOnlyList<IStorageFile>? files = null;
-
+        
         CancellationTokenSource? cts = null;
         try
         {
@@ -629,7 +630,7 @@ public partial class MainWindowViewModel : ViewModelBase
             
             files = await _fileDialogService.OpenTraceFilesAsync();
 
-            if (files == null || files.Count == 0)
+            if (files.Count == 0)
             {
                 StatusMessage = "Файлы не выбраны.";
                 return;
@@ -858,8 +859,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка повторного парсинга: {FileName}", card.FileInfo.FileName);
-            StatusMessage = $"Ошибка перепарсинга '{card.FileInfo.FileName}': {ex.Message}";
+            Logger.Error(ex, "Ошибка повторной обработки файла: {FileName}", card.FileInfo.FileName);
+            StatusMessage = $"Ошибка повторной обработки файла: '{card.FileInfo.FileName}': {ex.Message}";
         }
     }
 

@@ -7,17 +7,18 @@ namespace FirebirdTraceViewer.Models;
 /// </summary>
 public class AppSettings
 {
-    
+    public bool IsClassicSearch { get; set; }
+    public string Theme { get; set; }
 }
 
 /// <summary>
 /// Настройки видимости секций UI
 /// </summary>
-public sealed class UiSectionSettings
+public class UiSectionSettings
 {
-    public bool Files { get; set; } = true;
-    public bool Search { get; set; } = true;
-    public bool Events { get; set; } = true;
-    public bool Statistics { get; set; } = true;
-    public bool Logs { get; set; } = false;
+    public bool Files { get; set; }
+    public bool Search { get; set; }
+    public bool Events { get; set; }
+    public bool Statistics { get; set; }
+    public bool Logs { get; set; }
 }
