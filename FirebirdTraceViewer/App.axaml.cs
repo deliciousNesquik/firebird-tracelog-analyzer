@@ -1,8 +1,6 @@
-using System.Linq;
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using FirebirdTraceViewer.ViewModels;
 using FirebirdTraceViewer.Views;
@@ -12,6 +10,8 @@ namespace FirebirdTraceViewer;
 
 public partial class App : Application
 {
+    public static IServiceProvider? Services { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -19,17 +19,32 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Инициализируем DI контейнер
+        Services = Program.ConfigureServices();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Получаем MainWindowViewModel из DI
-            var mainViewModel = Program.Services!.GetRequiredService<MainWindowViewModel>();
+            var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
 
             desktop.MainWindow = new MainWindow
             {
                 DataContext = mainViewModel
             };
+
+            // Cleanup при закрытии приложения
+            desktop.Exit += OnApplicationExit;
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        // Освобождаем ресурсы DI контейнера
+        if (Services is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
     }
 }

@@ -1,11 +1,14 @@
 ﻿using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using Avalonia;
 using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
+using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Services;
 using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.ViewModels;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
@@ -13,8 +16,6 @@ namespace FirebirdTraceViewer;
 
 internal sealed class Program
 {
-    public static IServiceProvider? Services { get; private set; }
-
     [STAThread]
     public static void Main(string[] args)
     {
@@ -26,19 +27,6 @@ internal sealed class Program
         {
             logger.Debug("Инициализация приложения FirebirdTraceViewer");
 
-            // Создаем DI контейнер
-            var services = new ServiceCollection();
-
-            // Конфигурация сервисов
-            ConfigureServices(services);
-
-            // Строим провайдер сервисов
-            Services = services.BuildServiceProvider();
-
-            // Валидация загрузки правил парсера при старте (fail-fast)
-            ValidateParserConfiguration(Services, logger);
-
-            // Запуск Avalonia
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
         }
@@ -53,56 +41,72 @@ internal sealed class Program
         }
     }
 
-    /// <summary>
-    /// Конфигурация DI сервисов.
-    /// </summary>
-    private static void ConfigureServices(IServiceCollection services)
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
+
+    public static IServiceProvider ConfigureServices()
     {
-        // ========== Библиотека парсера ==========
+        var logger = LogManager.GetCurrentClassLogger();
+        
+        // 1. Создаём конфигурацию
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+        // 2. Регистрируем сервисы
+        var services = new ServiceCollection();
+
+        // Регистрируем IConfiguration
+        services.AddSingleton<IConfiguration>(configuration);
+
+        // ✅ Strongly-typed Options (теперь работает!)
+        services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+        services.Configure<UiSectionSettings>(configuration.GetSection("UI:Sections"));
+
+        // Парсер Firebird
         services.AddFirebirdTraceParser(
             rulesPath: "Configuration/rules.json",
             nlogConfigPath: "Configuration/nlog.config"
         );
 
-        // ========== Avalonia сервисы ==========
+        // UI сервисы
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<ISortingService, SortingService>();
 
-        // ========== ViewModels ==========
+        // ViewModels
         services.AddTransient<MainWindowViewModel>();
 
-        // Дополнительные ViewModels, если потребуются
-        // services.AddTransient<SettingsViewModel>();
+        // 3. Строим провайдер
+        var serviceProvider = services.BuildServiceProvider();
+
+        // 4. Валидация при старте
+        ValidateParserConfiguration(serviceProvider, logger);
+
+        return serviceProvider;
     }
 
-    /// <summary>
-    /// Валидация конфигурации парсера при старте (fail-fast).
-    /// </summary>
     private static void ValidateParserConfiguration(IServiceProvider provider, ILogger logger)
     {
         try
         {
             var rules = provider.GetRequiredService<IReadOnlyDictionary<string, Regex>>();
             logger.Info("Правила парсера успешно загружены: {RuleCount} правил", rules.Count);
-            
+
             foreach (var rule in rules)
             {
-                logger.Debug("Rule loaded: {RuleName} -> {Pattern}", rule.Key, rule.Value.ToString().Substring(0, Math.Min(50, rule.Value.ToString().Length)));
+                var pattern = rule.Value.ToString();
+                var preview = pattern.Length > 50 ? pattern[..50] : pattern;
+                logger.Debug("Rule loaded: {RuleName} -> {Pattern}", rule.Key, preview);
             }
         }
         catch (Exception ex)
         {
             logger.Fatal(ex, "Не удалось загрузить правила парсера. Приложение будет закрыто.");
-            throw; // Приложение не должно запускаться с невалидными правилами
+            throw;
         }
     }
-
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-#if DEBUG
-            .WithDeveloperTools()
-#endif
-            .WithInterFont()
-            .LogToTrace();
 }

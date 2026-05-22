@@ -43,7 +43,10 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1"/>
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="11.0.0-preview.4.26230.115" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.4.26230.115" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.4.26230.115" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-preview.4.26230.115" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="11.0.0-preview.4.26230.115" />
         <PackageReference Include="NJsonSchema" Version="11.6.1" />
         <PackageReference Include="NLog" Version="6.1.3" />
         <PackageReference Include="NLog.Extensions.Logging" Version="6.1.3" />

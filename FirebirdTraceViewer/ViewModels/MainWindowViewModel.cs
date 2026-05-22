@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Security.Cryptography;
+using Avalonia;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,6 +14,8 @@ using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Models.Filters;
 using FirebirdTraceViewer.Services.Sorting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
@@ -21,6 +24,9 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly AppSettings _appSettings;
+    private readonly UiSectionSettings _uiSettings;
+    
     // Сервис для открытия файлов через стандартный проводник.
     private readonly IFileDialogService _fileDialogService;
 
@@ -150,13 +156,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
     public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser,
-        ISortingService sortingService)
+        ISortingService sortingService, IOptions<AppSettings> appSettings,
+        IOptions<UiSectionSettings> uiSettings)
     {
         // Инициализируем фильтры
         InitializeFilters();
 
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
+        // Извлекаем значения из IOptions<T>
+        _appSettings = appSettings.Value;
+        _uiSettings = uiSettings.Value;
         _sortingService = sortingService;
 
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
@@ -181,9 +191,27 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentSearchType = SearchType.Classic;
         IsClassicSearch = true;
         GoToFactorySettingsSection();
+        LoadSettings();
         StatusMessage = "Готов к работе!";
 
         Logger.Info("MainWindowViewModel инициализирован");
+    }
+    
+    /// <summary>
+    /// Загружает настройки из конфигурации
+    /// </summary>
+    private void LoadSettings()
+    {
+        // UI секции
+        IsTraceFilesSectionVisible = _uiSettings.Files;
+        IsSearchSectionVisible = _uiSettings.Search;
+        IsEventsSectionVisible = _uiSettings.Events;
+        IsStatisticsSectionVisible = _uiSettings.Statistics;
+        IsLogsSectionVisible = _uiSettings.Logs;
+
+        Logger.Info("Настройки UI загружены: Files={Files}, Search={Search}, Events={Events}",
+            _uiSettings.Files, _uiSettings.Search, _uiSettings.Events);
+        
     }
 
     private int HeavyQueriesComparer(EventBase a, EventBase b, bool descending)
@@ -395,11 +423,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void GoToFactorySettingsSection()
     {
-        IsTraceFilesSectionVisible = true;
-        IsSearchSectionVisible = true;
-        IsEventsSectionVisible = true;
-        IsStatisticsSectionVisible = true;
-        IsLogsSectionVisible = false;
+        IsTraceFilesSectionVisible = _uiSettings.Files;
+        IsSearchSectionVisible = _uiSettings.Search;
+        IsEventsSectionVisible = _uiSettings.Events;
+        IsStatisticsSectionVisible = _uiSettings.Statistics;
+        IsLogsSectionVisible = _uiSettings.Logs;
+
+        Logger.Info("Восстановлены заводские настройки");
+        StatusMessage = "Восстановлены заводские настройки";
     }
 
 
