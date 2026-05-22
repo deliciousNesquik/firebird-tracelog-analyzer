@@ -229,23 +229,28 @@ public sealed class SortingService : ISortingService
     /// <summary>
     ///     Создаёт функцию сравнения по пути к свойству.
     /// </summary>
-    private Comparison<EventBase> CreatePropertyComparer(string propertyPath)
+    private Func<EventBase, EventBase, bool, int> CreatePropertyComparer(string propertyPath)
     {
-        return (a, b) =>
+        return (a, b, descending) =>
         {
             var valueA = GetPropertyValue(a, propertyPath);
             var valueB = GetPropertyValue(b, propertyPath);
 
-            // null всегда в конце
+            // null всегда в конце (независимо от направления сортировки)
             if (valueA == null && valueB == null) return 0;
-            if (valueA == null) return 1;
-            if (valueB == null) return -1;
+            if (valueA == null) return 1;  // a после b
+            if (valueB == null) return -1; // a перед b
 
-            // Сравниваем через IComparable
+            int result;
+        
+            // Сравниваем значения
             if (valueA is IComparable comparableA)
-                return comparableA.CompareTo(valueB);
+                result = comparableA.CompareTo(valueB);
+            else
+                result = string.Compare(valueA.ToString(), valueB.ToString(), StringComparison.Ordinal);
 
-            return string.Compare(valueA.ToString(), valueB.ToString(), StringComparison.Ordinal);
+            // Инвертируем результат для descending (но НЕ для null!)
+            return descending ? -result : result;
         };
     }
 
@@ -282,10 +287,7 @@ public sealed class SortingService : ISortingService
         }
 
         var sorted = events.ToList();
-        sorted.Sort(descriptor.Comparer);
-
-        if (descending)
-            sorted.Reverse();
+        sorted.Sort((a, b) => descriptor.Comparer(a, b, descending));
 
         Logger.Info("Применена сортировка: {DisplayName}, descending={Descending}",
             descriptor.DisplayName, descending);

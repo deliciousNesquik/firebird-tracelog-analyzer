@@ -11,7 +11,7 @@ namespace FirebirdTraceViewer.Services.Sorting;
 public sealed class SortDescriptor : INotifyPropertyChanged
 {
     private bool _isSelected;
-
+    
     /// <summary>Уникальный идентификатор</summary>
     public string Id { get; }
     
@@ -25,7 +25,8 @@ public sealed class SortDescriptor : INotifyPropertyChanged
     public int Priority { get; }
     
     /// <summary>Функция сравнения событий</summary>
-    public Comparison<EventBase> Comparer { get; }
+    public Func<EventBase, EventBase, bool, int> Comparer { get; }
+    //public Comparison<EventBase> Comparer { get; }
     
     /// <summary>Является ли сортировкой по умолчанию</summary>
     public bool IsDefault { get; init; }
@@ -47,7 +48,7 @@ public sealed class SortDescriptor : INotifyPropertyChanged
     public SortDescriptor(
         string id,
         string displayName,
-        Comparison<EventBase> comparer,
+        Func<EventBase, EventBase, bool, int> comparer,
         string category = "Общие",
         int priority = 100)
     {

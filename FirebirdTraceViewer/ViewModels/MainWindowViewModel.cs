@@ -165,14 +165,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _sortingService.RegisterCustomSort(new SortDescriptor(
             "custom_user_activity",
             "По активности пользователя",
-            CustomUserActivityComparer,
+            (a, b, desc) => CustomUserActivityComparer(a, b, desc),
             "Аналитика",
             50));
 
         _sortingService.RegisterCustomSort(new SortDescriptor(
             "heavy_queries",
             "Тяжёлые запросы",
-            HeavyQueriesComparer,
+            (a, b, desc) => HeavyQueriesComparer(a, b, desc),
             "Аналитика",
             2));
 
@@ -186,14 +186,41 @@ public partial class MainWindowViewModel : ViewModelBase
         Logger.Info("MainWindowViewModel инициализирован");
     }
 
-    private int HeavyQueriesComparer(EventBase a, EventBase b)
+    private int HeavyQueriesComparer(EventBase a, EventBase b, bool descending)
     {
         var msA = GetExecuteMs(a);
         var msB = GetExecuteMs(b);
 
         // Сначала тяжёлые (по убыванию времени)
         var result = msB.CompareTo(msA);
-        return result != 0 ? result : a.Timestamp.CompareTo(b.Timestamp);
+        //return result != 0 ? result : a.Timestamp.CompareTo(b.Timestamp);
+        
+        if (result == 0)
+            result = a.Timestamp.CompareTo(b.Timestamp);
+        
+        return descending ? -result : result;
+    }
+    
+    /// <summary>
+    ///     Пример пользовательской сортировки.
+    /// </summary>
+    private int CustomUserActivityComparer(EventBase a, EventBase b, bool descending)
+    {
+        var userA = GetUserFromEvent(a);
+        var userB = GetUserFromEvent(b);
+
+        // null всегда в конце
+        if (userA == null && userB == null) return 0;
+        if (userA == null) return 1;
+        if (userB == null) return -1;
+
+        var result = string.Compare(userA, userB, StringComparison.OrdinalIgnoreCase);
+    
+        // Если пользователи одинаковые, сортируем по времени
+        if (result == 0)
+            result = a.Timestamp.CompareTo(b.Timestamp);
+    
+        return descending ? -result : result; // ← инвертируем для descending
     }
 
     private int GetExecuteMs(EventBase evt)
@@ -288,22 +315,7 @@ public partial class MainWindowViewModel : ViewModelBase
         StatusMessage = $"Применена сортировка: {SelectedSort.DisplayName}";
     }
 
-    /// <summary>
-    ///     Пример пользовательской сортировки.
-    /// </summary>
-    private int CustomUserActivityComparer(EventBase a, EventBase b)
-    {
-        // Приоритет: сначала события с User, потом без
-        var userA = GetUserFromEvent(a);
-        var userB = GetUserFromEvent(b);
-
-        if (userA == null && userB == null) return a.Timestamp.CompareTo(b.Timestamp);
-        if (userA == null) return 1;
-        if (userB == null) return -1;
-
-        var userCompare = string.Compare(userA, userB, StringComparison.OrdinalIgnoreCase);
-        return userCompare != 0 ? userCompare : a.Timestamp.CompareTo(b.Timestamp);
-    }
+    
 
     private string? GetUserFromEvent(EventBase evt)
     {
@@ -488,6 +500,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsFileLoading = false;
             ApplyAllFilters();
+            //UpdateAvailableSorts();
             ReparseAllFilesCommand.NotifyCanExecuteChanged();
             ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
             OpenLocalFileCommand.NotifyCanExecuteChanged();
@@ -613,6 +626,8 @@ public partial class MainWindowViewModel : ViewModelBase
             
             IsFileLoading = false;
             LoadProgress = 0;
+            ApplyAllFilters();
+            //UpdateAvailableSorts();
 
             // Разблокируем кнопку
             OpenLocalFileCommand.NotifyCanExecuteChanged();
