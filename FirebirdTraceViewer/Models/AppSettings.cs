@@ -8,7 +8,7 @@ namespace FirebirdTraceViewer.Models;
 public class AppSettings
 {
     public bool IsClassicSearch { get; set; }
-    public string Theme { get; set; }
+    public string Theme { get; set; } = "Light";
 }
 
 /// <summary>

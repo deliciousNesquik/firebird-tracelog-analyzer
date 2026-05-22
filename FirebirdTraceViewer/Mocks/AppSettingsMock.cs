@@ -1,17 +1,25 @@
-﻿using FirebirdTraceViewer.Models;
+﻿using System.Runtime.CompilerServices;
+using FirebirdTraceViewer.Models;
 
 namespace FirebirdTraceViewer.Mocks;
 
 public class AppSettingsMock: AppSettings
 {
-    public new bool IsClassicSearch { get; init; } = true;
+    public AppSettingsMock()
+    {
+        IsClassicSearch = true;
+        Theme = "Light";
+    }
 }
 
 public class UiSectionSettingsMock: UiSectionSettings
 {
-    public new bool Files { get; init; } = true;
-    public new bool Search { get; init; } = true;
-    public new bool Events { get; init; } = true;
-    public new bool Statistics { get; init; } = true;
-    public new bool Logs { get; init; } = true;
+    public UiSectionSettingsMock()
+    {
+        Files = true;
+        Search = true;
+        Events = true;
+        Statistics = true;
+        Logs = true;
+    }
 }

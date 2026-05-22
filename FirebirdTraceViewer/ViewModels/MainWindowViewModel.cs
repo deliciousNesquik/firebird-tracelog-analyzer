@@ -104,11 +104,17 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Design-time конструктор — только для XAML превью.</summary>
     public MainWindowViewModel()
     {
+        // Использую Mock для визуального отображения
+        _appSettings = new AppSettingsMock();
+        _uiSettings = new UiSectionSettingsMock();
+        
+        // Парсер и сервис проводника не нужен в Design режиме
         _parser = null!;
         _fileDialogService = null!;
         _sortingService = null!;
+        
+        // Использую Mock для визуального отображения
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
-
         foreach (var fileInfo in TraceFilesInfosMock.Mocks) { TraceFileInfos.Add(CreateFileCardViewModel(fileInfo)); }
 
         Events.Add(new AttachDatabaseEvent
@@ -134,8 +140,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
-            new StatisticInfoModel("All Events:", "0"),
-            new StatisticInfoModel("Filtered Events:", "0")
+            new StatisticInfoModel("All Events:", Events.Count.ToString()),
+            new StatisticInfoModel("Filtered Events:", Events.Count.ToString())
         ]);
         
         
@@ -162,6 +168,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _sortingService = sortingService;
 
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
+        // Обновляем статистику
+        UpdateStatistics();
 
         // Создаем дополнительные ручные сортировки
         CreateCustomSorting();

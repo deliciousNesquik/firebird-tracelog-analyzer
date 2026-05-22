@@ -11,11 +11,10 @@
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="FTV (firebird trace log viewer)"
+        Title="FireBird Trace Log Viewer"
         MinWidth="1000">
 
     <Design.DataContext>
-
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
