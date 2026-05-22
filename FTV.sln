@@ -4,10 +4,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebirdTraceViewer", "Fire
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebirdTraceParser.Core", "FirebirdTraceParser.Core\FirebirdTraceParser.Core.csproj", "{F9096CF6-D59C-427A-B153-F9DD3E054BB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebirdTraceParser.Tests", "FirebirdTraceParser.Tests\FirebirdTraceParser.Tests.csproj", "{5BFCE9AF-1C2A-42F0-9BBC-C58A7172DCD1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirebirdTraceParser.Benchmarks", "FirebirdTraceParser.Benchmarks\FirebirdTraceParser.Benchmarks.csproj", "{67A970D9-AA29-4E3F-A6C4-D608D20A67D7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,13 +18,5 @@ Global
 		{F9096CF6-D59C-427A-B153-F9DD3E054BB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9096CF6-D59C-427A-B153-F9DD3E054BB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9096CF6-D59C-427A-B153-F9DD3E054BB7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5BFCE9AF-1C2A-42F0-9BBC-C58A7172DCD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5BFCE9AF-1C2A-42F0-9BBC-C58A7172DCD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5BFCE9AF-1C2A-42F0-9BBC-C58A7172DCD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5BFCE9AF-1C2A-42F0-9BBC-C58A7172DCD1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67A970D9-AA29-4E3F-A6C4-D608D20A67D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67A970D9-AA29-4E3F-A6C4-D608D20A67D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67A970D9-AA29-4E3F-A6C4-D608D20A67D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67A970D9-AA29-4E3F-A6C4-D608D20A67D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
