@@ -148,7 +148,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // Загрузка всех настроек приложения
         LoadSettings();
         
-        StatusMessage = "Готов к работе (Design Time).";
+        StatusMessage = "Ready to go (Design Time).";
     }
 
     /// <summary>Runtime конструктор — используется DI контейнером.</summary>
@@ -180,8 +180,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Загрузка всех настроек приложения
         LoadSettings();
         
-        StatusMessage = "Готов к работе!";
-        Logger.Info("MainWindowViewModel инициализирован");
+        StatusMessage = "Ready to go!";
+        Logger.Info("MainWindowViewModel initialized.");
     }
     
     /// <summary>
@@ -200,8 +200,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IsClassicSearch = _appSettings.IsClassicSearch;
         CurrentSearchType = IsClassicSearch ? SearchType.Classic : SearchType.Regexp;
         
-        Logger.Info("Настройки приложения загружены");
-        StatusMessage = "Настройки приложения загружены";
+        Logger.Info("Application settings have been loaded.");
+        StatusMessage = "Application settings have been loaded.";
     }
 
 
@@ -210,16 +210,16 @@ public partial class MainWindowViewModel : ViewModelBase
         // Регистрируем пользовательскую сортировку
         _sortingService.RegisterCustomSort(new SortDescriptor(
             "custom_user_activity",
-            "По активности пользователя",
+            "User Activity",
             CustomUserActivityComparer,
-            "Аналитика",
+            "Analytics",
             50));
 
         _sortingService.RegisterCustomSort(new SortDescriptor(
             "heavy_queries",
-            "Тяжёлые запросы",
+            "Heavy Queries",
             HeavyQueriesComparer,
-            "Аналитика",
+            "Analytics",
             2));
     }
 
@@ -285,7 +285,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedSort = descriptor;
         descriptor.IsSelected = true;
 
-        Logger.Info("Выбрана сортировка: {DisplayName}", descriptor.DisplayName);
+        Logger.Info("Sorting selected: {DisplayName}", descriptor.DisplayName);
     }
 
     private void UpdateAvailableSorts()
@@ -349,7 +349,7 @@ public partial class MainWindowViewModel : ViewModelBase
         FilteredEvents.Clear();
         foreach (var evt in sorted) FilteredEvents.Add(evt);
 
-        StatusMessage = $"Применена сортировка: {SelectedSort.DisplayName}";
+        StatusMessage = $"Sorting selected: {SelectedSort.DisplayName}";
     }
 
     
@@ -379,7 +379,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateAvailableSorts(); // ← Обновляем сортировки после фильтрации
         ApplyCurrentSort(); // ← Применяем текущую сортировку
 
-        StatusMessage = $"Отфильтровано: {FilteredEvents.Count}/{Events.Count} событий";
+        StatusMessage = $"Filter: {FilteredEvents.Count}/{Events.Count} events";
     }
 
     /// <summary>
@@ -438,8 +438,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IsStatisticsSectionVisible = _uiSettings.Statistics;
         IsLogsSectionVisible = _uiSettings.Logs;
 
-        Logger.Info("Восстановлены заводские настройки");
-        StatusMessage = "Восстановлены заводские настройки";
+        Logger.Info("Factory settings restored");
+        StatusMessage = "Factory settings restored";
     }
 
 
@@ -454,7 +454,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 checkBox.IsSelected = false;
 
         ApplyAllFilters();
-        StatusMessage = "Все фильтры очищены.";
+        StatusMessage = "Clear all filters.";
     }
 
     /// <summary>
@@ -473,7 +473,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ApplyAllFilters // Callback при изменении
         );
 
-        Logger.Info("Фильтры инициализированы");
+        Logger.Info("Filters initialized");
     }
 
     /// <summary>
@@ -498,7 +498,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (TraceFileInfos.Count == 0)
         {
-            StatusMessage = "Нет загруженных файлов для обработки.";
+            StatusMessage = "There are no uploaded files for processing.";
             return;
         }
 
@@ -511,30 +511,30 @@ public partial class MainWindowViewModel : ViewModelBase
             // Снимок коллекции — защита от модификации во время итерации
             var allCards = TraceFileInfos.ToList();
 
-            StatusMessage = $"Повторная обработка всех файлов: 0/{allCards.Count}";
+            StatusMessage = $"Reprocessing all files: 0/{allCards.Count}";
 
             for (var i = 0; i < allCards.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var card = allCards[i];
-                StatusMessage = $"Повторная обработка {i + 1}/{allCards.Count}: {card.FileInfo.FileName}";
+                StatusMessage = $"Reprocessing {i + 1}/{allCards.Count}: {card.FileInfo.FileName}";
 
                 await ReparseTraceFileAsync(card, cancellationToken);
             }
 
-            StatusMessage = $"Все файлы обработаны заново: {allCards.Count} файл(ов).";
-            Logger.Info("Повторная обработка всех файлов завершена: {Count}", allCards.Count);
+            StatusMessage = $"All files have been reprocessed.: {allCards.Count} file(s).";
+            Logger.Info("Reprocessing of all files completed: {Count}", allCards.Count);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Повторная обработка отменена.";
-            Logger.Info("Повторная обработка всех файлов отменена");
+            StatusMessage = "Reprocessing cancelled.";
+            Logger.Info("Reprocessing of all files has been cancelled.");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка при повторной обработке всех файлов");
-            StatusMessage = $"Ошибка обработки: {ex.Message}";
+            Logger.Error(ex, "Error reprocessing all files");
+            StatusMessage = $"Processing error: {ex.Message}";
         }
         finally
         {
@@ -556,7 +556,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (SelectedFileCards.Count == 0)
         {
-            StatusMessage = "Нет выделенных файлов для обработки.";
+            StatusMessage = "There are no files selected for processing.";
             return;
         }
 
@@ -566,33 +566,32 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            // Снимок — SelectedFileCards может меняться во время итерации
             var selectedCards = SelectedFileCards.ToList();
 
-            StatusMessage = $"Повторная обработка выделенных файлов: 0/{selectedCards.Count}";
+            StatusMessage = $"Reprocessing selected files: 0/{selectedCards.Count}";
 
             for (var i = 0; i < selectedCards.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var card = selectedCards[i];
-                StatusMessage = $"Повторная обработка {i + 1}/{selectedCards.Count}: {card.FileInfo.FileName}";
+                StatusMessage = $"Reprocessing {i + 1}/{selectedCards.Count}: {card.FileInfo.FileName}";
 
                 await ReparseTraceFileAsync(card, cancellationToken);
             }
 
-            StatusMessage = $"Выделенные файлы обработаны заново: {selectedCards.Count} файл(ов).";
-            Logger.Info("Повторная обработка выделенных файлов завершена: {Count}", selectedCards.Count);
+            StatusMessage = $"The selected files have been reprocessed.: {selectedCards.Count} file(s).";
+            Logger.Info("Reprocessing of selected files completed: {Count}", selectedCards.Count);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Повторная обработка отменена.";
-            Logger.Info("Повторная обработка выделенных файлов отменена");
+            StatusMessage = "Reprocessing cancelled.";
+            Logger.Info("Reprocessing of selected files has been cancelled.");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка при повторной обработке выделенных файлов");
-            StatusMessage = $"Ошибка обработки: {ex.Message}";
+            Logger.Error(ex, "Error reprocessing selected files");
+            StatusMessage = $"Processing error: {ex.Message}";
         }
         finally
         {
@@ -640,7 +639,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (files.Count == 0)
             {
-                StatusMessage = "Файлы не выбраны.";
+                StatusMessage = "No files selected.";
                 return;
             }
 
@@ -648,13 +647,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Загрузка файлов отменена.";
-            Logger.Info("Загрузка файлов отменена пользователем");
+            StatusMessage = "File upload cancelled by user.";
+            Logger.Info("File upload cancelled by user");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка при загрузке файлов");
-            StatusMessage = $"Ошибка загрузки: {ex.Message}";
+            Logger.Error(ex, "Error while downloading files");
+            StatusMessage = $"Loading error: {ex.Message}";
         }
         finally
         {
@@ -727,18 +726,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             {
-                Logger.Warn("Файл не найден или путь пустой: {Path}", path);
+                Logger.Warn("File not found or path is empty: {Path}", path);
                 continue;
             }
 
-            StatusMessage = $"Обработка файла {i + 1}/{files.Count}: {Path.GetFileName(path)}";
+            StatusMessage = $"File processing {i + 1}/{files.Count}: {Path.GetFileName(path)}";
 
             var fileHash = await CalculateFileHashAsync(path, cancellationToken);
 
             if (IsDuplicate(fileHash))
             {
                 duplicateCount++;
-                Logger.Warn("Дубликат файла пропущен: {FilePath}", path);
+                Logger.Warn("Duplicate file skipped: {FilePath}", path);
                 continue;
             }
 
@@ -783,7 +782,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 AddEventWithFiltering(evt);
         });
 
-        Logger.Info("Файл распарсен: {FileName}, событий: {Count}",
+        Logger.Info("The file is parsed: {FileName}, events: {Count}",
             fileInfo.Name, eventList.Count);
 
         return new TraceFileInfoModel(
@@ -828,7 +827,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RemoveFileEvents(card.FileInfo.FileHash);
         TraceFileInfos.Remove(card);
         UpdateStatistics();
-        StatusMessage = $"Файл '{card.FileInfo.FileName}' удалён.";
+        StatusMessage = $"File '{card.FileInfo.FileName}' is deleted.";
         return Task.CompletedTask;
     }
 
@@ -846,8 +845,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!fileInfo.Exists)
             {
-                StatusMessage = $"Файл '{card.FileInfo.FileName}' не найден на диске.";
-                Logger.Warn("Файл для повторного парсинга не существует: {Path}", card.FileInfo.FilePath);
+                StatusMessage = $"File '{card.FileInfo.FileName}' not found on disk.";
+                Logger.Warn("The file to reparse does not exist.: {Path}", card.FileInfo.FilePath);
                 return;
             }
 
@@ -867,8 +866,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка повторной обработки файла: {FileName}", card.FileInfo.FileName);
-            StatusMessage = $"Ошибка повторной обработки файла: '{card.FileInfo.FileName}': {ex.Message}";
+            Logger.Error(ex, "Error reprocessing file: {FileName}", card.FileInfo.FileName);
+            StatusMessage = $"Error reprocessing file: '{card.FileInfo.FileName}': {ex.Message}";
         }
     }
 
@@ -914,10 +913,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var totalEvents = TraceFileInfos.Sum(f => f.FileInfo.EventCount);
 
         StatisticInfoModels.UpdateStatistics([
-            new StatisticInfoModel("Файлов:", TraceFileInfos.Count.ToString()),
-            new StatisticInfoModel("Всего событий:", totalEvents.ToString("N0")),
+            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("All Events:", totalEvents.ToString("N0")),
             new StatisticInfoModel(
-                "Отфильтрованных событий:",
+                "Filtering Events:",
                 FilteredEvents.Count.ToString("N0"))
         ]);
     }
@@ -926,10 +925,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         return (addedCount, duplicateCount) switch
         {
-            (> 0, > 0) => $"Добавлено: {addedCount} файл(ов). Пропущено дубликатов: {duplicateCount}.",
-            (> 0, 0) => $"Добавлено: {addedCount} файл(ов).",
-            (0, > 0) => "Файлы не добавлены: все выбранные файлы уже загружены.",
-            _ => "Файлы не выбраны."
+            (> 0, > 0) => $"Load: {addedCount} file(s). Skipped clone: {duplicateCount}.",
+            (> 0, 0) => $"Load: {addedCount} file(s).",
+            (0, > 0) => "File(s) not load: all files already loaded.",
+            _ => "File(s) not selected."
         };
     }
 }

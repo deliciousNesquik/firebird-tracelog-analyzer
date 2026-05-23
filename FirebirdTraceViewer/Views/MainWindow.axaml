@@ -319,8 +319,8 @@
 
             <!--Поисковая строка с иконкой и кнопкой поиска-->
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
-                <TextBox Grid.Row="0" Grid.Column="0"
-                         PlaceholderText="Поиск" VerticalContentAlignment="Center" />
+                <TextBox Grid.Row="0" Grid.Column="0" Background="{DynamicResource Background}"
+                         PlaceholderText="Search" VerticalContentAlignment="Center" />
                 <Button Grid.Row="0" Grid.Column="1" Background="Transparent" VerticalContentAlignment="Center"
                         Height="40" BorderThickness="1">
                     <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconColor}" />
@@ -421,7 +421,7 @@
         <usercontrols:StatisticInfoSection
             Grid.Row="4"
             Padding="10"
-            Background="{DynamicResource Background }"
+            Background="{DynamicResource BackgroundOther}"
             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStatisticsSectionVisible}"
             DataContext="{Binding StatisticInfoModels}" />
 
