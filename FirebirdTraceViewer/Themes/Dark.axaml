@@ -1,0 +1,13 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Color x:Key="Background">#262626</Color>
+    <Color x:Key="MenuBackground">#3b3e40</Color>
+    <Color x:Key="BackgroundOther">#2b2d30</Color>
+
+    <Color x:Key="Foreground">#ededed</Color>
+    
+    <x:String x:Key="ThemeIconColor">.ThemeIconColor { fill:#FFEFFF; }</x:String>
+    <x:String x:Key="ThemeIconStroke">.ThemeIconStroke { stroke:#FFEFFF; }</x:String>
+    
+</ResourceDictionary>

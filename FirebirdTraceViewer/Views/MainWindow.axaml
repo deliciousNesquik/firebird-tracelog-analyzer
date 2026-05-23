@@ -10,9 +10,10 @@
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/app-logo.ico"
         Title="FireBird Trace Log Viewer"
-        MinWidth="1000">
+        MinWidth="1000"
+        MinHeight="500">
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -216,24 +217,26 @@
 
     </Window.DataTemplates>
 
-    <Grid RowDefinitions="30 Auto Auto * 40, Auto" RowSpacing="5">
+    <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
 
-        <Menu Grid.Row="0">
-            <MenuItem Header="Open">
-                <MenuItem Header="Local File" Command="{Binding OpenLocalFileCommand}" />
-                <MenuItem Header="Remote File" IsEnabled="False" />
-                <MenuItem Header="Cancel Loading"
+        <Menu Grid.Row="0" Background="{DynamicResource MenuBackground}">
+            <MenuItem Header="Open" Foreground="{DynamicResource Foreground}">
+                <MenuItem Header="Local File" Foreground="{DynamicResource Foreground}"
+                          Command="{Binding OpenLocalFileCommand}" />
+                <MenuItem Header="Remote File" Foreground="{DynamicResource Foreground}" IsEnabled="False" />
+                <MenuItem Header="Cancel Loading" Foreground="{DynamicResource Foreground}"
                           Command="{Binding CancelLoadingCommand}" />
             </MenuItem>
-            <MenuItem Header="Edit">
-                <MenuItem Header="Reprocess all files"
+            <MenuItem Header="Edit" Foreground="{DynamicResource Foreground}">
+                <MenuItem Header="Reprocess all files" Foreground="{DynamicResource Foreground}"
                           Command="{Binding ReparseAllFilesCommand}" />
-                <MenuItem Header="Reprocess selected files"
+                <MenuItem Header="Reprocess selected files" Foreground="{DynamicResource Foreground}"
                           Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
-            <MenuItem Header="Window">
+            <MenuItem Header="Window" Foreground="{DynamicResource Foreground}">
                 <MenuItem
                     Header="Files"
+                    Foreground="{DynamicResource Foreground}"
                     Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsTraceFilesSectionVisible}"
@@ -241,6 +244,7 @@
 
                 <MenuItem
                     Header="Search, Sort and Filters"
+                    Foreground="{DynamicResource Foreground}"
                     Command="{Binding SwitchVisibleSearchSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsSearchSectionVisible}"
@@ -248,6 +252,7 @@
 
                 <MenuItem
                     Header="Events"
+                    Foreground="{DynamicResource Foreground}"
                     IsChecked="{Binding IsEventsSectionVisible}"
                     Command="{Binding SwitchEventsSectionVisibleCommand}"
                     ToggleType="CheckBox"
@@ -255,6 +260,7 @@
 
                 <MenuItem
                     Header="Statistics"
+                    Foreground="{DynamicResource Foreground}"
                     IsChecked="{Binding IsStatisticsSectionVisible}"
                     Command="{Binding SwitchStatisticsSectionVisibleCommand}"
                     ToggleType="CheckBox"
@@ -262,24 +268,28 @@
 
                 <MenuItem
                     Header="Statuses"
+                    Foreground="{DynamicResource Foreground}"
                     IsChecked="{Binding IsLogsSectionVisible}"
                     Command="{Binding SwitchLogsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <Separator />
-                <MenuItem Header="Reset" Command="{Binding GoToFactorySettingsSectionCommand}" />
+                <MenuItem Header="Reset" Foreground="{DynamicResource Foreground}"
+                          Command="{Binding GoToFactorySettingsSectionCommand}" />
             </MenuItem>
 
-            <MenuItem Header="Settings">
-                <MenuItem Header="Set up remote access" />
-                <MenuItem Header="Configure open file update" />
+            <MenuItem Header="Settings" Foreground="{DynamicResource Foreground}">
+                <MenuItem Header="Set up remote access" Foreground="{DynamicResource Foreground}" />
+                <MenuItem Header="Configure open file update" Foreground="{DynamicResource Foreground}" />
             </MenuItem>
         </Menu>
 
 
         <ListBox
             Grid.Row="1"
+            Padding="10"
+            Background="{DynamicResource BackgroundOther}"
             IsVisible="{Binding IsTraceFilesSectionVisible}"
             SelectionMode="Multiple"
             SelectedItems="{Binding SelectedFileCards}"
@@ -305,8 +315,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Grid.Row="2" IsVisible="{Binding IsSearchSectionVisible}"
-                Padding="10">
+        <Border Grid.Row="2" Padding="10" Background="{DynamicResource BackgroundOther}" IsVisible="{Binding IsSearchSectionVisible}" >
 
             <!--Поисковая строка с иконкой и кнопкой поиска-->
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
@@ -314,7 +323,7 @@
                          PlaceholderText="Поиск" VerticalContentAlignment="Center" />
                 <Button Grid.Row="0" Grid.Column="1" Background="Transparent" VerticalContentAlignment="Center"
                         Height="40" BorderThickness="1">
-                    <Svg Path="{DynamicResource SearchIcon}" />
+                    <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconColor}" />
                 </Button>
 
                 <Button Grid.Row="0"
@@ -380,12 +389,12 @@
                         </Flyout>
                     </Button.Flyout>
 
-                    <Svg Path="{DynamicResource SortIcon}" />
+                    <Svg Path="{DynamicResource SortIcon}" Css="{DynamicResource ThemeIconStroke}"/>
                 </Button>
 
                 <Button Grid.Row="0" Grid.Column="3" VerticalContentAlignment="Center" Background="Transparent"
                         Height="40" BorderThickness="1">
-                    <Svg Path="{DynamicResource FilterIcon}" />
+                    <Svg Path="{DynamicResource FilterIcon}" Css="{DynamicResource ThemeIconStroke}" />
                 </Button>
 
 
@@ -393,51 +402,11 @@
 
         </Border>
 
-        <!--<Grid Grid.Row="2" ColumnDefinitions="* *">
-
-            ~1~ Поиск @1@
-            <Grid Grid.Column="0" RowDefinitions="Auto Auto" Margin="10,5,10,0">
-
-                ~1~ Строка поиска (растягивается на всю ширину столбца Grid.Column="0") @1@
-                <Grid Grid.Row="0" ColumnDefinitions="* Auto" ColumnSpacing="10">
-                    <TextBox Grid.Column="0"
-                             PlaceholderText="Поиск..."
-                             HorizontalAlignment="Stretch" />
-                    <Button Grid.Column="1"
-                            Content="🔍"
-                            Width="34"
-                            Height="34"
-                            HorizontalAlignment="Left" />
-                </Grid>
-
-                ~1~ Режимы поиска @1@
-                <Grid Grid.Row="1"
-                      ColumnDefinitions="Auto 10* Auto"
-                      ColumnSpacing="20"
-                      Margin="0,8,0,0">
-
-                    <StackPanel VerticalAlignment="Top" Grid.Column="0" Orientation="Vertical">
-                        <RadioButton Content="Classic"
-                                     GroupName="SearchType"
-                                     IsChecked="{Binding IsClassicSearch}"
-                                     Command="{Binding SwitchSearchType}"
-                                     HorizontalAlignment="Stretch" />
-                        <RadioButton Content="Regexp"
-                                     GroupName="SearchType"
-                                     Command="{Binding SwitchSearchType}"
-                                     HorizontalAlignment="Stretch" />
-                    </StackPanel>
-
-                    <CheckBox VerticalAlignment="Top" Grid.Column="2"
-                              Content="Find in selected files" />
-                </Grid>
-            </Grid>
-        </Grid>-->
-
         <ListBox Grid.Row="3"
+                 Padding="10"
                  ItemsSource="{Binding FilteredEvents}"
                  IsVisible="{Binding IsEventsSectionVisible}"
-                 Margin="10"
+                 Background="{DynamicResource Background }"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">
 
@@ -451,11 +420,12 @@
 
         <usercontrols:StatisticInfoSection
             Grid.Row="4"
-            Margin="10 0 0 0"
+            Padding="10"
+            Background="{DynamicResource Background }"
             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStatisticsSectionVisible}"
             DataContext="{Binding StatisticInfoModels}" />
 
-        <TextBlock Grid.Row="5" IsVisible="{Binding IsLogsSectionVisible}" Text="{Binding StatusMessage}"
-                   Padding="10 0 0 5" />
+        <TextBlock Grid.Row="5" Background="{DynamicResource MenuBackground}" IsVisible="{Binding IsLogsSectionVisible}" Text="{Binding StatusMessage}"
+                   Padding="10" />
     </Grid>
 </Window>

@@ -10,6 +10,12 @@
     </Application.DataTemplates>
   
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://FirebirdTraceViewer/Themes/Dark.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+        
         <x:String x:Key="AppIcon">avares://FirebirdTraceViewer/Assets/app.ico</x:String>
         <x:String x:Key="SearchIcon">avares://FirebirdTraceViewer/Assets/search.svg</x:String>
         <x:String x:Key="SortIcon">avares://FirebirdTraceViewer/Assets/sort.svg</x:String>
