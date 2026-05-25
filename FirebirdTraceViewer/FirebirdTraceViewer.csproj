@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <RuntimeIdentifiers>osx-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
         <OutputType>Exe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
@@ -37,6 +37,7 @@
         
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.2"/>
         <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.2"/>
+        <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.2" />
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>

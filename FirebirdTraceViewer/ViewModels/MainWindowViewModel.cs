@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Security.Cryptography;
-using Avalonia;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,10 +9,10 @@ using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 using FirebirdTraceParser.Core.Parsing.Engine;
 using FirebirdTraceViewer.Enums;
+using FirebirdTraceViewer.Services;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
-using FirebirdTraceViewer.Models.Filters;
 using FirebirdTraceViewer.Services.Sorting;
 using Microsoft.Extensions.Options;
 using NLog;
@@ -24,98 +23,99 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    #region Dependencies (Injected Services)
+
     private readonly AppSettings _appSettings;
     private readonly UiSectionSettings _uiSettings;
-    
-    // Сервис для открытия файлов через стандартный проводник.
     private readonly IFileDialogService _fileDialogService;
-
-    // Сервис парсера для обработки потока данных файла.
     private readonly ITraceLogParser _parser;
-
     private readonly ISortingService _sortingService;
-    public ObservableCollection<SortDescriptor> AvailableSorts { get; } = [];
+    private readonly IFilteringService _filteringService;
 
-    [ObservableProperty] private SortDescriptor? _selectedSort;
+    #endregion
 
-    [ObservableProperty] private bool _isSortDescending;
+    #region Collections
 
-    /// <summary>
-    ///     Сортировки, сгруппированные по категориям
-    /// </summary>
-    public ObservableCollection<IGrouping<string, SortDescriptor>> AvailableSortsByCategory { get; } = [];
+    /// <summary>Все события из всех файлов (source of truth)</summary>
+    public ObservableCollection<EventBase> Events { get; } = [];
 
-    // Менеджер фильтров
-    private readonly FilterManager _filterManager = new();
-    private readonly EventTypeFilter _eventTypeFilter = new();
-    private readonly UserNameFilter _userNameFilter = new();
-
-    [ObservableProperty] public partial EventTypeFilterViewModel? EventTypeFilterViewModel { get; set; }
-
-    // Хранит события по хешу файла для O(1) удаления группы событий
-    // HashSet<EventBase> работает через record structural equality — 
-    // используем List + индекс для сохранения порядка вставки
-    private readonly Dictionary<string, List<EventBase>> _eventsByFileHash = [];
-
-    // Токен для отмены текущей операции загрузки
-    private CancellationTokenSource? _loadingCts;
-
-    public ObservableCollection<FileCardViewModel> TraceFileInfos { get; } = [];
-    public ObservableCollection<FilterCardModel> FilterCardModels { get; } = [];
-
-    /// <summary>
-    ///     Отфильтрованные события на основе всех активных фильтров.
-    ///     Обновляется при изменении фильтров.
-    /// </summary>
+    /// <summary>События после применения фильтров и сортировки</summary>
     public ObservableCollection<EventBase> FilteredEvents { get; } = [];
 
-    public ObservableCollection<EventBase> Events { get; } = [];
-    public StatisticsInfoSectionViewModel StatisticInfoModels { get; }
+    /// <summary>Информация о загруженных файлах</summary>
+    public ObservableCollection<FileCardViewModel> TraceFileInfos { get; } = [];
 
-
-    /// <summary>
-    ///     Выделенные карточки файлов — синхронизируется из code-behind через ListBox.SelectionChanged.
-    ///     Хранит ссылки, а не копии — O(1) доступ.
-    /// </summary>
+    /// <summary>Выделенные файлы (синхронизируется с ListBox.SelectedItems)</summary>
     public ObservableCollection<FileCardViewModel> SelectedFileCards { get; } = [];
 
-    [ObservableProperty] public partial SearchType CurrentSearchType { get; set; }
+    /// <summary>Все доступные сортировки</summary>
+    public ObservableCollection<SortDescriptor> AvailableSorts { get; } = [];
 
-    /// <summary>
-    ///     Вычисляемое свойство — нет дублирования состояния.
-    ///     Обновляется через OnCurrentSearchTypeChanged.
-    /// </summary>
-    [ObservableProperty]
-    public partial bool IsClassicSearch { get; set; }
+    /// <summary>Сортировки, сгруппированные по категориям</summary>
+    public ObservableCollection<IGrouping<string, SortDescriptor>> AvailableSortsByCategory { get; } = [];
 
-    [ObservableProperty] public partial bool IsTraceFilesSectionVisible { get; set; }
-    [ObservableProperty] public partial bool IsSearchSectionVisible { get; set; }
-    [ObservableProperty] public partial bool IsEventsSectionVisible { get; set; }
-    [ObservableProperty] public partial bool IsStatisticsSectionVisible { get; set; }
-    [ObservableProperty] public partial bool IsLogsSectionVisible { get; set; }
+    #endregion
 
+    #region State Management
 
-    [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
+    // События по хешу файла (для быстрого удаления)
+    private readonly Dictionary<string, List<EventBase>> _eventsByFileHash = [];
 
-    [ObservableProperty] public partial bool IsFileLoading { get; set; }
+    // Токен отмены загрузки
+    private CancellationTokenSource? _loadingCts;
 
-    [ObservableProperty] public partial double LoadProgress { get; set; }
+    #endregion
 
-    /// <summary>Design-time конструктор — только для XAML превью.</summary>
+    #region Observable Properties - UI State
+
+    [ObservableProperty] private bool _isTraceFilesSectionVisible;
+    [ObservableProperty] private bool _isSearchSectionVisible;
+    [ObservableProperty] private bool _isEventsSectionVisible;
+    [ObservableProperty] private bool _isStatisticsSectionVisible;
+    [ObservableProperty] private bool _isLogsSectionVisible;
+
+    [ObservableProperty] private SearchType _currentSearchType;
+    [ObservableProperty] private bool _isClassicSearch;
+
+    [ObservableProperty] private string _statusMessage = string.Empty;
+    [ObservableProperty] private bool _isFileLoading;
+    [ObservableProperty] private double _loadProgress;
+
+    #endregion
+
+    #region Observable Properties - Sorting & Filtering
+
+    [ObservableProperty] private SortDescriptor? _selectedSort;
+    [ObservableProperty] private bool _isSortDescending;
+
+    /// <summary>ViewModel панели фильтров</summary>
+    public FiltersPanelViewModel FiltersPanelViewModel { get; }
+
+    /// <summary>ViewModel секции статистики</summary>
+    public StatisticsInfoSectionViewModel StatisticInfoModels { get; }
+
+    #endregion
+
+    #region Constructors
+
+    /// <summary>Design-time конструктор (для XAML превью)</summary>
     public MainWindowViewModel()
     {
-        // Использую Mock для визуального отображения
+        // Mock-данные для дизайнера
         _appSettings = new AppSettingsMock();
         _uiSettings = new UiSectionSettingsMock();
-        
-        // Парсер и сервис проводника не нужен в Design режиме
         _parser = null!;
         _fileDialogService = null!;
         _sortingService = null!;
-        
-        // Использую Mock для визуального отображения
+        _filteringService = null!;
+
+        // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
-        foreach (var fileInfo in TraceFilesInfosMock.Mocks) { TraceFileInfos.Add(CreateFileCardViewModel(fileInfo)); }
+        FiltersPanelViewModel = new FiltersPanelViewModel(() => { });
+
+        // Mock данные
+        foreach (var fileInfo in TraceFilesInfosMock.Mocks)
+            TraceFileInfos.Add(CreateFileCardViewModel(fileInfo));
 
         Events.Add(new AttachDatabaseEvent
         {
@@ -124,90 +124,88 @@ public partial class MainWindowViewModel : ViewModelBase
                 Address = "192.168.3.5",
                 AttachmentId = 123,
                 Charset = "UTF-8",
-                DatabasePath = "Path",
-                Port = 1010,
+                DatabasePath = "C:\\Database\\test.fdb",
+                Port = 3050,
                 Protocol = "TCP",
-                ProcessId = 12,
-                ProcessPath = "Process Path",
+                ProcessId = 12345,
+                ProcessPath = "C:\\App\\app.exe",
                 User = "BERDIN.A",
-                Role = "MON"
+                Role = "ADMIN"
             },
             EventType = EventType.AttachDatabase,
             Timestamp = DateTime.Now,
-            TraceId = 437_236,
+            TraceId = 437236,
             HexTraceId = "0x7f3133ba1dc0"
         });
+
+        FilteredEvents.Add(Events[0]);
 
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
             new StatisticInfoModel("All Events:", Events.Count.ToString()),
-            new StatisticInfoModel("Filtered Events:", Events.Count.ToString())
+            new StatisticInfoModel("Filtered Events:", FilteredEvents.Count.ToString())
         ]);
-        
-        
-        // Загрузка всех настроек приложения
+
         LoadSettings();
-        
         StatusMessage = "Ready to go (Design Time).";
     }
 
-    /// <summary>Runtime конструктор — используется DI контейнером.</summary>
-    public MainWindowViewModel(IFileDialogService fileDialogService, ITraceLogParser parser,
-        ISortingService sortingService, IOptions<AppSettings> appSettings,
+    /// <summary>Runtime конструктор (DI)</summary>
+    public MainWindowViewModel(
+        IFileDialogService fileDialogService,
+        ITraceLogParser parser,
+        ISortingService sortingService,
+        IFilteringService filteringService,
+        IOptions<AppSettings> appSettings,
         IOptions<UiSectionSettings> uiSettings)
     {
-        // Инициализируем фильтры
-        InitializeFilters();
-
+        // Dependency Injection
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
-        
-        // Извлекаем значения из IOptions<T>
-        _appSettings = appSettings.Value;
-        _uiSettings = uiSettings.Value;
-        _sortingService = sortingService;
+        _sortingService = sortingService ?? throw new ArgumentNullException(nameof(sortingService));
+        _filteringService = filteringService ?? throw new ArgumentNullException(nameof(filteringService));
+        _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
+        _uiSettings = uiSettings?.Value ?? throw new ArgumentNullException(nameof(uiSettings));
 
+        // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
-        // Обновляем статистику
-        UpdateStatistics();
+        FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters);
 
-        // Создаем дополнительные ручные сортировки
-        CreateCustomSorting();
-        
-        // Выполняем обновление UI для получения всех возможных сортировок
-        UpdateAvailableSorts();
-        
-        // Загрузка всех настроек приложения
+        // Регистрация пользовательских сортировок
+        RegisterCustomSorts();
+
+        // Загрузка настроек
         LoadSettings();
-        
+
         StatusMessage = "Ready to go!";
         Logger.Info("MainWindowViewModel initialized.");
     }
-    
-    /// <summary>
-    /// Загружает настройки из конфигурации
-    /// </summary>
+
+    #endregion
+
+    #region Initialization
+
+    /// <summary>Загружает настройки из конфигурации</summary>
     private void LoadSettings()
     {
-        // Настройка окон
+        // UI Visibility
         IsTraceFilesSectionVisible = _uiSettings.Files;
         IsSearchSectionVisible = _uiSettings.Search;
         IsEventsSectionVisible = _uiSettings.Events;
         IsStatisticsSectionVisible = _uiSettings.Statistics;
         IsLogsSectionVisible = _uiSettings.Logs;
 
-        // Настройки поиска
+        // Search Type
         IsClassicSearch = _appSettings.IsClassicSearch;
         CurrentSearchType = IsClassicSearch ? SearchType.Classic : SearchType.Regexp;
-        
-        Logger.Info("Application settings have been loaded.");
-        StatusMessage = "Application settings have been loaded.";
+
+        Logger.Info("Application settings loaded.");
+        StatusMessage = "Application settings loaded.";
     }
 
-
-    private void CreateCustomSorting()
+    /// <summary>Регистрирует пользовательские сортировки</summary>
+    private void RegisterCustomSorts()
     {
-        // Регистрируем пользовательскую сортировку
         _sortingService.RegisterCustomSort(new SortDescriptor(
             "custom_user_activity",
             "User Activity",
@@ -221,73 +219,15 @@ public partial class MainWindowViewModel : ViewModelBase
             HeavyQueriesComparer,
             "Analytics",
             2));
+
+        Logger.Info("Custom sorts registered.");
     }
 
-    private int HeavyQueriesComparer(EventBase a, EventBase b, bool descending)
-    {
-        var msA = GetExecuteMs(a);
-        var msB = GetExecuteMs(b);
+    #endregion
 
-        // Сначала тяжёлые (по убыванию времени)
-        var result = msB.CompareTo(msA);
-        //return result != 0 ? result : a.Timestamp.CompareTo(b.Timestamp);
-        
-        if (result == 0)
-            result = a.Timestamp.CompareTo(b.Timestamp);
-        
-        return descending ? -result : result;
-    }
-    
-    /// <summary>
-    ///     Пример пользовательской сортировки.
-    /// </summary>
-    private int CustomUserActivityComparer(EventBase a, EventBase b, bool descending)
-    {
-        var userA = GetUserFromEvent(a);
-        var userB = GetUserFromEvent(b);
+    #region Sorting
 
-        // null всегда в конце
-        if (userA == null && userB == null) return 0;
-        if (userA == null) return 1;
-        if (userB == null) return -1;
-
-        var result = string.Compare(userA, userB, StringComparison.OrdinalIgnoreCase);
-    
-        // Если пользователи одинаковые, сортируем по времени
-        if (result == 0)
-            result = a.Timestamp.CompareTo(b.Timestamp);
-    
-        return descending ? -result : result; // ← инвертируем для descending
-    }
-
-    private int GetExecuteMs(EventBase evt)
-    {
-        return evt switch
-        {
-            StatementFinishEvent e => e.Performance.ExecuteMs,
-            ProcedureFinishEvent e => e.Performance.ExecuteMs,
-            TriggerFinishEvent e => e.Performance.ExecuteMs,
-            _ => 0
-        };
-    }
-
-    [RelayCommand]
-    private void SelectSort(SortDescriptor? descriptor)
-    {
-        if (descriptor == null || descriptor == SelectedSort)
-            return;
-
-        // Снимаем выделение с предыдущей
-        if (SelectedSort != null)
-            SelectedSort.IsSelected = false;
-
-        // Устанавливаем новую
-        SelectedSort = descriptor;
-        descriptor.IsSelected = true;
-
-        Logger.Info("Sorting selected: {DisplayName}", descriptor.DisplayName);
-    }
-
+    /// <summary>Обновляет список доступных сортировок</summary>
     private void UpdateAvailableSorts()
     {
         var previousSelectedId = SelectedSort?.Id;
@@ -297,15 +237,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var sorts = _sortingService.GetAvailableSorts(FilteredEvents);
 
-        // Добавляем в обычную коллекцию
-        foreach (var sort in sorts) AvailableSorts.Add(sort);
+        // Заполняем коллекции
+        foreach (var sort in sorts)
+            AvailableSorts.Add(sort);
 
-        // Группируем по категориям
         var grouped = sorts
             .GroupBy(s => s.Category)
             .OrderBy(g => g.Key);
 
-        foreach (var group in grouped) AvailableSortsByCategory.Add(group);
+        foreach (var group in grouped)
+            AvailableSortsByCategory.Add(group);
 
         // Восстанавливаем выбор
         SortDescriptor? toSelect = null;
@@ -320,15 +261,51 @@ public partial class MainWindowViewModel : ViewModelBase
             toSelect.IsSelected = true;
             SelectedSort = toSelect;
         }
+
+        Logger.Info("Available sorts updated: {Count}", sorts.Count);
     }
 
-    /// <summary>
-    ///     Применяет текущую сортировку.
-    /// </summary>
+    /// <summary>Применяет текущую сортировку</summary>
+    private void ApplyCurrentSort()
+    {
+        if (SelectedSort == null)
+        {
+            Logger.Warn("No sort selected, skipping sorting.");
+            return;
+        }
+
+        var sorted = _sortingService.ApplySort(
+            FilteredEvents,
+            SelectedSort.Id,
+            IsSortDescending);
+
+        FilteredEvents.Clear();
+        foreach (var evt in sorted)
+            FilteredEvents.Add(evt);
+
+        StatusMessage = $"Sorted by: {SelectedSort.DisplayName} ({(IsSortDescending ? "desc" : "asc")})";
+        Logger.Info("Applied sort: {SortName}, descending={Descending}", SelectedSort.DisplayName, IsSortDescending);
+    }
+
+    [RelayCommand]
+    private void SelectSort(SortDescriptor? descriptor)
+    {
+        if (descriptor == null || descriptor == SelectedSort)
+            return;
+
+        if (SelectedSort != null)
+            SelectedSort.IsSelected = false;
+
+        SelectedSort = descriptor;
+        descriptor.IsSelected = true;
+
+        Logger.Info("Sort selected: {DisplayName}", descriptor.DisplayName);
+    }
+
     partial void OnSelectedSortChanged(SortDescriptor? value)
     {
-        if (value == null) return;
-        ApplyCurrentSort();
+        if (value != null)
+            ApplyCurrentSort();
     }
 
     partial void OnIsSortDescendingChanged(bool value)
@@ -336,25 +313,50 @@ public partial class MainWindowViewModel : ViewModelBase
         ApplyCurrentSort();
     }
 
-    private void ApplyCurrentSort()
+    #region Custom Sort Comparers
+
+    private int CustomUserActivityComparer(EventBase a, EventBase b, bool descending)
     {
-        if (SelectedSort == null) return;
+        var userA = GetUserFromEvent(a);
+        var userB = GetUserFromEvent(b);
 
-        var sorted = _sortingService.ApplySort(
-            FilteredEvents,
-            SelectedSort.Id,
-            IsSortDescending);
+        if (userA == null && userB == null) return 0;
+        if (userA == null) return 1;
+        if (userB == null) return -1;
 
-        // Обновляем коллекцию
-        FilteredEvents.Clear();
-        foreach (var evt in sorted) FilteredEvents.Add(evt);
+        var result = string.Compare(userA, userB, StringComparison.OrdinalIgnoreCase);
 
-        StatusMessage = $"Sorting selected: {SelectedSort.DisplayName}";
+        if (result == 0)
+            result = a.Timestamp.CompareTo(b.Timestamp);
+
+        return descending ? -result : result;
     }
 
-    
+    private int HeavyQueriesComparer(EventBase a, EventBase b, bool descending)
+    {
+        var msA = GetExecuteMs(a);
+        var msB = GetExecuteMs(b);
 
-    private string? GetUserFromEvent(EventBase evt)
+        var result = msB.CompareTo(msA); // По умолчанию тяжёлые первыми
+
+        if (result == 0)
+            result = a.Timestamp.CompareTo(b.Timestamp);
+
+        return descending ? -result : result;
+    }
+
+    private static int GetExecuteMs(EventBase evt)
+    {
+        return evt switch
+        {
+            StatementFinishEvent e => e.Performance.ExecuteMs,
+            ProcedureFinishEvent e => e.Performance.ExecuteMs,
+            TriggerFinishEvent e => e.Performance.ExecuteMs,
+            _ => 0
+        };
+    }
+
+    private static string? GetUserFromEvent(EventBase evt)
     {
         return evt switch
         {
@@ -367,275 +369,63 @@ public partial class MainWindowViewModel : ViewModelBase
         };
     }
 
+    #endregion
+
+    #endregion
+
+    #region Filtering
+
+    /// <summary>Обновляет доступные фильтры на основе текущих событий</summary>
+    private void UpdateAvailableFilters()
+    {
+        var filters = _filteringService.GetAvailableFilters(Events);
+        FiltersPanelViewModel.LoadFilters(filters);
+
+        Logger.Info("Available filters updated: {Count}", filters.Count);
+    }
+
+    /// <summary>Применяет все активные фильтры</summary>
     private void ApplyAllFilters()
     {
-        FilteredEvents.Clear();
+        var filtered = _filteringService.ApplyFilters(
+            Events,
+            FiltersPanelViewModel.AvailableFilters);
 
-        foreach (var evt in Events)
-            if (_filterManager.IsEventVisible(evt))
-                FilteredEvents.Add(evt);
+        FilteredEvents.Clear();
+        foreach (var evt in filtered)
+            FilteredEvents.Add(evt);
 
         UpdateStatistics();
-        UpdateAvailableSorts(); // ← Обновляем сортировки после фильтрации
-        ApplyCurrentSort(); // ← Применяем текущую сортировку
+        UpdateAvailableSorts();
+        ApplyCurrentSort();
 
-        StatusMessage = $"Filter: {FilteredEvents.Count}/{Events.Count} events";
+        var activeCount = FiltersPanelViewModel.ActiveFiltersCount;
+        StatusMessage = activeCount > 0
+            ? $"Filtered: {FilteredEvents.Count}/{Events.Count} events ({activeCount} filters active)"
+            : $"Showing all events: {FilteredEvents.Count}";
+
+        Logger.Info("Filters applied: {FilteredCount}/{TotalCount}", FilteredEvents.Count, Events.Count);
     }
 
-    /// <summary>
-    ///     Синхронизирует IsClassicSearch при изменении CurrentSearchType.
-    ///     Единственное место управления состоянием поиска.
-    /// </summary>
-    partial void OnCurrentSearchTypeChanged(SearchType value)
-    {
-        IsClassicSearch = value == SearchType.Classic;
-    }
+    #endregion
 
-    [RelayCommand]
-    private void SwitchSearchType()
-    {
-        CurrentSearchType = CurrentSearchType == SearchType.Classic
-            ? SearchType.Regexp
-            : SearchType.Classic;
-    }
+    #region File Operations
 
-    [RelayCommand]
-    private void SwitchVisibleTraceFilesSection()
-    {
-        IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
-    }
-
-    [RelayCommand]
-    private void SwitchVisibleSearchSection()
-    {
-        IsSearchSectionVisible = !IsSearchSectionVisible;
-    }
-
-    [RelayCommand]
-    private void SwitchEventsSectionVisible()
-    {
-        IsEventsSectionVisible = !IsEventsSectionVisible;
-    }
-
-    [RelayCommand]
-    private void SwitchStatisticsSectionVisible()
-    {
-        IsStatisticsSectionVisible = !IsStatisticsSectionVisible;
-    }
-
-    [RelayCommand]
-    private void SwitchLogsSectionVisible()
-    {
-        IsLogsSectionVisible = !IsLogsSectionVisible;
-    }
-
-    [RelayCommand]
-    private void GoToFactorySettingsSection()
-    {
-        IsTraceFilesSectionVisible = _uiSettings.Files;
-        IsSearchSectionVisible = _uiSettings.Search;
-        IsEventsSectionVisible = _uiSettings.Events;
-        IsStatisticsSectionVisible = _uiSettings.Statistics;
-        IsLogsSectionVisible = _uiSettings.Logs;
-
-        Logger.Info("Factory settings restored");
-        StatusMessage = "Factory settings restored";
-    }
-
-
-    [RelayCommand]
-    private void ClearFilters()
-    {
-        _filterManager.ResetAll();
-
-        // Сбрасываем UI
-        if (EventTypeFilterViewModel != null)
-            foreach (var checkBox in EventTypeFilterViewModel.EventTypeCheckBoxes)
-                checkBox.IsSelected = false;
-
-        ApplyAllFilters();
-        StatusMessage = "Clear all filters.";
-    }
-
-    /// <summary>
-    ///     Инициализирует все доступные фильтры.
-    ///     Место, где добавляются новые фильтры в будущем.
-    /// </summary>
-    private void InitializeFilters()
-    {
-        // Регистрируем фильтр типов событий
-        _filterManager.RegisterFilter(_eventTypeFilter);
-        _filterManager.RegisterFilter(_userNameFilter);
-
-        // Создаём ViewModel для UI
-        EventTypeFilterViewModel = new EventTypeFilterViewModel(
-            _eventTypeFilter,
-            ApplyAllFilters // Callback при изменении
-        );
-
-        Logger.Info("Filters initialized");
-    }
-
-    /// <summary>
-    ///     Добавляет новое событие и применяет фильтры.
-    ///     Вызывается после парсинга файла.
-    /// </summary>
-    private void AddEventWithFiltering(EventBase evt)
-    {
-        Events.Add(evt);
-
-        if (_filterManager.IsEventVisible(evt))
-            FilteredEvents.Add(evt);
-    }
-
-
-    /// <summary>
-    ///     Повторно парсит все загруженные файлы последовательно.
-    ///     Защищена от запуска во время загрузки.
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanReparseFiles))]
-    private async Task ReparseAllFilesAsync(CancellationToken cancellationToken)
-    {
-        if (TraceFileInfos.Count == 0)
-        {
-            StatusMessage = "There are no uploaded files for processing.";
-            return;
-        }
-
-        IsFileLoading = true;
-        ReparseAllFilesCommand.NotifyCanExecuteChanged();
-        ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
-
-        try
-        {
-            // Снимок коллекции — защита от модификации во время итерации
-            var allCards = TraceFileInfos.ToList();
-
-            StatusMessage = $"Reprocessing all files: 0/{allCards.Count}";
-
-            for (var i = 0; i < allCards.Count; i++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var card = allCards[i];
-                StatusMessage = $"Reprocessing {i + 1}/{allCards.Count}: {card.FileInfo.FileName}";
-
-                await ReparseTraceFileAsync(card, cancellationToken);
-            }
-
-            StatusMessage = $"All files have been reprocessed.: {allCards.Count} file(s).";
-            Logger.Info("Reprocessing of all files completed: {Count}", allCards.Count);
-        }
-        catch (OperationCanceledException)
-        {
-            StatusMessage = "Reprocessing cancelled.";
-            Logger.Info("Reprocessing of all files has been cancelled.");
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reprocessing all files");
-            StatusMessage = $"Processing error: {ex.Message}";
-        }
-        finally
-        {
-            IsFileLoading = false;
-            ApplyAllFilters();
-            //UpdateAvailableSorts();
-            ReparseAllFilesCommand.NotifyCanExecuteChanged();
-            ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
-            OpenLocalFileCommand.NotifyCanExecuteChanged();
-            UpdateStatistics();
-        }
-    }
-
-    /// <summary>
-    ///     Повторно парсит только выделенные файлы.
-    /// </summary>
-    [RelayCommand(CanExecute = nameof(CanReparseSelectedFiles))]
-    private async Task ReparseSelectedFilesAsync(CancellationToken cancellationToken)
-    {
-        if (SelectedFileCards.Count == 0)
-        {
-            StatusMessage = "There are no files selected for processing.";
-            return;
-        }
-
-        IsFileLoading = true;
-        ReparseAllFilesCommand.NotifyCanExecuteChanged();
-        ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
-
-        try
-        {
-            var selectedCards = SelectedFileCards.ToList();
-
-            StatusMessage = $"Reprocessing selected files: 0/{selectedCards.Count}";
-
-            for (var i = 0; i < selectedCards.Count; i++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var card = selectedCards[i];
-                StatusMessage = $"Reprocessing {i + 1}/{selectedCards.Count}: {card.FileInfo.FileName}";
-
-                await ReparseTraceFileAsync(card, cancellationToken);
-            }
-
-            StatusMessage = $"The selected files have been reprocessed.: {selectedCards.Count} file(s).";
-            Logger.Info("Reprocessing of selected files completed: {Count}", selectedCards.Count);
-        }
-        catch (OperationCanceledException)
-        {
-            StatusMessage = "Reprocessing cancelled.";
-            Logger.Info("Reprocessing of selected files has been cancelled.");
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reprocessing selected files");
-            StatusMessage = $"Processing error: {ex.Message}";
-        }
-        finally
-        {
-            IsFileLoading = false;
-
-            OnIsFileLoadingChanged(true);
-            ApplyAllFilters();
-            UpdateStatistics();
-        }
-    }
-
-    private bool CanReparseFiles()
-    {
-        return !IsFileLoading && TraceFileInfos.Count > 0;
-    }
-
-    private bool CanReparseSelectedFiles()
-    {
-        return !IsFileLoading && SelectedFileCards.Count > 0;
-    }
-
-    /// <summary>
-    ///     Открывает диалог выбора файлов и запускает парсинг.
-    ///     Защищена от параллельного вызова через CanExecute.
-    /// </summary>
+    /// <summary>Открывает диалог выбора файлов</summary>
     [RelayCommand(CanExecute = nameof(CanOpenFile))]
     private async Task OpenLocalFileAsync(CancellationToken cancellationToken)
     {
-        // Блокируем повторный вызов
         IsFileLoading = true;
         OpenLocalFileCommand.NotifyCanExecuteChanged();
 
-        IReadOnlyList<IStorageFile>? files = null;
-        
         CancellationTokenSource? cts = null;
+
         try
         {
-            // Создаём связанный CTS: отмена через кнопку ИЛИ через cancellationToken фреймворка
             cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _loadingCts = cts;
-            
-            var token = _loadingCts.Token;
-            
-            files = await _fileDialogService.OpenTraceFilesAsync();
+
+            var files = await _fileDialogService.OpenTraceFilesAsync();
 
             if (files.Count == 0)
             {
@@ -643,16 +433,16 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            await ProcessSelectedFilesAsync(files, token);
+            await ProcessSelectedFilesAsync(files, cts.Token);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "File upload cancelled by user.";
-            Logger.Info("File upload cancelled by user");
+            StatusMessage = "File loading cancelled.";
+            Logger.Info("File loading cancelled by user.");
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Error while downloading files");
+            Logger.Error(ex, "Error loading files");
             StatusMessage = $"Loading error: {ex.Message}";
         }
         finally
@@ -662,53 +452,26 @@ public partial class MainWindowViewModel : ViewModelBase
                 _loadingCts = null;
                 cts.Dispose();
             }
-            
+
             IsFileLoading = false;
             LoadProgress = 0;
-            ApplyAllFilters();
-            //UpdateAvailableSorts();
-
-            // Разблокируем кнопку
             OpenLocalFileCommand.NotifyCanExecuteChanged();
-            UpdateStatistics();
         }
     }
 
-    private bool CanOpenFile()
-    {
-        return !IsFileLoading;
-    }
+    private bool CanOpenFile() => !IsFileLoading;
 
-    /// <summary>
-    ///     Отменяет текущую загрузку файлов.
-    /// </summary>
+    /// <summary>Отменяет текущую загрузку</summary>
     [RelayCommand(CanExecute = nameof(CanCancelLoading))]
     private void CancelLoading()
     {
         _loadingCts?.Cancel();
+        Logger.Info("Loading cancellation requested.");
     }
 
-    private bool CanCancelLoading()
-    {
-        return IsFileLoading && _loadingCts != null;
-    }
+    private bool CanCancelLoading() => IsFileLoading && _loadingCts != null;
 
-    /// <summary>
-    ///     При изменении IsFileLoading уведомляем все зависимые команды.
-    ///     Централизованно — не нужно дублировать NotifyCanExecuteChanged везде.
-    /// </summary>
-    partial void OnIsFileLoadingChanged(bool value)
-    {
-        OpenLocalFileCommand.NotifyCanExecuteChanged();
-        CancelLoadingCommand.NotifyCanExecuteChanged();
-        ReparseAllFilesCommand.NotifyCanExecuteChanged();
-        ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
-    }
-
-
-    /// <summary>
-    ///     Обрабатывает список выбранных файлов последовательно.
-    /// </summary>
+    /// <summary>Обрабатывает выбранные файлы</summary>
     private async Task ProcessSelectedFilesAsync(
         IReadOnlyList<IStorageFile> files,
         CancellationToken cancellationToken)
@@ -726,11 +489,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             {
-                Logger.Warn("File not found or path is empty: {Path}", path);
+                Logger.Warn("File not found: {Path}", path);
                 continue;
             }
 
-            StatusMessage = $"File processing {i + 1}/{files.Count}: {Path.GetFileName(path)}";
+            StatusMessage = $"Processing {i + 1}/{files.Count}: {Path.GetFileName(path)}";
 
             var fileHash = await CalculateFileHashAsync(path, cancellationToken);
 
@@ -750,22 +513,24 @@ public partial class MainWindowViewModel : ViewModelBase
             addedCount++;
         }
 
+        // После загрузки обновляем фильтры и сортировки
+        UpdateAvailableFilters();
+        UpdateAvailableSorts();
+        ApplyAllFilters();
+
         StatusMessage = BuildFileAddingStatusMessage(addedCount, duplicateCount);
     }
 
-    /// <summary>
-    ///     Парсит один файл, сохраняет события в словарь и добавляет их в коллекцию.
-    /// </summary>
+    /// <summary>Парсит один файл</summary>
     private async Task<TraceFileInfoModel> ParseFileAsync(
         FileInfo fileInfo,
         string fileHash,
         CancellationToken cancellationToken)
     {
-        StatusMessage = $"Парсинг: {fileInfo.Name}";
-        Logger.Info("Начало парсинга: {FileName}", fileInfo.Name);
+        StatusMessage = $"Parsing: {fileInfo.Name}";
+        Logger.Info("Parsing started: {FileName}", fileInfo.Name);
 
-        var progress = new Progress<double>(p =>
-            LoadProgress = p * 100);
+        var progress = new Progress<double>(p => LoadProgress = p * 100);
 
         var parseResult = await _parser.ParseFileAsync(
             fileInfo.FullName,
@@ -775,15 +540,14 @@ public partial class MainWindowViewModel : ViewModelBase
         var eventList = parseResult.Events.ToList();
         _eventsByFileHash[fileHash] = eventList;
 
-        // Добавляем события на UI-потоке одним батчем
+        // Добавляем события в главную коллекцию
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             foreach (var evt in eventList)
-                AddEventWithFiltering(evt);
+                Events.Add(evt);
         });
 
-        Logger.Info("The file is parsed: {FileName}, events: {Count}",
-            fileInfo.Name, eventList.Count);
+        Logger.Info("File parsed: {FileName}, events: {Count}", fileInfo.Name, eventList.Count);
 
         return new TraceFileInfoModel(
             fileInfo.Name,
@@ -795,20 +559,29 @@ public partial class MainWindowViewModel : ViewModelBase
             fileHash);
     }
 
-    /// <summary>
-    ///     Удаляет события файла из коллекции.
-    ///     Использует HashSet для O(1) lookup
-    /// </summary>
+    /// <summary>Удаляет файл и его события</summary>
+    private Task RemoveTraceFileAsync(FileCardViewModel card)
+    {
+        RemoveFileEvents(card.FileInfo.FileHash);
+        TraceFileInfos.Remove(card);
+
+        UpdateAvailableFilters();
+        UpdateStatistics();
+
+        StatusMessage = $"File removed: {card.FileInfo.FileName}";
+        Logger.Info("File removed: {FileName}", card.FileInfo.FileName);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Удаляет события файла из коллекций</summary>
     private void RemoveFileEvents(string fileHash)
     {
         if (!_eventsByFileHash.TryGetValue(fileHash, out var eventsToRemove))
             return;
 
-        // Строим HashSet для O(1) contains-check при фильтрации
-        // record EventBase использует structural equality — это корректно
         var eventsSet = eventsToRemove.ToHashSet();
 
-        // Удаляем из обеих коллекций (исходной и отфильтрованной)
         for (var i = Events.Count - 1; i >= 0; i--)
             if (eventsSet.Contains(Events[i]))
                 Events.RemoveAt(i);
@@ -817,27 +590,120 @@ public partial class MainWindowViewModel : ViewModelBase
             if (eventsSet.Contains(FilteredEvents[i]))
                 FilteredEvents.RemoveAt(i);
 
-
         _eventsByFileHash.Remove(fileHash);
+
+        Logger.Info("Removed {Count} events for file hash {Hash}", eventsToRemove.Count, fileHash);
     }
 
-    /// <summary>Callback для FileCardViewModel — удаление файла.</summary>
-    private Task RemoveTraceFileAsync(FileCardViewModel card)
+    private bool IsDuplicate(string fileHash) =>
+        TraceFileInfos.Any(f => string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+
+    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo) =>
+        new(fileInfo, RemoveTraceFileAsync, card => ReparseTraceFileAsync(card, CancellationToken.None));
+
+    #endregion
+
+    #region Reparse Operations
+
+    [RelayCommand(CanExecute = nameof(CanReparseFiles))]
+    private async Task ReparseAllFilesAsync(CancellationToken cancellationToken)
     {
-        RemoveFileEvents(card.FileInfo.FileHash);
-        TraceFileInfos.Remove(card);
-        UpdateStatistics();
-        StatusMessage = $"File '{card.FileInfo.FileName}' is deleted.";
-        return Task.CompletedTask;
+        if (TraceFileInfos.Count == 0)
+        {
+            StatusMessage = "No files to reprocess.";
+            return;
+        }
+
+        IsFileLoading = true;
+        NotifyCommandsCanExecuteChanged();
+
+        try
+        {
+            var allCards = TraceFileInfos.ToList();
+            StatusMessage = $"Reprocessing all files: 0/{allCards.Count}";
+
+            for (var i = 0; i < allCards.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var card = allCards[i];
+                StatusMessage = $"Reprocessing {i + 1}/{allCards.Count}: {card.FileInfo.FileName}";
+
+                await ReparseTraceFileAsync(card, cancellationToken);
+            }
+
+            StatusMessage = $"All files reprocessed: {allCards.Count} file(s).";
+            Logger.Info("Reprocessing completed: {Count} files", allCards.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Reprocessing cancelled.";
+            Logger.Info("Reprocessing cancelled.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error during reprocessing");
+            StatusMessage = $"Reprocessing error: {ex.Message}";
+        }
+        finally
+        {
+            IsFileLoading = false;
+            UpdateAvailableFilters();
+            ApplyAllFilters();
+            NotifyCommandsCanExecuteChanged();
+        }
     }
 
-    /// <summary>
-    ///     Повторно парсит один файл.
-    ///     Используется и как callback из FileCardViewModel, и из команд меню.
-    /// </summary>
-    private async Task ReparseTraceFileAsync(
-        FileCardViewModel card,
-        CancellationToken cancellationToken = default)
+    [RelayCommand(CanExecute = nameof(CanReparseSelectedFiles))]
+    private async Task ReparseSelectedFilesAsync(CancellationToken cancellationToken)
+    {
+        if (SelectedFileCards.Count == 0)
+        {
+            StatusMessage = "No files selected for reprocessing.";
+            return;
+        }
+
+        IsFileLoading = true;
+        NotifyCommandsCanExecuteChanged();
+
+        try
+        {
+            var selectedCards = SelectedFileCards.ToList();
+            StatusMessage = $"Reprocessing selected files: 0/{selectedCards.Count}";
+
+            for (var i = 0; i < selectedCards.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var card = selectedCards[i];
+                StatusMessage = $"Reprocessing {i + 1}/{selectedCards.Count}: {card.FileInfo.FileName}";
+
+                await ReparseTraceFileAsync(card, cancellationToken);
+            }
+
+            StatusMessage = $"Selected files reprocessed: {selectedCards.Count} file(s).";
+            Logger.Info("Selected files reprocessed: {Count}", selectedCards.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Reprocessing cancelled.";
+            Logger.Info("Selected files reprocessing cancelled.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error reprocessing selected files");
+            StatusMessage = $"Reprocessing error: {ex.Message}";
+        }
+        finally
+        {
+            IsFileLoading = false;
+            UpdateAvailableFilters();
+            ApplyAllFilters();
+            NotifyCommandsCanExecuteChanged();
+        }
+    }
+
+    private async Task ReparseTraceFileAsync(FileCardViewModel card, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -845,8 +711,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
             if (!fileInfo.Exists)
             {
-                StatusMessage = $"File '{card.FileInfo.FileName}' not found on disk.";
-                Logger.Warn("The file to reparse does not exist.: {Path}", card.FileInfo.FilePath);
+                StatusMessage = $"File not found: {card.FileInfo.FileName}";
+                Logger.Warn("File not found for reparse: {Path}", card.FileInfo.FilePath);
                 return;
             }
 
@@ -854,47 +720,89 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var updatedModel = await ParseFileAsync(fileInfo, card.FileInfo.FileHash, cancellationToken);
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
-                card.FileInfo = updatedModel);
+            await Dispatcher.UIThread.InvokeAsync(() => card.FileInfo = updatedModel);
 
-            ApplyAllFilters();
+            Logger.Info("File reparsed: {FileName}", card.FileInfo.FileName);
         }
         catch (OperationCanceledException)
         {
-            // Пробрасываем выше — обработка в вызывающей команде
             throw;
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Error reprocessing file: {FileName}", card.FileInfo.FileName);
-            StatusMessage = $"Error reprocessing file: '{card.FileInfo.FileName}': {ex.Message}";
+            Logger.Error(ex, "Error reparsing file: {FileName}", card.FileInfo.FileName);
+            StatusMessage = $"Reparse error: {card.FileInfo.FileName}: {ex.Message}";
         }
     }
 
-    private bool IsDuplicate(string fileHash)
+    private bool CanReparseFiles() => !IsFileLoading && TraceFileInfos.Count > 0;
+    private bool CanReparseSelectedFiles() => !IsFileLoading && SelectedFileCards.Count > 0;
+
+    #endregion
+
+    #region UI Commands
+
+    [RelayCommand]
+    private void SwitchSearchType()
     {
-        return TraceFileInfos.Any(f =>
-            string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+        CurrentSearchType = CurrentSearchType == SearchType.Classic
+            ? SearchType.Regexp
+            : SearchType.Classic;
     }
 
-    /// <summary>
-    ///     Создаёт ViewModel для карточки файла с привязкой callbacks.
-    /// </summary>
-    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo)
+    partial void OnCurrentSearchTypeChanged(SearchType value)
     {
-        return new FileCardViewModel(
-            fileInfo,
-            RemoveTraceFileAsync,
-            // Лямбда обёртка для совместимости сигнатур:
-            // FileCardViewModel ожидает Func<FileCardViewModel, Task>
-            // ReparseTraceFileAsync имеет параметр CancellationToken = default
-            card => ReparseTraceFileAsync(card, CancellationToken.None)
-        );
+        IsClassicSearch = value == SearchType.Classic;
     }
 
-    private static async Task<string> CalculateFileHashAsync(
-        string filePath,
-        CancellationToken cancellationToken)
+    [RelayCommand] private void SwitchVisibleTraceFilesSection() => IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
+    [RelayCommand] private void SwitchVisibleSearchSection() => IsSearchSectionVisible = !IsSearchSectionVisible;
+    [RelayCommand] private void SwitchEventsSectionVisible() => IsEventsSectionVisible = !IsEventsSectionVisible;
+    [RelayCommand] private void SwitchStatisticsSectionVisible() => IsStatisticsSectionVisible = !IsStatisticsSectionVisible;
+    [RelayCommand] private void SwitchLogsSectionVisible() => IsLogsSectionVisible = !IsLogsSectionVisible;
+
+    [RelayCommand]
+    private void GoToFactorySettingsSection()
+    {
+        IsTraceFilesSectionVisible = _uiSettings.Files;
+        IsSearchSectionVisible = _uiSettings.Search;
+        IsEventsSectionVisible = _uiSettings.Events;
+        IsStatisticsSectionVisible = _uiSettings.Statistics;
+        IsLogsSectionVisible = _uiSettings.Logs;
+
+        Logger.Info("Factory settings restored.");
+        StatusMessage = "Factory settings restored.";
+    }
+
+    #endregion
+
+    #region Utilities
+
+    partial void OnIsFileLoadingChanged(bool value)
+    {
+        NotifyCommandsCanExecuteChanged();
+    }
+
+    private void NotifyCommandsCanExecuteChanged()
+    {
+        OpenLocalFileCommand.NotifyCanExecuteChanged();
+        CancelLoadingCommand.NotifyCanExecuteChanged();
+        ReparseAllFilesCommand.NotifyCanExecuteChanged();
+        ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
+    }
+
+    private void UpdateStatistics()
+    {
+        var totalEvents = TraceFileInfos.Sum(f => f.FileInfo.EventCount);
+
+        StatisticInfoModels.UpdateStatistics([
+            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("All Events:", totalEvents.ToString("N0")),
+            new StatisticInfoModel("Filtered Events:", FilteredEvents.Count.ToString("N0"))
+        ]);
+    }
+
+    private static async Task<string> CalculateFileHashAsync(string filePath, CancellationToken cancellationToken)
     {
         await using var stream = new FileStream(
             filePath,
@@ -908,27 +816,16 @@ public partial class MainWindowViewModel : ViewModelBase
         return Convert.ToHexString(hashBytes);
     }
 
-    private void UpdateStatistics()
-    {
-        var totalEvents = TraceFileInfos.Sum(f => f.FileInfo.EventCount);
-
-        StatisticInfoModels.UpdateStatistics([
-            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
-            new StatisticInfoModel("All Events:", totalEvents.ToString("N0")),
-            new StatisticInfoModel(
-                "Filtering Events:",
-                FilteredEvents.Count.ToString("N0"))
-        ]);
-    }
-
     private static string BuildFileAddingStatusMessage(int addedCount, int duplicateCount)
     {
         return (addedCount, duplicateCount) switch
         {
-            (> 0, > 0) => $"Load: {addedCount} file(s). Skipped clone: {duplicateCount}.",
-            (> 0, 0) => $"Load: {addedCount} file(s).",
-            (0, > 0) => "File(s) not load: all files already loaded.",
-            _ => "File(s) not selected."
+            (> 0, > 0) => $"Loaded: {addedCount} file(s). Skipped duplicates: {duplicateCount}.",
+            (> 0, 0) => $"Loaded: {addedCount} file(s).",
+            (0, > 0) => "No files loaded: all files are duplicates.",
+            _ => "No files selected."
         };
     }
+
+    #endregion
 }

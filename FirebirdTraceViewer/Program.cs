@@ -6,6 +6,7 @@ using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Filtering;
 using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.ViewModels;
 using Microsoft.Extensions.Configuration;
@@ -76,6 +77,7 @@ internal sealed class Program
         // UI сервисы
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<ISortingService, SortingService>();
+        services.AddSingleton<IFilteringService, FilteringService>();
 
         // ViewModels
         services.AddTransient<MainWindowViewModel>();

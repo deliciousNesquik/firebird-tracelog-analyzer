@@ -3,7 +3,6 @@
              x:Class="FirebirdTraceViewer.App"
              xmlns:local="using:FirebirdTraceViewer"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -11,15 +10,41 @@
   
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://FirebirdTraceViewer/Themes/Dark.axaml" />
-            </ResourceDictionary.MergedDictionaries>
+
+            <ResourceDictionary.ThemeDictionaries>
+
+                <ResourceDictionary x:Key="Light">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://FirebirdTraceViewer/Themes/Light.axaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://FirebirdTraceViewer/Themes/Dark.axaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Icons -->
+            <x:String x:Key="AppIcon">
+                avares://FirebirdTraceViewer/Assets/app.ico
+            </x:String>
+
+            <x:String x:Key="SearchIcon">
+                avares://FirebirdTraceViewer/Assets/search.svg
+            </x:String>
+
+            <x:String x:Key="SortIcon">
+                avares://FirebirdTraceViewer/Assets/sort.svg
+            </x:String>
+
+            <x:String x:Key="FilterIcon">
+                avares://FirebirdTraceViewer/Assets/filter.svg
+            </x:String>
+
         </ResourceDictionary>
-        
-        <x:String x:Key="AppIcon">avares://FirebirdTraceViewer/Assets/app.ico</x:String>
-        <x:String x:Key="SearchIcon">avares://FirebirdTraceViewer/Assets/search.svg</x:String>
-        <x:String x:Key="SortIcon">avares://FirebirdTraceViewer/Assets/sort.svg</x:String>
-        <x:String x:Key="FilterIcon">avares://FirebirdTraceViewer/Assets/filter.svg</x:String>
     </Application.Resources>         
              
     <Application.Styles>

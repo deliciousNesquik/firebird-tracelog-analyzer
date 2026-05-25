@@ -217,26 +217,26 @@
 
     </Window.DataTemplates>
 
-    <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
+    <Grid Background="{DynamicResource AppBackground}" RowDefinitions="30 Auto Auto * Auto, Auto">
 
-        <Menu Grid.Row="0" Background="{DynamicResource MenuBackground}">
-            <MenuItem Header="Open" Foreground="{DynamicResource Foreground}">
-                <MenuItem Header="Local File" Foreground="{DynamicResource Foreground}"
+        <Menu Grid.Row="0" Background="{DynamicResource AppBackground}">
+            <MenuItem Header="Open" Foreground="{DynamicResource PrimaryText}">
+                <MenuItem Header="Local File" Foreground="{DynamicResource PrimaryText}"
                           Command="{Binding OpenLocalFileCommand}" />
-                <MenuItem Header="Remote File" Foreground="{DynamicResource Foreground}" IsEnabled="False" />
-                <MenuItem Header="Cancel Loading" Foreground="{DynamicResource Foreground}"
+                <MenuItem Header="Remote File" Foreground="{DynamicResource PrimaryText}" IsEnabled="False" />
+                <MenuItem Header="Cancel Loading" Foreground="{DynamicResource PrimaryText}"
                           Command="{Binding CancelLoadingCommand}" />
             </MenuItem>
-            <MenuItem Header="Edit" Foreground="{DynamicResource Foreground}">
-                <MenuItem Header="Reprocess all files" Foreground="{DynamicResource Foreground}"
+            <MenuItem Header="Edit" Foreground="{DynamicResource PrimaryText}">
+                <MenuItem Header="Reprocess all files" Foreground="{DynamicResource PrimaryText}"
                           Command="{Binding ReparseAllFilesCommand}" />
-                <MenuItem Header="Reprocess selected files" Foreground="{DynamicResource Foreground}"
+                <MenuItem Header="Reprocess selected files" Foreground="{DynamicResource PrimaryText}"
                           Command="{Binding ReparseSelectedFilesCommand}" />
             </MenuItem>
-            <MenuItem Header="Window" Foreground="{DynamicResource Foreground}">
+            <MenuItem Header="Window" Foreground="{DynamicResource PrimaryText}">
                 <MenuItem
                     Header="Files"
-                    Foreground="{DynamicResource Foreground}"
+                    Foreground="{DynamicResource PrimaryText}"
                     Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsTraceFilesSectionVisible}"
@@ -244,7 +244,7 @@
 
                 <MenuItem
                     Header="Search, Sort and Filters"
-                    Foreground="{DynamicResource Foreground}"
+                    Foreground="{DynamicResource PrimaryText}"
                     Command="{Binding SwitchVisibleSearchSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsSearchSectionVisible}"
@@ -252,7 +252,7 @@
 
                 <MenuItem
                     Header="Events"
-                    Foreground="{DynamicResource Foreground}"
+                    Foreground="{DynamicResource PrimaryText}"
                     IsChecked="{Binding IsEventsSectionVisible}"
                     Command="{Binding SwitchEventsSectionVisibleCommand}"
                     ToggleType="CheckBox"
@@ -260,7 +260,7 @@
 
                 <MenuItem
                     Header="Statistics"
-                    Foreground="{DynamicResource Foreground}"
+                    Foreground="{DynamicResource PrimaryText}"
                     IsChecked="{Binding IsStatisticsSectionVisible}"
                     Command="{Binding SwitchStatisticsSectionVisibleCommand}"
                     ToggleType="CheckBox"
@@ -268,20 +268,20 @@
 
                 <MenuItem
                     Header="Statuses"
-                    Foreground="{DynamicResource Foreground}"
+                    Foreground="{DynamicResource PrimaryText}"
                     IsChecked="{Binding IsLogsSectionVisible}"
                     Command="{Binding SwitchLogsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <Separator />
-                <MenuItem Header="Reset" Foreground="{DynamicResource Foreground}"
+                <MenuItem Header="Reset" Foreground="{DynamicResource PrimaryText}"
                           Command="{Binding GoToFactorySettingsSectionCommand}" />
             </MenuItem>
 
-            <MenuItem Header="Settings" Foreground="{DynamicResource Foreground}">
-                <MenuItem Header="Set up remote access" Foreground="{DynamicResource Foreground}" />
-                <MenuItem Header="Configure open file update" Foreground="{DynamicResource Foreground}" />
+            <MenuItem Header="Settings" Foreground="{DynamicResource PrimaryText}">
+                <MenuItem Header="Set up remote access" Foreground="{DynamicResource PrimaryText}" />
+                <MenuItem Header="Configure open file update" Foreground="{DynamicResource PrimaryText}" />
             </MenuItem>
         </Menu>
 
@@ -289,7 +289,7 @@
         <ListBox
             Grid.Row="1"
             Padding="10"
-            Background="{DynamicResource BackgroundOther}"
+            Background="{DynamicResource SecondaryBackground}"
             IsVisible="{Binding IsTraceFilesSectionVisible}"
             SelectionMode="Multiple"
             SelectedItems="{Binding SelectedFileCards}"
@@ -315,15 +315,16 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Grid.Row="2" Padding="10" Background="{DynamicResource BackgroundOther}" IsVisible="{Binding IsSearchSectionVisible}" >
+        <Border Grid.Row="2" Padding="10" Background="{DynamicResource SecondaryBackground}"
+                IsVisible="{Binding IsSearchSectionVisible}">
 
             <!--Поисковая строка с иконкой и кнопкой поиска-->
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
-                <TextBox Grid.Row="0" Grid.Column="0" Background="{DynamicResource Background}"
+                <TextBox Grid.Row="0" Grid.Column="0" Background="{DynamicResource SecondaryBackground}"
                          PlaceholderText="Search" VerticalContentAlignment="Center" />
                 <Button Grid.Row="0" Grid.Column="1" Background="Transparent" VerticalContentAlignment="Center"
                         Height="40" BorderThickness="1">
-                    <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconColor}" />
+                    <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconFill}" />
                 </Button>
 
                 <Button Grid.Row="0"
@@ -353,7 +354,7 @@
                                                         <TextBlock Text="{Binding Key}"
                                                                    FontWeight="SemiBold"
                                                                    FontSize="12"
-                                                                   Foreground="{DynamicResource SystemAccentColor}"
+                                                                   Foreground="{DynamicResource AccentColor}"
                                                                    Margin="4,4,4,2" />
 
                                                         <!-- Сортировки в категории -->
@@ -361,6 +362,7 @@
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
                                                                     <RadioButton
+                                                                        BorderBrush="{DynamicResource AccentColor}"
                                                                         GroupName="SortSelection"
                                                                         Content="{Binding DisplayName}"
                                                                         IsChecked="{Binding IsSelected, Mode=TwoWay}"
@@ -389,12 +391,197 @@
                         </Flyout>
                     </Button.Flyout>
 
-                    <Svg Path="{DynamicResource SortIcon}" Css="{DynamicResource ThemeIconStroke}"/>
+                    <Svg Path="{DynamicResource SortIcon}" Css="{DynamicResource ThemeIconStroke}" />
                 </Button>
 
-                <Button Grid.Row="0" Grid.Column="3" VerticalContentAlignment="Center" Background="Transparent"
-                        Height="40" BorderThickness="1">
-                    <Svg Path="{DynamicResource FilterIcon}" Css="{DynamicResource ThemeIconStroke}" />
+                <Button Grid.Row="0"
+                        Grid.Column="3"
+                        Background="Transparent"
+                        Height="40"
+                        BorderThickness="1">
+
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <Border Padding="12" MinWidth="400" MaxWidth="600" MaxHeight="500">
+                                <ScrollViewer>
+                                    <StackPanel Spacing="12" VerticalAlignment="Center">
+
+                                        <!-- Заголовок -->
+                                        <Grid ColumnDefinitions="* Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       VerticalAlignment="Center"
+                                                       Text="Фильтрация событий"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="16"
+                                                       Margin="0,0,0,8" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" Spacing="8">
+                                                <!-- Badge с количеством активных фильтров -->
+                                                <Border Background="{DynamicResource AccentColor}"
+                                                        CornerRadius="10"
+                                                        Padding="10,2"
+                                                        IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                    <TextBlock
+                                                        Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount}"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="White"
+                                                        FontSize="11"
+                                                        FontWeight="Bold" />
+                                                </Border>
+
+                                                <!-- Кнопка сброса -->
+                                                <Button Content="Сбросить все"
+                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ResetAllFiltersCommand}"
+                                                        FontSize="12"
+                                                        Padding="8,4" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Separator />
+
+                                        <!-- Список фильтров по категориям -->
+                                        <ItemsControl
+                                            ItemsSource="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.FiltersByCategory}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Spacing="8" Margin="0,0,0,16">
+
+                                                        <!-- Заголовок категории -->
+                                                        <TextBlock Text="{Binding Key}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="13"
+                                                                   Foreground="{DynamicResource AccentColor}"
+                                                                   Margin="0,8,0,4" />
+
+                                                        <!-- Фильтры в категории -->
+                                                        <ItemsControl ItemsSource="{Binding}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border BorderBrush="{DynamicResource BorderBrush}"
+                                                                            BorderThickness="1"
+                                                                            CornerRadius="4"
+                                                                            Padding="8"
+                                                                            Margin="0,4">
+
+                                                                        <StackPanel Spacing="6">
+
+                                                                            <!-- Заголовок фильтра с чекбоксом активации -->
+                                                                            <CheckBox Content="{Binding DisplayName}"
+                                                                                    IsChecked="{Binding IsActive}"
+                                                                                    FontWeight="Medium"
+                                                                                    FontSize="12" />
+
+                                                                            <!-- Содержимое фильтра (показываем только если активен) -->
+                                                                            <StackPanel Spacing="4"
+                                                                                    IsVisible="{Binding IsActive}"
+                                                                                    Margin="20,0,0,0">
+
+                                                                                <!-- Enum/String MultiSelect -->
+                                                                                <ItemsControl
+                                                                                    ItemsSource="{Binding AvailableValues}"
+                                                                                    IsVisible="{Binding AvailableValues.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                                                    <ItemsControl.ItemTemplate>
+                                                                                        <DataTemplate>
+                                                                                            <CheckBox Margin="0,2">
+                                                                                                <CheckBox.Content>
+                                                                                                    <StackPanel
+                                                                                                        Orientation="Horizontal"
+                                                                                                        Spacing="6">
+                                                                                                        <TextBlock
+                                                                                                            Text="{Binding DisplayName}" />
+                                                                                                        <TextBlock
+                                                                                                            Text="{Binding Count, StringFormat='({0})'}"
+                                                                                                            Foreground="{DynamicResource SecondaryText}"
+                                                                                                            FontSize="11" />
+                                                                                                    </StackPanel>
+                                                                                                </CheckBox.Content>
+                                                                                                <CheckBox.IsChecked>
+                                                                                                    <Binding
+                                                                                                        Path="IsSelected"
+                                                                                                        Mode="TwoWay" />
+                                                                                                </CheckBox.IsChecked>
+                                                                                            </CheckBox>
+                                                                                        </DataTemplate>
+                                                                                    </ItemsControl.ItemTemplate>
+                                                                                </ItemsControl>
+
+                                                                                <!-- Numeric/DateTime Range -->
+                                                                                <StackPanel Spacing="4"
+                                                                                    IsVisible="{Binding MinValue, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                                                    <TextBlock Text="Диапазон:"
+                                                                                        FontSize="11"
+                                                                                        Foreground="{DynamicResource SecondaryText}" />
+
+                                                                                    <Grid
+                                                                                        ColumnDefinitions="Auto,*,Auto,*"
+                                                                                        ColumnSpacing="6">
+                                                                                        <TextBlock Grid.Column="0"
+                                                                                            Text="От:"
+                                                                                            VerticalAlignment="Center"
+                                                                                            FontSize="11" />
+                                                                                        <TextBox Grid.Column="1"
+                                                                                            Text="{Binding CurrentMinValue}"
+                                                                                            FontSize="11"
+                                                                                            Padding="4" />
+
+                                                                                        <TextBlock Grid.Column="2"
+                                                                                            Text="До:"
+                                                                                            VerticalAlignment="Center"
+                                                                                            FontSize="11" />
+                                                                                        <TextBox Grid.Column="3"
+                                                                                            Text="{Binding CurrentMaxValue}"
+                                                                                            FontSize="11"
+                                                                                            Padding="4" />
+                                                                                    </Grid>
+
+                                                                                    <TextBlock FontSize="10"
+                                                                                        Foreground="{DynamicResource SecondaryText}">
+                                                                                        <Run Text="Мин:" />
+                                                                                        <Run Text="{Binding MinValue}" />
+                                                                                        <Run Text=" | Макс:" />
+                                                                                        <Run Text="{Binding MaxValue}" />
+                                                                                    </TextBlock>
+                                                                                </StackPanel>
+
+                                                                            </StackPanel>
+
+                                                                        </StackPanel>
+
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+
+                    <!-- Иконка с badge -->
+                    <Grid>
+                        <Svg Path="{DynamicResource FilterIcon}" Css="{DynamicResource ThemeIconStroke}" />
+
+                        <!-- Badge с количеством активных фильтров -->
+                        <Border Background="Red"
+                                CornerRadius="8"
+                                Padding="4,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Margin="0,-6,-6,0"
+                                IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <TextBlock
+                                Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount}"
+                                Foreground="White"
+                                FontSize="9"
+                                FontWeight="Bold" />
+                        </Border>
+                    </Grid>
                 </Button>
 
 
@@ -421,11 +608,12 @@
         <usercontrols:StatisticInfoSection
             Grid.Row="4"
             Padding="10"
-            Background="{DynamicResource BackgroundOther}"
+            Background="{DynamicResource SecondaryBackground}"
             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStatisticsSectionVisible}"
             DataContext="{Binding StatisticInfoModels}" />
 
-        <TextBlock Grid.Row="5" Background="{DynamicResource MenuBackground}" IsVisible="{Binding IsLogsSectionVisible}" Text="{Binding StatusMessage}"
+        <TextBlock Grid.Row="5" Background="{DynamicResource AppBackground}" IsVisible="{Binding IsLogsSectionVisible}"
+                   Text="{Binding StatusMessage}"
                    Padding="10" />
     </Grid>
 </Window>

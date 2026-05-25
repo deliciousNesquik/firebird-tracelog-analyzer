@@ -1,0 +1,40 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Base -->
+    <Color x:Key="AppBackground">#FFFFFF</Color>
+    <Color x:Key="SurfaceBackground">#FFFFFF</Color>
+    <Color x:Key="SecondaryBackground">#FAFAFA</Color>
+
+    <!-- Controls -->
+    <Color x:Key="CardBackground">#F5F5F5</Color>
+    <Color x:Key="ControlBackground">#FFFFFF</Color>
+
+    <!-- Text -->
+    <Color x:Key="PrimaryText">#141414</Color>
+    <Color x:Key="SecondaryText">#6B6B6B</Color>
+
+    <!-- Borders -->
+    <Color x:Key="BorderColor">#DDDDDD</Color>
+
+    <!-- States -->
+    <Color x:Key="HoverBackground">#F0F0F0</Color>
+    <Color x:Key="SelectedBackground">#E8EEF9</Color>
+
+    <!-- Accent -->
+    <Color x:Key="AccentColor">#3E66AD</Color>
+
+    <!-- Semantic -->
+    <Color x:Key="SuccessColor">#2E8B57</Color>
+    <Color x:Key="DangerColor">#D64545</Color>
+
+    <!-- SVG -->
+    <x:String x:Key="ThemeIconFill">
+        .ThemeIconFill { fill:#141414; }
+    </x:String>
+
+    <x:String x:Key="ThemeIconStroke">
+        .ThemeIconStroke { stroke:#141414; }
+    </x:String>
+
+</ResourceDictionary>
