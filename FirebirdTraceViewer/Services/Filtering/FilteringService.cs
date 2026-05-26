@@ -2,10 +2,10 @@
 using System.Reflection;
 using FirebirdTraceParser.Core.Attributes;
 using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Filtering;
 using NLog;
 
-namespace FirebirdTraceViewer.Services;
+namespace FirebirdTraceViewer.Services.Filtering;
 
 public interface IFilteringService
 {

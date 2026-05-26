@@ -294,7 +294,7 @@
             SelectionMode="Multiple"
             SelectedItems="{Binding SelectedFileCards}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
-            ItemsSource="{Binding TraceFileInfos}">
+            ItemsSource="{Binding FileCards}">
 
             <!-- Задаем горизонтальную ориентацию панели элементов -->
             <ListBox.ItemsPanel>

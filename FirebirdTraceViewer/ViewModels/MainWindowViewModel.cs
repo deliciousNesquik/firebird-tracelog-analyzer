@@ -13,7 +13,7 @@ using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
-using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Filtering;
 using FirebirdTraceViewer.Services.Sorting;
 using Microsoft.Extensions.Options;
 using NLog;
@@ -43,14 +43,13 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>События после применения фильтров и сортировки</summary>
     public RangeObservableCollection<EventBase> VisibleEvents { get; } = [];
 
-    /// <summary>Информация о загруженных файлах</summary>
-    public ObservableCollection<FileCardViewModel> TraceFileInfos { get; } = [];
 
-    /// <summary>Выделенные файлы (синхронизируется с ListBox.SelectedItems)</summary>
+    /// <summary>Карточки загруженных файлов</summary>
+    public ObservableCollection<FileCardViewModel> FileCards { get; } = [];
+
+    /// <summary>Выделенные карточки загруженных файлов</summary>
     public ObservableCollection<FileCardViewModel> SelectedFileCards { get; } = [];
-
-    /// <summary>Все доступные сортировки</summary>
-    public ObservableCollection<SortDescriptor> AvailableSorts { get; } = [];
+    
 
     /// <summary>Сортировки, сгруппированные по категориям</summary>
     public ObservableCollection<IGrouping<string, SortDescriptor>> AvailableSortsByCategory { get; } = [];
@@ -116,7 +115,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Mock данные
         foreach (var fileInfo in TraceFilesInfosMock.Mocks)
-            TraceFileInfos.Add(CreateFileCardViewModel(fileInfo));
+            FileCards.Add(CreateFileCardViewModel(fileInfo));
 
         AllEvents.Add(new AttachDatabaseEvent
         {
@@ -142,7 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase
         VisibleEvents.Add(AllEvents[0]);
 
         StatisticInfoModels.UpdateStatistics([
-            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("Files:", FileCards.Count.ToString()),
             new StatisticInfoModel("All Events:", AllEvents.Count.ToString()),
             new StatisticInfoModel("Visible Events:", VisibleEvents.Count.ToString()),
             new StatisticInfoModel("Filtered Events:", AllEvents.Count.ToString())
@@ -233,15 +232,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private void UpdateAvailableSorts()
     {
         var previousSelectedId = SelectedSort?.Id;
-
-        AvailableSorts.Clear();
+        
         AvailableSortsByCategory.Clear();
 
         var sorts = _sortingService.GetAvailableSorts(VisibleEvents);
-
-        // Заполняем коллекции
-        foreach (var sort in sorts)
-            AvailableSorts.Add(sort);
 
         var grouped = sorts
             .GroupBy(s => s.Category)
@@ -280,13 +274,16 @@ public partial class MainWindowViewModel : ViewModelBase
             VisibleEvents,
             SelectedSort.Id,
             IsSortDescending);
+        
+        VisibleEvents.ReplaceRange(sorted);
 
-        VisibleEvents.Clear();
-        foreach (var evt in sorted)
-            VisibleEvents.Add(evt);
+        StatusMessage =
+            $"Sorted by: {SelectedSort.DisplayName} ({(IsSortDescending ? "desc" : "asc")})";
 
-        StatusMessage = $"Sorted by: {SelectedSort.DisplayName} ({(IsSortDescending ? "desc" : "asc")})";
-        Logger.Info("Applied sort: {SortName}, descending={Descending}", SelectedSort.DisplayName, IsSortDescending);
+        Logger.Info(
+            "Applied sort: {SortName}, descending={Descending}",
+            SelectedSort.DisplayName,
+            IsSortDescending);
     }
 
     [RelayCommand]
@@ -383,36 +380,41 @@ public partial class MainWindowViewModel : ViewModelBase
         var filters = _filteringService.GetAvailableFilters(AllEvents);
         FiltersPanelViewModel.LoadFilters(filters);
 
-        Logger.Info("Available filters updated: {Count}", filters.Count);
+        StatusMessage = $"Available filters: {filters.Count}";
+        Logger.Info(
+            "Available filters updated: {Count}", 
+            filters.Count
+        );
     }
 
     /// <summary>Применяет все активные фильтры</summary>
     private void ApplyAllFilters()
     {
-        var filtered = _filteringService.ApplyFilters(
-            AllEvents,
-            FiltersPanelViewModel.AvailableFilters);
+        IEnumerable<EventBase> query =
+            _filteringService.ApplyFilters(
+                AllEvents,
+                FiltersPanelViewModel.AvailableFilters);
 
-        VisibleEvents.Clear();
-        foreach (var evt in filtered)
-            VisibleEvents.Add(evt);
+        if (SelectedSort != null)
+        {
+            query = _sortingService.ApplySort(
+                query,
+                SelectedSort.Id,
+                IsSortDescending);
+        }
+
+        VisibleEvents.ReplaceRange(query);
 
         UpdateStatistics();
         UpdateAvailableSorts();
-        ApplyCurrentSort();
-
-        var activeCount = FiltersPanelViewModel.ActiveFiltersCount;
-        StatusMessage = activeCount > 0
-            ? $"Filtered: {VisibleEvents.Count}/{AllEvents.Count} events ({activeCount} filters active)"
-            : $"Showing all events: {VisibleEvents.Count}";
-
-        Logger.Info("Filters applied: {FilteredCount}/{TotalCount}", VisibleEvents.Count, AllEvents.Count);
     }
 
     #endregion
 
     #region File Operations
 
+    private bool CanOpenFile() => !IsFileLoading;
+    
     /// <summary>Открывает диалог выбора файлов</summary>
     [RelayCommand(CanExecute = nameof(CanOpenFile))]
     private async Task OpenLocalFileAsync(CancellationToken cancellationToken)
@@ -461,11 +463,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private bool CanOpenFile()
-    {
-        return !IsFileLoading;
-    }
-
+    private bool CanCancelLoading() => IsFileLoading && _loadingCts != null;
+    
     /// <summary>Отменяет текущую загрузку</summary>
     [RelayCommand(CanExecute = nameof(CanCancelLoading))]
     private void CancelLoading()
@@ -474,11 +473,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Logger.Info("Loading cancellation requested.");
     }
 
-    private bool CanCancelLoading()
-    {
-        return IsFileLoading && _loadingCts != null;
-    }
-
+    
     /// <summary>Обрабатывает выбранные файлы</summary>
     private async Task ProcessSelectedFilesAsync(
         IReadOnlyList<IStorageFile> files,
@@ -516,7 +511,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var traceModel = await ParseFileAsync(fileInfo, fileHash, cancellationToken);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
-                TraceFileInfos.Add(CreateFileCardViewModel(traceModel)));
+                FileCards.Add(CreateFileCardViewModel(traceModel)));
 
             addedCount++;
         }
@@ -616,7 +611,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Task RemoveTraceFileAsync(FileCardViewModel card)
     {
         RemoveFileEvents(card.FileInfo.FileHash);
-        TraceFileInfos.Remove(card);
+        FileCards.Remove(card);
 
         UpdateAvailableFilters();
         UpdateStatistics();
@@ -648,17 +643,11 @@ public partial class MainWindowViewModel : ViewModelBase
         Logger.Info("Removed {Count} events for file hash {Hash}", eventsToRemove.Count, fileHash);
     }
 
-    private bool IsDuplicate(string fileHash)
-    {
-        return TraceFileInfos.Any(f =>
-            string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
-    }
+    private bool IsDuplicate(string fileHash) => FileCards.Any(f => 
+        string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
 
-    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo)
-    {
-        return new FileCardViewModel(fileInfo, RemoveTraceFileAsync,
-            card => ReparseTraceFileAsync(card, CancellationToken.None));
-    }
+    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo) => new FileCardViewModel(fileInfo, RemoveTraceFileAsync,
+        card => ReparseTraceFileAsync(card, CancellationToken.None));
 
     #endregion
 
@@ -667,7 +656,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanReparseFiles))]
     private async Task ReparseAllFilesAsync(CancellationToken cancellationToken)
     {
-        if (TraceFileInfos.Count == 0)
+        if (FileCards.Count == 0)
         {
             StatusMessage = "No files to reprocess.";
             return;
@@ -678,7 +667,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var allCards = TraceFileInfos.ToList();
+            var allCards = FileCards.ToList();
             StatusMessage = $"Reprocessing all files: 0/{allCards.Count}";
 
             for (var i = 0; i < allCards.Count; i++)
@@ -796,7 +785,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private bool CanReparseFiles()
     {
-        return !IsFileLoading && TraceFileInfos.Count > 0;
+        return !IsFileLoading && FileCards.Count > 0;
     }
 
     private bool CanReparseSelectedFiles()
@@ -883,10 +872,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateStatistics()
     {
-        var totalEvents = TraceFileInfos.Sum(f => f.FileInfo.EventCount);
+        var totalEvents = FileCards.Sum(f => f.FileInfo.EventCount);
 
         StatisticInfoModels.UpdateStatistics([
-            new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
+            new StatisticInfoModel("Files:", FileCards.Count.ToString()),
             new StatisticInfoModel("All Events:", totalEvents.ToString("N0")),
             new StatisticInfoModel("Filtered Events:", VisibleEvents.Count.ToString("N0"))
         ]);

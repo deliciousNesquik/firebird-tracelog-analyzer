@@ -1,6 +1,6 @@
 ﻿using FirebirdTraceParser.Core.Attributes;
 
-namespace FirebirdTraceViewer.Services;
+namespace FirebirdTraceViewer.Services.Filtering;
 
 /// <summary>
 /// Метаданные поля, доступного для фильтрации.

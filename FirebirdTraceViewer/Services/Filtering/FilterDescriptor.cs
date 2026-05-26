@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using FirebirdTraceParser.Core.Attributes;
 using FirebirdTraceParser.Core.Models.Events;
 
-namespace FirebirdTraceViewer.Services;
+namespace FirebirdTraceViewer.Services.Filtering;
 
 /// <summary>
 /// Описывает один фильтр со всеми его настройками.

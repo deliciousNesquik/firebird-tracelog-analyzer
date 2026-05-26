@@ -29,4 +29,26 @@ public sealed class RangeObservableCollection<T> : ObservableCollection<T>
         OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
         OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
     }
+    
+    public void ReplaceRange(IEnumerable<T> items)
+    {
+        if (items == null)
+            return;
+
+        CheckReentrancy();
+
+        var newItems = items.ToList();
+
+        Items.Clear();
+
+        foreach (var item in newItems)
+            Items.Add(item);
+
+        OnCollectionChanged(
+            new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Reset));
+
+        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+        OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+    }
 }

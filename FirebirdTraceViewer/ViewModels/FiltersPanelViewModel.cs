@@ -3,6 +3,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Filtering;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
