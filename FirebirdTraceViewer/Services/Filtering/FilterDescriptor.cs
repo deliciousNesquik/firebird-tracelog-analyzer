@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using FirebirdTraceParser.Core.Attributes;
+using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.Events;
 
 namespace FirebirdTraceViewer.Services.Filtering;
@@ -12,38 +13,38 @@ namespace FirebirdTraceViewer.Services.Filtering;
 public sealed class FilterDescriptor : INotifyPropertyChanged
 {
     private bool _isActive;
-    private Func<EventBase, bool> _filterPredicate;
     private object? _currentMinValue;
     private object? _currentMaxValue;
-    
+    private string? _searchText;
+    private Func<EventBase, bool> _filterPredicate;
+
     /// <summary>Уникальный ID фильтра</summary>
     public string Id { get; }
-    
+
     /// <summary>Отображаемое имя</summary>
     public string DisplayName { get; }
-    
+
     /// <summary>Категория</summary>
     public string Category { get; }
-    
+
     /// <summary>Приоритет отображения</summary>
     public int Priority { get; }
-    
+
     /// <summary>Тип фильтра (для UI)</summary>
     public FilterType FilterType { get; }
-    
+
     /// <summary>Путь к свойству</summary>
     public string PropertyPath { get; }
-    
+
     /// <summary>Доступные значения для выбора (для Enum/String фильтров)</summary>
     public ObservableCollection<FilterValueItem> AvailableValues { get; } = [];
-    
+
     /// <summary>Минимальное значение (для Range фильтров)</summary>
     public object? MinValue { get; set; }
-    
+
     /// <summary>Максимальное значение (для Range фильтров)</summary>
     public object? MaxValue { get; set; }
 
-    
     /// <summary>Текущее минимальное значение фильтра</summary>
     public object? CurrentMinValue
     {
@@ -54,7 +55,8 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
             {
                 _currentMinValue = value;
                 OnPropertyChanged();
-                OnRangeValueChanged(); // ← вызываем обновление предиката
+                // ❌ УБРАЛИ автоприменение
+                // OnRangeValueChanged();
             }
         }
     }
@@ -69,14 +71,26 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
             {
                 _currentMaxValue = value;
                 OnPropertyChanged();
-                OnRangeValueChanged(); // ← вызываем обновление предиката
+                // ❌ УБРАЛИ автоприменение
+                // OnRangeValueChanged();
             }
         }
     }
-    
+
     /// <summary>Текст для поиска (для TextSearch)</summary>
-    public string? SearchText { get; set; }
-    
+    public string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     /// <summary>Активен ли фильтр</summary>
     public bool IsActive
     {
@@ -90,17 +104,19 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
             }
         }
     }
-    
-    /// <summary>Событие изменения диапазона (для подписки ViewModel)</summary>
-    public event EventHandler? RangeValueChanged;
 
-    private void OnRangeValueChanged()
-    {
-        RangeValueChanged?.Invoke(this, EventArgs.Empty);
-    }
-    
     /// <summary>Функция проверки события</summary>
-    public Func<EventBase, bool> FilterPredicate => _filterPredicate;
+    public Func<EventBase, bool> FilterPredicate
+    {
+        get => _filterPredicate;
+        set
+        {
+            if (_filterPredicate != value)
+                _filterPredicate = value;
+            
+            OnPropertyChanged();
+        }
+    }
 
     public FilterDescriptor(
         string id,
@@ -125,7 +141,23 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
     /// </summary>
     public void UpdatePredicate(Func<EventBase, bool> newPredicate)
     {
+        Console.WriteLine(FilterPredicate(new EventBase(){EventType = EventType.AttachDatabase, TraceId = 1, HexTraceId = "0x3", Timestamp = new DateTime()}));
         _filterPredicate = newPredicate ?? throw new ArgumentNullException(nameof(newPredicate));
+        Console.WriteLine(FilterPredicate(new EventBase(){EventType = EventType.AttachDatabase, TraceId = 1, HexTraceId = "0x3", Timestamp = new DateTime()}));
+    }
+
+    /// <summary>
+    /// Сбрасывает фильтр к начальному состоянию
+    /// </summary>
+    public void Reset()
+    {
+        IsActive = false;
+        CurrentMinValue = MinValue;
+        CurrentMaxValue = MaxValue;
+        SearchText = null;
+
+        foreach (var value in AvailableValues)
+            value.IsSelected = false;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

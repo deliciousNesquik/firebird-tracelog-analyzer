@@ -2,7 +2,8 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceViewer.Services;
+using FirebirdTraceParser.Core.Attributes;
+using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceViewer.Services.Filtering;
 using NLog;
 
@@ -12,7 +13,7 @@ public partial class FiltersPanelViewModel : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Action _onFiltersChanged;
+    private readonly Action _onFiltersApplied; // ← Переименовали для ясности
 
     /// <summary>Все доступные фильтры</summary>
     public ObservableCollection<FilterDescriptor> AvailableFilters { get; } = [];
@@ -24,15 +25,24 @@ public partial class FiltersPanelViewModel : ObservableObject
     [ObservableProperty]
     private int _activeFiltersCount;
 
-    public FiltersPanelViewModel(Action onFiltersChanged)
+    /// <summary>Есть ли изменения (нужно применить фильтры)</summary>
+    [ObservableProperty]
+    private bool _hasUnappliedChanges;
+
+    public FiltersPanelViewModel(Action onFiltersApplied)
     {
-        _onFiltersChanged = onFiltersChanged ?? throw new ArgumentNullException(nameof(onFiltersChanged));
+        _onFiltersApplied = onFiltersApplied ?? throw new ArgumentNullException(nameof(onFiltersApplied));
     }
-    
+
+    /// <summary>
+    /// ✅ ЯВНОЕ применение фильтров (по кнопке)
+    /// </summary>
     [RelayCommand]
     private void ApplyFilters()
     {
-        _onFiltersChanged();
+        _onFiltersApplied();
+        HasUnappliedChanges = false;
+        Logger.Info("Фильтры применены вручную");
     }
 
     /// <summary>
@@ -43,9 +53,8 @@ public partial class FiltersPanelViewModel : ObservableObject
         // Отписываемся от старых
         foreach (var filter in AvailableFilters)
         {
-            filter.PropertyChanged -= OnFilterChanged;
-            filter.RangeValueChanged -= OnRangeValueChanged; // ← Новое
-            
+            filter.PropertyChanged -= OnFilterPropertyChanged;
+
             foreach (var value in filter.AvailableValues)
                 value.PropertyChanged -= OnFilterValueChanged;
         }
@@ -56,11 +65,10 @@ public partial class FiltersPanelViewModel : ObservableObject
         foreach (var filter in filters)
         {
             AvailableFilters.Add(filter);
-            
+
             // Подписываемся на изменения
-            filter.PropertyChanged += OnFilterChanged;
-            filter.RangeValueChanged += OnRangeValueChanged; // ← Новое
-            
+            filter.PropertyChanged += OnFilterPropertyChanged;
+
             foreach (var value in filter.AvailableValues)
                 value.PropertyChanged += OnFilterValueChanged;
         }
@@ -74,26 +82,81 @@ public partial class FiltersPanelViewModel : ObservableObject
             FiltersByCategory.Add(group);
 
         UpdateActiveFiltersCount();
+        HasUnappliedChanges = false;
     }
 
-    private void OnRangeValueChanged(object? sender, EventArgs e)
+    /// <summary>
+    /// Обновляет счётчики фильтров на основе отфильтрованных событий
+    /// </summary>
+    public void UpdateFilterCounts(IEnumerable<EventBase> filteredEvents)
     {
-        // При изменении диапазона автоматически активируем фильтр и применяем
-        if (sender is FilterDescriptor filter)
-        {
-            if (!filter.IsActive)
-                filter.IsActive = true;
+        var eventsList = filteredEvents.ToList();
 
-            _onFiltersChanged(); // ← Применяем фильтры
+        foreach (var filter in AvailableFilters)
+        {
+            // Пропускаем активные фильтры (не пересчитываем их счётчики)
+            if (filter.IsActive)
+                continue;
+
+            // Обновляем счётчики для Enum/String фильтров
+            if (filter.FilterType is FilterType.EnumMultiSelect or FilterType.StringMultiSelect)
+            {
+                UpdateMultiSelectCounts(filter, eventsList);
+            }
+        }
+
+        Logger.Debug("Счётчики фильтров обновлены для {Count} событий", eventsList.Count);
+    }
+
+    private void UpdateMultiSelectCounts(FilterDescriptor filter, List<EventBase> events)
+    {
+        var valueCounts = new Dictionary<object, int>();
+
+        foreach (var evt in events)
+        {
+            var value = GetPropertyValue(evt, filter.PropertyPath);
+            if (value != null)
+            {
+                valueCounts.TryGetValue(value, out var count);
+                valueCounts[value] = count + 1;
+            }
+        }
+
+        // Обновляем счётчики в UI
+        foreach (var item in filter.AvailableValues)
+        {
+            item.Count = valueCounts.TryGetValue(item.Value, out var count) ? count : 0;
         }
     }
 
-    private void OnFilterChanged(object? sender, PropertyChangedEventArgs e)
+    private object? GetPropertyValue(object obj, string propertyPath)
+    {
+        var parts = propertyPath.Split('.');
+        var current = obj;
+
+        foreach (var part in parts)
+        {
+            if (current == null) return null;
+
+            var prop = current.GetType().GetProperty(part);
+            if (prop == null) return null;
+
+            current = prop.GetValue(current);
+        }
+
+        return current;
+    }
+
+    private void OnFilterPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(FilterDescriptor.IsActive))
         {
             UpdateActiveFiltersCount();
-            _onFiltersChanged();
+            MarkAsChanged(); // ← Помечаем, что нужно применить
+        }
+        else if (e.PropertyName is nameof(FilterDescriptor.CurrentMinValue) or nameof(FilterDescriptor.CurrentMaxValue))
+        {
+            MarkAsChanged();
         }
     }
 
@@ -113,8 +176,13 @@ public partial class FiltersPanelViewModel : ObservableObject
                 }
             }
 
-            _onFiltersChanged();
+            MarkAsChanged();
         }
+    }
+
+    private void MarkAsChanged()
+    {
+        HasUnappliedChanges = true;
     }
 
     [RelayCommand]
@@ -122,20 +190,12 @@ public partial class FiltersPanelViewModel : ObservableObject
     {
         foreach (var filter in AvailableFilters)
         {
-            filter.IsActive = false;
-            
-            foreach (var value in filter.AvailableValues)
-                value.IsSelected = false;
-
-            // Сброс диапазонов
-            filter.CurrentMinValue = filter.MinValue;
-            filter.CurrentMaxValue = filter.MaxValue;
-            filter.SearchText = null;
+            filter.Reset();
         }
 
         UpdateActiveFiltersCount();
-        _onFiltersChanged();
-        
+        HasUnappliedChanges = true; // Нужно применить сброс
+
         Logger.Info("Все фильтры сброшены");
     }
 

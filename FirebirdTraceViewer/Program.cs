@@ -1,11 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Avalonia;
 using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Services;
+using FirebirdTraceViewer.Services.Filtering;
 using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.ViewModels;
 using Microsoft.Extensions.Configuration;
