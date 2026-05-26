@@ -8,7 +8,7 @@ namespace FirebirdTraceParser.Core.Models.Events;
 /// Базовая модель события трассировки Firebird.
 /// Соответствует Python EventBase.
 /// </summary>
-public abstract record EventBase
+public class EventBase
 {
     /// <summary>Время события в формате ISO 8601</summary>
     [SortableField("Время события", Priority = 1, Category = "Общие")]

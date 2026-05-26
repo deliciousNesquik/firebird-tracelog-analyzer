@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace FirebirdTraceViewer.Services.Filtering;
+namespace FirebirdTraceViewer.Services;
 
 /// <summary>
 /// Представляет одно значение для фильтра (например, пункт в чекбоксе).

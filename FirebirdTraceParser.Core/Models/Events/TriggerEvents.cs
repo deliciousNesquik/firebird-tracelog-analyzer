@@ -6,7 +6,7 @@ namespace FirebirdTraceParser.Core.Models.Events;
 /// Базовый класс для событий триггеров.
 /// Соответствует Python TriggerEventBase.
 /// </summary>
-public abstract record TriggerEventBase : EventBase
+public class TriggerEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
@@ -20,13 +20,13 @@ public abstract record TriggerEventBase : EventBase
 /// Событие начала выполнения триггера.
 /// Соответствует Python TriggerStartEvent.
 /// </summary>
-public sealed record TriggerStartEvent : TriggerEventBase;
+public sealed class TriggerStartEvent : TriggerEventBase;
 
 /// <summary>
 /// Событие завершения выполнения триггера.
 /// Соответствует Python TriggerFinishEvent.
 /// </summary>
-public sealed record TriggerFinishEvent : TriggerEventBase
+public sealed class TriggerFinishEvent : TriggerEventBase
 {
     public required PerformanceInfo Performance { get; init; }
     public PerformanceTable? PerformanceTable { get; init; }

@@ -2,7 +2,7 @@
 using System.Reflection;
 using FirebirdTraceParser.Core.Attributes;
 using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceViewer.Services.Filtering;
+using FirebirdTraceViewer.Services;
 using NLog;
 
 namespace FirebirdTraceViewer.Services;
@@ -346,7 +346,6 @@ public sealed class FilteringService : IFilteringService
         var min = values.Min();
         var max = values.Max();
 
-        // Захватываем переменные для использования в лямбде
         var propertyPath = field.PropertyPath;
 
         var descriptor = new FilterDescriptor(
@@ -354,7 +353,7 @@ public sealed class FilteringService : IFilteringService
             field.DisplayName,
             FilterType.NumericRange,
             propertyPath,
-            evt => CheckNumericRangeFilter(evt, propertyPath, min, max),
+            evt => true,
             field.Category,
             field.Priority)
         {
@@ -364,9 +363,24 @@ public sealed class FilteringService : IFilteringService
             CurrentMaxValue = max
         };
 
-        // Обновляем предикат после создания, чтобы использовать CurrentMinValue/CurrentMaxValue
-        descriptor.UpdatePredicate(evt => 
-            CheckNumericRangeFilter(evt, propertyPath, descriptor.CurrentMinValue, descriptor.CurrentMaxValue));
+        // Динамический предикат
+        descriptor.UpdatePredicate(evt =>
+        {
+            var value = GetPropertyValue(evt, propertyPath) as IComparable;
+            if (value == null)
+                return false;
+
+            var currentMin = descriptor.CurrentMinValue as IComparable;
+            var currentMax = descriptor.CurrentMaxValue as IComparable;
+
+            if (currentMin != null && value.CompareTo(currentMin) < 0)
+                return false;
+
+            if (currentMax != null && value.CompareTo(currentMax) > 0)
+                return false;
+
+            return true;
+        });
 
         return descriptor;
     }
@@ -385,7 +399,6 @@ public sealed class FilteringService : IFilteringService
         var min = values.Min();
         var max = values.Max();
 
-        // Захватываем переменные
         var propertyPath = field.PropertyPath;
 
         var descriptor = new FilterDescriptor(
@@ -393,7 +406,7 @@ public sealed class FilteringService : IFilteringService
             field.DisplayName,
             FilterType.DateTimeRange,
             propertyPath,
-            evt => CheckDateTimeRangeFilter(evt, propertyPath, min, max),
+            evt => true, // ← Временный предикат, обновим ниже
             field.Category,
             field.Priority)
         {
@@ -403,9 +416,25 @@ public sealed class FilteringService : IFilteringService
             CurrentMaxValue = max
         };
 
-        // Обновляем предикат
-        descriptor.UpdatePredicate(evt => 
-            CheckDateTimeRangeFilter(evt, propertyPath, descriptor.CurrentMinValue, descriptor.CurrentMaxValue));
+        // создаём ДИНАМИЧЕСКИЙ предикат, который читает CurrentMinValue/CurrentMaxValue
+        descriptor.UpdatePredicate(evt =>
+        {
+            var value = GetPropertyValue(evt, propertyPath);
+            if (value is not DateTime dateTime)
+                return false;
+
+            // Читаем ТЕКУЩИЕ значения из descriptor (не из closure!)
+            var currentMin = descriptor.CurrentMinValue as DateTime?;
+            var currentMax = descriptor.CurrentMaxValue as DateTime?;
+
+            if (currentMin.HasValue && dateTime < currentMin.Value)
+                return false;
+
+            if (currentMax.HasValue && dateTime > currentMax.Value)
+                return false;
+
+            return true;
+        });
 
         return descriptor;
     }

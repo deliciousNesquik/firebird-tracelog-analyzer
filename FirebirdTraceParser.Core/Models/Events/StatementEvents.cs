@@ -6,7 +6,7 @@ namespace FirebirdTraceParser.Core.Models.Events;
 /// Базовый класс для событий SQL statement.
 /// Соответствует Python StatementEventBase.
 /// </summary>
-public abstract record StatementEventBase : EventBase
+public class StatementEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
@@ -19,13 +19,13 @@ public abstract record StatementEventBase : EventBase
 /// Событие начала выполнения statement.
 /// Соответствует Python StatementStartEvent.
 /// </summary>
-public sealed record StatementStartEvent : StatementEventBase;
+public sealed class StatementStartEvent : StatementEventBase;
 
 /// <summary>
 /// Событие завершения выполнения statement.
 /// Соответствует Python StatementFinishEvent.
 /// </summary>
-public sealed record StatementFinishEvent : StatementEventBase
+public sealed class StatementFinishEvent : StatementEventBase
 {
     public required PerformanceInfo Performance { get; init; }
     public PerformanceTable? PerformanceTable { get; init; }

@@ -6,7 +6,6 @@ using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Services;
-using FirebirdTraceViewer.Services.Filtering;
 using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.ViewModels;
 using Microsoft.Extensions.Configuration;

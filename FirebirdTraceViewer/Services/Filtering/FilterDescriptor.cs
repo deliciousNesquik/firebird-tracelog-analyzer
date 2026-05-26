@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using FirebirdTraceParser.Core.Attributes;
 using FirebirdTraceParser.Core.Models.Events;
 
-namespace FirebirdTraceViewer.Services.Filtering;
+namespace FirebirdTraceViewer.Services;
 
 /// <summary>
 /// Описывает один фильтр со всеми его настройками.
@@ -12,8 +12,9 @@ namespace FirebirdTraceViewer.Services.Filtering;
 public sealed class FilterDescriptor : INotifyPropertyChanged
 {
     private bool _isActive;
-    
     private Func<EventBase, bool> _filterPredicate;
+    private object? _currentMinValue;
+    private object? _currentMaxValue;
     
     /// <summary>Уникальный ID фильтра</summary>
     public string Id { get; }
@@ -41,12 +42,37 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
     
     /// <summary>Максимальное значение (для Range фильтров)</summary>
     public object? MaxValue { get; set; }
+
     
     /// <summary>Текущее минимальное значение фильтра</summary>
-    public object? CurrentMinValue { get; set; }
-    
+    public object? CurrentMinValue
+    {
+        get => _currentMinValue;
+        set
+        {
+            if (!Equals(_currentMinValue, value))
+            {
+                _currentMinValue = value;
+                OnPropertyChanged();
+                OnRangeValueChanged(); // ← вызываем обновление предиката
+            }
+        }
+    }
+
     /// <summary>Текущее максимальное значение фильтра</summary>
-    public object? CurrentMaxValue { get; set; }
+    public object? CurrentMaxValue
+    {
+        get => _currentMaxValue;
+        set
+        {
+            if (!Equals(_currentMaxValue, value))
+            {
+                _currentMaxValue = value;
+                OnPropertyChanged();
+                OnRangeValueChanged(); // ← вызываем обновление предиката
+            }
+        }
+    }
     
     /// <summary>Текст для поиска (для TextSearch)</summary>
     public string? SearchText { get; set; }
@@ -63,6 +89,14 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
                 OnPropertyChanged();
             }
         }
+    }
+    
+    /// <summary>Событие изменения диапазона (для подписки ViewModel)</summary>
+    public event EventHandler? RangeValueChanged;
+
+    private void OnRangeValueChanged()
+    {
+        RangeValueChanged?.Invoke(this, EventArgs.Empty);
     }
     
     /// <summary>Функция проверки события</summary>

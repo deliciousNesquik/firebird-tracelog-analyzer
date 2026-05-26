@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceViewer.Services.Filtering;
+using FirebirdTraceViewer.Services;
 using NLog;
 
 namespace FirebirdTraceViewer.ViewModels;
@@ -27,6 +27,12 @@ public partial class FiltersPanelViewModel : ObservableObject
     {
         _onFiltersChanged = onFiltersChanged ?? throw new ArgumentNullException(nameof(onFiltersChanged));
     }
+    
+    [RelayCommand]
+    private void ApplyFilters()
+    {
+        _onFiltersChanged();
+    }
 
     /// <summary>
     /// Загружает фильтры и подписывается на изменения.
@@ -37,6 +43,8 @@ public partial class FiltersPanelViewModel : ObservableObject
         foreach (var filter in AvailableFilters)
         {
             filter.PropertyChanged -= OnFilterChanged;
+            filter.RangeValueChanged -= OnRangeValueChanged; // ← Новое
+            
             foreach (var value in filter.AvailableValues)
                 value.PropertyChanged -= OnFilterValueChanged;
         }
@@ -50,6 +58,8 @@ public partial class FiltersPanelViewModel : ObservableObject
             
             // Подписываемся на изменения
             filter.PropertyChanged += OnFilterChanged;
+            filter.RangeValueChanged += OnRangeValueChanged; // ← Новое
+            
             foreach (var value in filter.AvailableValues)
                 value.PropertyChanged += OnFilterValueChanged;
         }
@@ -63,6 +73,18 @@ public partial class FiltersPanelViewModel : ObservableObject
             FiltersByCategory.Add(group);
 
         UpdateActiveFiltersCount();
+    }
+
+    private void OnRangeValueChanged(object? sender, EventArgs e)
+    {
+        // При изменении диапазона автоматически активируем фильтр и применяем
+        if (sender is FilterDescriptor filter)
+        {
+            if (!filter.IsActive)
+                filter.IsActive = true;
+
+            _onFiltersChanged(); // ← Применяем фильтры
+        }
     }
 
     private void OnFilterChanged(object? sender, PropertyChangedEventArgs e)
