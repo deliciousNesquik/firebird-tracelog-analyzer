@@ -75,6 +75,7 @@ public sealed record AttachmentInfo
     private string _processPath = string.Empty;
 
     /// <summary>Путь к исполняемому файлу клиента (опционально)</summary>
+    [FilterableField("Путь до приложения", Category = "Подключение", FilterType =  FilterType.StringMultiSelect)]
     public string? ProcessPath
     {
         get => _processPath;
@@ -82,5 +83,6 @@ public sealed record AttachmentInfo
     }
     
     /// <summary>ID процесса клиента (опционально)</summary>
+    [FilterableField("PID приложения", Category = "Подключение", FilterType =  FilterType.StringMultiSelect)]
     public int? ProcessId { get; init; }
 }
