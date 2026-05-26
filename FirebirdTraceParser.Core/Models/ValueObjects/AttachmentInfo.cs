@@ -1,4 +1,5 @@
 ﻿using FirebirdTraceParser.Core.Attributes;
+using FirebirdTraceParser.Core.Parsing.Utils;
 
 namespace FirebirdTraceParser.Core.Models.ValueObjects;
 
@@ -8,29 +9,70 @@ namespace FirebirdTraceParser.Core.Models.ValueObjects;
 /// </summary>
 public sealed record AttachmentInfo
 {
-    public required string DatabasePath { get; init; }
     
+    private string _databasePath = string.Empty;
+    public required string DatabasePath
+    {
+        get => _databasePath;
+        init => _databasePath = StringPool.Intern(value);
+    }
+
     [SortableField("ID подключения", Priority = 9, Category = "Подключение")]
     public required int AttachmentId { get; init; }
     
+    private string _user = string.Empty;
     [SortableField("Пользователь", Priority = 10, Category = "Подключение")]
-    public required string User { get; init; }
+    public required string User
+    {
+        get => _user; 
+        init => _user = StringPool.Intern(value);
+    }
     
+    private string _role = string.Empty;
+
     [SortableField("Роль", Priority = 11, Category = "Подключение")]
-    public required string Role { get; init; }
-    
+    public required string Role
+    {
+        get => _role;
+        init => _role = StringPool.Intern(value);
+    }
+
+    private string _charset = string.Empty;
+
     [SortableField("Кодировка", Priority = 12, Category = "Подключение")]
-    public required string Charset { get; init; }
-    
+    public required string Charset
+    {
+        get => _charset;
+        init => _charset = StringPool.Intern(value);
+    }
+
+    private string _protocol = string.Empty;
+
     [SortableField("Протокол", Priority = 13, Category = "Подключение")]
-    public required string Protocol { get; init; }
+    public required string Protocol
+    {
+        get => _protocol;
+        init => _protocol = StringPool.Intern(value);
+    }
     
+    private string _address = string.Empty;
+
     [SortableField("Адрес", Priority = 14, Category = "Подключение")]
-    public required string Address { get; init; }
+    public required string Address
+    {
+        get => _address;
+        init => _address = StringPool.Intern(value);
+    }
     public required int Port { get; init; }
-    
+
+    private string _processPath = string.Empty;
+
     /// <summary>Путь к исполняемому файлу клиента (опционально)</summary>
-    public string? ProcessPath { get; init; }
+    public string? ProcessPath
+    {
+        get => _processPath;
+        init => _processPath = StringPool.Intern(value);
+    }
     
     /// <summary>ID процесса клиента (опционально)</summary>
     public int? ProcessId { get; init; }

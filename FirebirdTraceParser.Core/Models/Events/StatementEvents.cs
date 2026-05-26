@@ -1,4 +1,5 @@
 ﻿using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Core.Parsing.Utils;
 
 namespace FirebirdTraceParser.Core.Models.Events;
 
@@ -11,7 +12,14 @@ public class StatementEventBase : EventBase
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
     public required int StatementId { get; init; }
-    public required string Sql { get; init; }
+    
+    private string _sql = string.Empty;
+
+    public required string Sql
+    {
+        get => _sql;
+        init => _sql = StringPool.Intern(value);
+    }
     public required IReadOnlyList<SqlParam> Params { get; init; }
 }
 

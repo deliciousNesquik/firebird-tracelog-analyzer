@@ -1,4 +1,6 @@
-﻿using FirebirdTraceParser.Core.Models.ValueObjects;
+﻿using System.Runtime.InteropServices;
+using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Core.Parsing.Utils;
 
 namespace FirebirdTraceParser.Core.Models.Events;
 
@@ -10,10 +12,38 @@ public class TriggerEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
-    public required string TriggerName { get; init; }
-    public required string Table { get; init; }
-    public required string Timing { get; init; }
-    public required string Event { get; init; }
+    
+    private string _triggerName = string.Empty;
+
+    public required string TriggerName
+    {
+        get => _triggerName;
+        init => _triggerName = StringPool.Intern(value);
+    }
+    
+    private string _table = string.Empty;
+
+    public required string Table
+    {
+        get => _table;
+        init => _table = StringPool.Intern(value);
+    }
+    
+    private string _timing = string.Empty;
+
+    public required string Timing
+    {
+        get => _timing;
+        init => _timing = StringPool.Intern(value);
+    }
+    
+    private string _event =  string.Empty;
+
+    public required string Event
+    {
+        get => _event;
+        init => _event = StringPool.Intern(value);
+    }
 }
 
 /// <summary>

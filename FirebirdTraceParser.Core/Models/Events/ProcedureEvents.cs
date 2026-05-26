@@ -1,4 +1,5 @@
 ﻿using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Core.Parsing.Utils;
 
 namespace FirebirdTraceParser.Core.Models.Events;
 
@@ -10,7 +11,13 @@ public class ProcedureEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
-    public required string ProcedureName { get; init; }
+
+    private string _procedureName = string.Empty;
+    public required string ProcedureName
+    {
+        get => _procedureName;
+        set => _procedureName = StringPool.Intern(value);
+    }
     public required IReadOnlyList<SqlParam> Params { get; init; }
 }
 
