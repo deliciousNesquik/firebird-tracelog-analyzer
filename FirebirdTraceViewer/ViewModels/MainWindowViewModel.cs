@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -13,9 +14,8 @@ using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
-using FirebirdTraceViewer.Services;
-using FirebirdTraceViewer.Services.Sorting;
 using FirebirdTraceViewer.Services.Filtering;
+using FirebirdTraceViewer.Services.Sorting;
 using Microsoft.Extensions.Options;
 using NLog;
 
@@ -378,10 +378,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #region Filtering
 
-    /// <summary>Обновляет доступные фильтры на основе текущих событий</summary>
+    /// <summary>
+    ///     ✅ Обновляет доступные фильтры на основе ТЕКУЩИХ (отфильтрованных) событий
+    /// </summary>
     private void UpdateAvailableFilters()
     {
-        var filters = _filteringService.GetAvailableFilters(AllEvents);
+        // Передаём VisibleEvents вместо AllEvents!
+        // Это позволяет показывать фильтры только для видимого типа события
+        var filters = _filteringService.GetAvailableFilters(VisibleEvents);
+
         FiltersPanelViewModel.LoadFilters(filters);
 
         StatusMessage = $"Available filters: {filters.Count}";
@@ -389,7 +394,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// ✅ ГЛАВНЫЙ МЕТОД: Применяет все активные фильтры и обновляет UI
+    ///     ✅ ГЛАВНЫЙ МЕТОД: Применяет все активные фильтры и обновляет UI
     /// </summary>
     private void ApplyAllFilters()
     {
@@ -398,10 +403,10 @@ public partial class MainWindowViewModel : ViewModelBase
             _isBatchUpdate = true;
 
             Logger.Info("Начинаю применение фильтров...");
-            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
 
             // 1️⃣ Применяем фильтры
-            IEnumerable<EventBase> query = _filteringService.ApplyFilters(
+            var query = _filteringService.ApplyFilters(
                 AllEvents,
                 FiltersPanelViewModel.AvailableFilters);
 
@@ -427,17 +432,22 @@ public partial class MainWindowViewModel : ViewModelBase
             VisibleEvents.ReplaceRange(filteredList);
             Logger.Info("UI обновлён за {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 4️⃣ Обновляем счётчики фильтров (для каскадной фильтрации)
-            sw.Restart();
-            FiltersPanelViewModel.UpdateFilterCounts(filteredList);
-            Logger.Info("Счётчики фильтров обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
-
-            // 5️⃣ Обновляем доступные сортировки (только для видимых типов)
+            // 4️⃣ ✅ СНАЧАЛА обновляем сортировки (для видимых типов)
             sw.Restart();
             UpdateAvailableSorts();
             Logger.Info("Сортировки обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 6️⃣ Обновляем статистику
+            // 5️⃣ ✅ ПОТОМ обновляем фильтры (для видимых типов)
+            sw.Restart();
+            UpdateAvailableFilters();
+            Logger.Info("Фильтры обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
+
+            // 6️⃣ Обновляем счётчики фильтров
+            sw.Restart();
+            FiltersPanelViewModel.UpdateFilterCounts(filteredList);
+            Logger.Info("Счётчики фильтров обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
+
+            // 7️⃣ Обновляем статистику
             UpdateStatistics();
 
             StatusMessage = $"Показано событий: {filteredList.Count:N0} из {AllEvents.Count:N0}";
@@ -457,7 +467,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #region File Operations
 
-    private bool CanOpenFile() => !IsFileLoading;
+    private bool CanOpenFile()
+    {
+        return !IsFileLoading;
+    }
 
     /// <summary>Открывает диалог выбора файлов</summary>
     [RelayCommand(CanExecute = nameof(CanOpenFile))]
@@ -507,7 +520,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private bool CanCancelLoading() => IsFileLoading && _loadingCts != null;
+    private bool CanCancelLoading()
+    {
+        return IsFileLoading && _loadingCts != null;
+    }
 
     /// <summary>Отменяет текущую загрузку</summary>
     [RelayCommand(CanExecute = nameof(CanCancelLoading))]
@@ -572,7 +588,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // ✅ После загрузки всех файлов — ОДНО обновление
         if (addedCount > 0)
         {
-            UpdateAvailableFilters();
             ApplyAllFilters(); // ← Применяет фильтры + обновляет сортировки + статистику
         }
 
@@ -619,10 +634,7 @@ public partial class MainWindowViewModel : ViewModelBase
             batch.Add(evt);
 
             // ✅ НЕ обновляем VisibleEvents во время парсинга (будет обновлено после)
-            if (batch.Count >= 1000)
-            {
-                batch.Clear();
-            }
+            if (batch.Count >= 1000) batch.Clear();
         }
 
         _eventsByFileHash[fileHash] = events;
@@ -661,8 +673,6 @@ public partial class MainWindowViewModel : ViewModelBase
             _isBatchUpdate = false;
         }
 
-        // ✅ После удаления — одно обновление
-        UpdateAvailableFilters();
         ApplyAllFilters();
 
         return Task.CompletedTask;
@@ -689,12 +699,17 @@ public partial class MainWindowViewModel : ViewModelBase
         Logger.Info("Removed {Count} events for file hash {Hash}", eventsToRemove.Count, fileHash);
     }
 
-    private bool IsDuplicate(string fileHash) => FileCards.Any(f =>
-        string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+    private bool IsDuplicate(string fileHash)
+    {
+        return FileCards.Any(f =>
+            string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+    }
 
-    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo) =>
-        new(fileInfo, RemoveTraceFileAsync,
+    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo)
+    {
+        return new FileCardViewModel(fileInfo, RemoveTraceFileAsync,
             card => ReparseTraceFileAsync(card, CancellationToken.None));
+    }
 
     #endregion
 

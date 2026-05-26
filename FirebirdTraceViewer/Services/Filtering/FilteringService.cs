@@ -6,24 +6,6 @@ using NLog;
 
 namespace FirebirdTraceViewer.Services.Filtering;
 
-public interface IFilteringService
-{
-    /// <summary>
-    /// Получает все доступные фильтры для коллекции событий.
-    /// </summary>
-    IReadOnlyList<FilterDescriptor> GetAvailableFilters(IEnumerable<EventBase> events);
-    
-    /// <summary>
-    /// Применяет все активные фильтры к коллекции.
-    /// </summary>
-    IEnumerable<EventBase> ApplyFilters(IEnumerable<EventBase> events, IEnumerable<FilterDescriptor> filters);
-    
-    /// <summary>
-    /// Регистрирует пользовательский фильтр.
-    /// </summary>
-    void RegisterCustomFilter(FilterDescriptor descriptor);
-}
-
 public sealed class FilteringService : IFilteringService
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -239,41 +221,51 @@ public sealed class FilteringService : IFilteringService
         _fieldCache[eventType] = fields;
         return fields;
     }
-
+    
     private void ScanProperties(Type type, string pathPrefix, List<FilterFieldInfo> results, int depth = 0)
     {
-        if (depth > 3) return;
+        if (depth > 3)
+        {
+            Logger.Warn("⚠️ Достигнута максимальная глубина сканирования для {Type}", type.Name);
+            return;
+        }
+
+        Logger.Debug("🔎 Сканирую тип: {Type}, prefix: '{Prefix}', depth: {Depth}", 
+            type.Name, pathPrefix, depth);
 
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    
+        Logger.Debug("  Найдено {Count} свойств в {Type}", properties.Length, type.Name);
 
         foreach (var prop in properties)
         {
             var filterAttr = prop.GetCustomAttribute<FilterableFieldAttribute>();
 
-            if (filterAttr == null)
-            {
-                if (ShouldScanNestedType(prop.PropertyType))
-                {
-                    var nestedPath = string.IsNullOrEmpty(pathPrefix)
-                        ? prop.Name
-                        : $"{pathPrefix}.{prop.Name}";
-
-                    ScanProperties(prop.PropertyType, nestedPath, results, depth + 1);
-                }
-                continue;
-            }
-
             var path = string.IsNullOrEmpty(pathPrefix)
                 ? prop.Name
                 : $"{pathPrefix}.{prop.Name}";
 
-            results.Add(new FilterFieldInfo(
-                path,
-                filterAttr.DisplayName ?? prop.Name,
-                prop.PropertyType,
-                filterAttr.Category ?? "Общие",
-                filterAttr.Priority,
-                filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
+            Logger.Debug("    Свойство: {Name}, Атрибут: {HasAttr}, Тип: {Type}", 
+                prop.Name, filterAttr != null, prop.PropertyType.Name);
+
+            if (filterAttr != null)
+            {
+                results.Add(new FilterFieldInfo(
+                    path,
+                    filterAttr.DisplayName ?? prop.Name,
+                    prop.PropertyType,
+                    filterAttr.Category ?? "Общие",
+                    filterAttr.Priority,
+                    filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
+            
+                Logger.Info("      ✅ Добавлено поле: {Path}", path);
+            }
+
+            if (ShouldScanNestedType(prop.PropertyType))
+            {
+                Logger.Debug("      🔄 Рекурсивное сканирование: {Type}", prop.PropertyType.Name);
+                ScanProperties(prop.PropertyType, path, results, depth + 1);
+            }
         }
     }
 
