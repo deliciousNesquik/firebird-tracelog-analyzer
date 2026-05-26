@@ -605,7 +605,7 @@
 
         <ListBox Grid.Row="3"
                  Padding="10"
-                 ItemsSource="{Binding FilteredEvents}"
+                 ItemsSource="{Binding VisibleEvents}"
                  IsVisible="{Binding IsEventsSectionVisible}"
                  Background="{DynamicResource Background }"
                  SelectionMode="Multiple"

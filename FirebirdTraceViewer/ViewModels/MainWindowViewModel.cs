@@ -8,11 +8,12 @@ using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 using FirebirdTraceParser.Core.Parsing.Engine;
+using FirebirdTraceViewer.Core;
 using FirebirdTraceViewer.Enums;
-using FirebirdTraceViewer.Services;
 using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
+using FirebirdTraceViewer.Services;
 using FirebirdTraceViewer.Services.Sorting;
 using Microsoft.Extensions.Options;
 using NLog;
@@ -37,10 +38,10 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Collections
 
     /// <summary>Все события из всех файлов (source of truth)</summary>
-    public ObservableCollection<EventBase> Events { get; } = [];
+    private List<EventBase> AllEvents { get; } = [];
 
     /// <summary>События после применения фильтров и сортировки</summary>
-    public ObservableCollection<EventBase> FilteredEvents { get; } = [];
+    public RangeObservableCollection<EventBase> VisibleEvents { get; } = [];
 
     /// <summary>Информация о загруженных файлах</summary>
     public ObservableCollection<FileCardViewModel> TraceFileInfos { get; } = [];
@@ -117,7 +118,7 @@ public partial class MainWindowViewModel : ViewModelBase
         foreach (var fileInfo in TraceFilesInfosMock.Mocks)
             TraceFileInfos.Add(CreateFileCardViewModel(fileInfo));
 
-        Events.Add(new AttachDatabaseEvent
+        AllEvents.Add(new AttachDatabaseEvent
         {
             Attachment = new AttachmentInfo
             {
@@ -138,12 +139,13 @@ public partial class MainWindowViewModel : ViewModelBase
             HexTraceId = "0x7f3133ba1dc0"
         });
 
-        FilteredEvents.Add(Events[0]);
+        VisibleEvents.Add(AllEvents[0]);
 
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
-            new StatisticInfoModel("All Events:", Events.Count.ToString()),
-            new StatisticInfoModel("Filtered Events:", FilteredEvents.Count.ToString())
+            new StatisticInfoModel("All Events:", AllEvents.Count.ToString()),
+            new StatisticInfoModel("Visible Events:", VisibleEvents.Count.ToString()),
+            new StatisticInfoModel("Filtered Events:", AllEvents.Count.ToString())
         ]);
 
         LoadSettings();
@@ -235,7 +237,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AvailableSorts.Clear();
         AvailableSortsByCategory.Clear();
 
-        var sorts = _sortingService.GetAvailableSorts(FilteredEvents);
+        var sorts = _sortingService.GetAvailableSorts(VisibleEvents);
 
         // Заполняем коллекции
         foreach (var sort in sorts)
@@ -275,13 +277,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var sorted = _sortingService.ApplySort(
-            FilteredEvents,
+            VisibleEvents,
             SelectedSort.Id,
             IsSortDescending);
 
-        FilteredEvents.Clear();
+        VisibleEvents.Clear();
         foreach (var evt in sorted)
-            FilteredEvents.Add(evt);
+            VisibleEvents.Add(evt);
 
         StatusMessage = $"Sorted by: {SelectedSort.DisplayName} ({(IsSortDescending ? "desc" : "asc")})";
         Logger.Info("Applied sort: {SortName}, descending={Descending}", SelectedSort.DisplayName, IsSortDescending);
@@ -378,7 +380,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Обновляет доступные фильтры на основе текущих событий</summary>
     private void UpdateAvailableFilters()
     {
-        var filters = _filteringService.GetAvailableFilters(Events);
+        var filters = _filteringService.GetAvailableFilters(AllEvents);
         FiltersPanelViewModel.LoadFilters(filters);
 
         Logger.Info("Available filters updated: {Count}", filters.Count);
@@ -388,12 +390,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ApplyAllFilters()
     {
         var filtered = _filteringService.ApplyFilters(
-            Events,
+            AllEvents,
             FiltersPanelViewModel.AvailableFilters);
 
-        FilteredEvents.Clear();
+        VisibleEvents.Clear();
         foreach (var evt in filtered)
-            FilteredEvents.Add(evt);
+            VisibleEvents.Add(evt);
 
         UpdateStatistics();
         UpdateAvailableSorts();
@@ -401,10 +403,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var activeCount = FiltersPanelViewModel.ActiveFiltersCount;
         StatusMessage = activeCount > 0
-            ? $"Filtered: {FilteredEvents.Count}/{Events.Count} events ({activeCount} filters active)"
-            : $"Showing all events: {FilteredEvents.Count}";
+            ? $"Filtered: {VisibleEvents.Count}/{AllEvents.Count} events ({activeCount} filters active)"
+            : $"Showing all events: {VisibleEvents.Count}";
 
-        Logger.Info("Filters applied: {FilteredCount}/{TotalCount}", FilteredEvents.Count, Events.Count);
+        Logger.Info("Filters applied: {FilteredCount}/{TotalCount}", VisibleEvents.Count, AllEvents.Count);
     }
 
     #endregion
@@ -459,7 +461,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private bool CanOpenFile() => !IsFileLoading;
+    private bool CanOpenFile()
+    {
+        return !IsFileLoading;
+    }
 
     /// <summary>Отменяет текущую загрузку</summary>
     [RelayCommand(CanExecute = nameof(CanCancelLoading))]
@@ -469,7 +474,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Logger.Info("Loading cancellation requested.");
     }
 
-    private bool CanCancelLoading() => IsFileLoading && _loadingCts != null;
+    private bool CanCancelLoading()
+    {
+        return IsFileLoading && _loadingCts != null;
+    }
 
     /// <summary>Обрабатывает выбранные файлы</summary>
     private async Task ProcessSelectedFilesAsync(
@@ -528,34 +536,79 @@ public partial class MainWindowViewModel : ViewModelBase
         CancellationToken cancellationToken)
     {
         StatusMessage = $"Parsing: {fileInfo.Name}";
-        Logger.Info("Parsing started: {FileName}", fileInfo.Name);
 
-        var progress = new Progress<double>(p => LoadProgress = p * 100);
+        Logger.Info("Streaming parse started: {FileName}", fileInfo.Name);
 
-        var parseResult = await _parser.ParseFileAsync(
+        var events = new List<EventBase>(8192);
+
+        var startTrace = DateTime.MinValue;
+        var endTrace = DateTime.MinValue;
+
+        var batch = new List<EventBase>(1000);
+
+        await using var stream = new FileStream(
             fileInfo.FullName,
-            progress,
-            cancellationToken);
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            1024 * 1024,
+            true);
 
-        var eventList = parseResult.Events.ToList();
-        _eventsByFileHash[fileHash] = eventList;
-
-        // Добавляем события в главную коллекцию
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await foreach (var evt in _parser.ParseStreamAsync(
+                           stream,
+                           cancellationToken: cancellationToken))
         {
-            foreach (var evt in eventList)
-                Events.Add(evt);
-        });
+            cancellationToken.ThrowIfCancellationRequested();
 
-        Logger.Info("File parsed: {FileName}, events: {Count}", fileInfo.Name, eventList.Count);
+            if (startTrace == DateTime.MinValue)
+                startTrace = evt.Timestamp;
+
+            endTrace = evt.Timestamp;
+
+            events.Add(evt);
+            batch.Add(evt);
+
+            // UI обновляем батчами
+            if (batch.Count >= 1000)
+            {
+                var localBatch = batch.ToArray();
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    VisibleEvents.AddRange(localBatch);
+                });
+
+                batch.Clear();
+            }
+        }
+
+        // остаток батча
+        if (batch.Count > 0)
+        {
+            var localBatch = batch.ToArray();
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                VisibleEvents.AddRange(localBatch);
+            });
+        }
+
+        _eventsByFileHash[fileHash] = events;
+
+        AllEvents.AddRange(events);
+
+        Logger.Info(
+            "Streaming parse completed: {FileName}, events: {Count}",
+            fileInfo.Name,
+            events.Count);
 
         return new TraceFileInfoModel(
             fileInfo.Name,
             fileInfo.FullName,
             fileInfo.Length,
-            eventList.FirstOrDefault()?.Timestamp ?? DateTime.MinValue,
-            eventList.LastOrDefault()?.Timestamp ?? DateTime.MinValue,
-            eventList.Count,
+            startTrace,
+            endTrace,
+            events.Count,
             fileHash);
     }
 
@@ -582,24 +635,30 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var eventsSet = eventsToRemove.ToHashSet();
 
-        for (var i = Events.Count - 1; i >= 0; i--)
-            if (eventsSet.Contains(Events[i]))
-                Events.RemoveAt(i);
+        for (var i = AllEvents.Count - 1; i >= 0; i--)
+            if (eventsSet.Contains(AllEvents[i]))
+                AllEvents.RemoveAt(i);
 
-        for (var i = FilteredEvents.Count - 1; i >= 0; i--)
-            if (eventsSet.Contains(FilteredEvents[i]))
-                FilteredEvents.RemoveAt(i);
+        for (var i = VisibleEvents.Count - 1; i >= 0; i--)
+            if (eventsSet.Contains(VisibleEvents[i]))
+                VisibleEvents.RemoveAt(i);
 
         _eventsByFileHash.Remove(fileHash);
 
         Logger.Info("Removed {Count} events for file hash {Hash}", eventsToRemove.Count, fileHash);
     }
 
-    private bool IsDuplicate(string fileHash) =>
-        TraceFileInfos.Any(f => string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+    private bool IsDuplicate(string fileHash)
+    {
+        return TraceFileInfos.Any(f =>
+            string.Equals(f.FileInfo.FileHash, fileHash, StringComparison.OrdinalIgnoreCase));
+    }
 
-    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo) =>
-        new(fileInfo, RemoveTraceFileAsync, card => ReparseTraceFileAsync(card, CancellationToken.None));
+    private FileCardViewModel CreateFileCardViewModel(TraceFileInfoModel fileInfo)
+    {
+        return new FileCardViewModel(fileInfo, RemoveTraceFileAsync,
+            card => ReparseTraceFileAsync(card, CancellationToken.None));
+    }
 
     #endregion
 
@@ -735,8 +794,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private bool CanReparseFiles() => !IsFileLoading && TraceFileInfos.Count > 0;
-    private bool CanReparseSelectedFiles() => !IsFileLoading && SelectedFileCards.Count > 0;
+    private bool CanReparseFiles()
+    {
+        return !IsFileLoading && TraceFileInfos.Count > 0;
+    }
+
+    private bool CanReparseSelectedFiles()
+    {
+        return !IsFileLoading && SelectedFileCards.Count > 0;
+    }
 
     #endregion
 
@@ -755,11 +821,35 @@ public partial class MainWindowViewModel : ViewModelBase
         IsClassicSearch = value == SearchType.Classic;
     }
 
-    [RelayCommand] private void SwitchVisibleTraceFilesSection() => IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
-    [RelayCommand] private void SwitchVisibleSearchSection() => IsSearchSectionVisible = !IsSearchSectionVisible;
-    [RelayCommand] private void SwitchEventsSectionVisible() => IsEventsSectionVisible = !IsEventsSectionVisible;
-    [RelayCommand] private void SwitchStatisticsSectionVisible() => IsStatisticsSectionVisible = !IsStatisticsSectionVisible;
-    [RelayCommand] private void SwitchLogsSectionVisible() => IsLogsSectionVisible = !IsLogsSectionVisible;
+    [RelayCommand]
+    private void SwitchVisibleTraceFilesSection()
+    {
+        IsTraceFilesSectionVisible = !IsTraceFilesSectionVisible;
+    }
+
+    [RelayCommand]
+    private void SwitchVisibleSearchSection()
+    {
+        IsSearchSectionVisible = !IsSearchSectionVisible;
+    }
+
+    [RelayCommand]
+    private void SwitchEventsSectionVisible()
+    {
+        IsEventsSectionVisible = !IsEventsSectionVisible;
+    }
+
+    [RelayCommand]
+    private void SwitchStatisticsSectionVisible()
+    {
+        IsStatisticsSectionVisible = !IsStatisticsSectionVisible;
+    }
+
+    [RelayCommand]
+    private void SwitchLogsSectionVisible()
+    {
+        IsLogsSectionVisible = !IsLogsSectionVisible;
+    }
 
     [RelayCommand]
     private void GoToFactorySettingsSection()
@@ -798,7 +888,7 @@ public partial class MainWindowViewModel : ViewModelBase
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", TraceFileInfos.Count.ToString()),
             new StatisticInfoModel("All Events:", totalEvents.ToString("N0")),
-            new StatisticInfoModel("Filtered Events:", FilteredEvents.Count.ToString("N0"))
+            new StatisticInfoModel("Filtered Events:", VisibleEvents.Count.ToString("N0"))
         ]);
     }
 
