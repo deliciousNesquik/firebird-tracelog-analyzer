@@ -2,9 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Base -->
-    <Color x:Key="AppBackground">#FFFFFF</Color>
-    <Color x:Key="SurfaceBackground">#FFFFFF</Color>
-    <Color x:Key="SecondaryBackground">#FAFAFA</Color>
+    <Color x:Key="Background">#FFFFFF</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="SurfaceElevated">#FAFAFA</Color>
 
     <!-- Controls -->
     <Color x:Key="CardBackground">#F5F5F5</Color>

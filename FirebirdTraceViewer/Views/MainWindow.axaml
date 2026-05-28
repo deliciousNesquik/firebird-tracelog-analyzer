@@ -11,7 +11,7 @@
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/app-logo.ico"
-        Title="FireBird Trace Log Viewer"
+        Title="TraceWing"
         MinWidth="1000"
         MinHeight="500">
 
@@ -217,71 +217,116 @@
 
     </Window.DataTemplates>
 
-    <Grid Background="{DynamicResource AppBackground}" RowDefinitions="30 Auto Auto * Auto, Auto">
+    <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
 
-        <Menu Grid.Row="0" Background="{DynamicResource AppBackground}">
-            <MenuItem Header="Open" Foreground="{DynamicResource PrimaryText}">
-                <MenuItem Header="Local File" Foreground="{DynamicResource PrimaryText}"
-                          Command="{Binding OpenLocalFileCommand}" />
-                <MenuItem Header="Remote File" Foreground="{DynamicResource PrimaryText}" IsEnabled="False" />
-                <MenuItem Header="Cancel Loading" Foreground="{DynamicResource PrimaryText}"
-                          Command="{Binding CancelLoadingCommand}" />
-            </MenuItem>
-            <MenuItem Header="Edit" Foreground="{DynamicResource PrimaryText}">
-                <MenuItem Header="Reprocess all files" Foreground="{DynamicResource PrimaryText}"
-                          Command="{Binding ReparseAllFilesCommand}" />
-                <MenuItem Header="Reprocess selected files" Foreground="{DynamicResource PrimaryText}"
-                          Command="{Binding ReparseSelectedFilesCommand}" />
-            </MenuItem>
-            <MenuItem Header="Window" Foreground="{DynamicResource PrimaryText}">
+        <Menu Grid.Row="0">
+
+            <MenuItem
+                Header="_Open [O]">
+
                 <MenuItem
-                    Header="Files"
-                    Foreground="{DynamicResource PrimaryText}"
+                    Header="_Local File"
+                    InputGesture="Ctrl+O"
+                    HotKey="Ctrl+O"
+                    Command="{Binding OpenLocalFileCommand}" />
+
+                <MenuItem
+                    Header="_Remote File"
+                    InputGesture="Ctrl+Alt+O"
+                    HotKey="Ctrl+Alt+O"
+                    IsEnabled="False" />
+
+                <MenuItem
+                    Header="_Cancel Loading"
+                    InputGesture="Ctrl+C"
+                    HotKey="Ctrl+C"
+                    Command="{Binding CancelLoadingCommand}" />
+
+            </MenuItem>
+
+            <MenuItem
+                Header="_Edit [E]">
+
+                <MenuItem
+                    Header="Reprocess _All Files [A]"
+                    InputGesture="Ctrl+R"
+                    HotKey="Ctrl+R"
+                    Command="{Binding ReparseAllFilesCommand}" />
+
+                <MenuItem
+                    Header="Reprocess _Selected Files [S]"
+                    InputGesture="Ctrl+Alt+R"
+                    HotKey="Ctrl+Alt+R"
+                    Command="{Binding ReparseSelectedFilesCommand}" />
+
+            </MenuItem>
+
+            <MenuItem
+                Header="_Window [W]">
+
+                <MenuItem
+                    Header="_Files [F]"
+                    InputGesture="Ctrl+Shift+F1"
+                    HotKey="Ctrl+Shift+F1"
                     Command="{Binding SwitchVisibleTraceFilesSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsTraceFilesSectionVisible}"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Search, Sort and Filters"
-                    Foreground="{DynamicResource PrimaryText}"
+                    Header="_Search, Sort and Filters [S]"
+                    InputGesture="Ctrl+Shift+F2"
+                    HotKey="Ctrl+Shift+F2"
                     Command="{Binding SwitchVisibleSearchSectionCommand}"
                     ToggleType="CheckBox"
                     IsChecked="{Binding IsSearchSectionVisible}"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Events"
-                    Foreground="{DynamicResource PrimaryText}"
+                    Header="_Events [E]"
+                    InputGesture="Ctrl+Shift+F3"
+                    HotKey="Ctrl+Shift+F3"
                     IsChecked="{Binding IsEventsSectionVisible}"
                     Command="{Binding SwitchEventsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Statistics"
-                    Foreground="{DynamicResource PrimaryText}"
+                    Header="_Statistics [S]"
+                    InputGesture="Ctrl+Shift+F4"
+                    HotKey="Ctrl+Shift+F4"
                     IsChecked="{Binding IsStatisticsSectionVisible}"
                     Command="{Binding SwitchStatisticsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <MenuItem
-                    Header="Statuses"
-                    Foreground="{DynamicResource PrimaryText}"
+                    Header="_Logs [L]"
+                    InputGesture="Ctrl+Shift+F5"
+                    HotKey="Ctrl+Shift+F5"
                     IsChecked="{Binding IsLogsSectionVisible}"
                     Command="{Binding SwitchLogsSectionVisibleCommand}"
                     ToggleType="CheckBox"
                     StaysOpenOnClick="True" />
 
                 <Separator />
-                <MenuItem Header="Reset" Foreground="{DynamicResource PrimaryText}"
-                          Command="{Binding GoToFactorySettingsSectionCommand}" />
+                <MenuItem
+                    Header="_Reset [R]"
+                    InputGesture="Ctrl+Shift+F12"
+                    HotKey="Ctrl+Shift+F12"
+                    Command="{Binding GoToFactorySettingsSectionCommand}" />
+
             </MenuItem>
 
-            <MenuItem Header="Settings" Foreground="{DynamicResource PrimaryText}">
-                <MenuItem Header="Set up remote access" Foreground="{DynamicResource PrimaryText}" />
-                <MenuItem Header="Configure open file update" Foreground="{DynamicResource PrimaryText}" />
+            <MenuItem
+                Header="_Settings [S]">
+
+                <MenuItem
+                    Header="Set up remote access" />
+
+                <MenuItem
+                    Header="Configure open file update" />
+
             </MenuItem>
         </Menu>
 
@@ -289,7 +334,7 @@
         <ListBox
             Grid.Row="1"
             Padding="10"
-            Background="{DynamicResource SecondaryBackground}"
+            Background="{DynamicResource Surface}"
             IsVisible="{Binding IsTraceFilesSectionVisible}"
             SelectionMode="Multiple"
             SelectedItems="{Binding SelectedFileCards}"
@@ -315,7 +360,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Grid.Row="2" Padding="10" Background="{DynamicResource SecondaryBackground}"
+        <Border Grid.Row="2" Padding="10" Background="{DynamicResource Surface}"
                 IsVisible="{Binding IsSearchSectionVisible}">
 
             <!--Поисковая строка с иконкой и кнопкой поиска-->
@@ -442,13 +487,14 @@
                                         <Separator />
 
                                         <!-- ✅ КНОПКА ПРИМЕНИТЬ ФИЛЬТРЫ -->
-                                        <Button Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ApplyFiltersCommand}"
-                                                HorizontalAlignment="Stretch"
-                                                Background="{DynamicResource AccentColor}"
-                                                Foreground="White"
-                                                FontWeight="SemiBold"
-                                                Padding="12,8"
-                                                IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}">
+                                        <Button
+                                            Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ApplyFiltersCommand}"
+                                            HorizontalAlignment="Stretch"
+                                            Background="{DynamicResource AccentColor}"
+                                            Foreground="White"
+                                            FontWeight="SemiBold"
+                                            Padding="12,8"
+                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}">
                                             <Button.Content>
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <TextBlock Text="🔍" FontSize="16" />
@@ -611,7 +657,7 @@
                  Padding="10"
                  ItemsSource="{Binding VisibleEvents}"
                  IsVisible="{Binding IsEventsSectionVisible}"
-                 Background="{DynamicResource Background }"
+                 Background="{DynamicResource SurfaceElevated }"
                  SelectionMode="Multiple"
                  HorizontalAlignment="Stretch">
 
@@ -626,11 +672,11 @@
         <usercontrols:StatisticInfoSection
             Grid.Row="4"
             Padding="10"
-            Background="{DynamicResource SecondaryBackground}"
+            Background="{DynamicResource SurfaceElevated}"
             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsStatisticsSectionVisible}"
             DataContext="{Binding StatisticInfoModels}" />
 
-        <TextBlock Grid.Row="5" Background="{DynamicResource AppBackground}" IsVisible="{Binding IsLogsSectionVisible}"
+        <TextBlock Grid.Row="5" Background="{DynamicResource Surface}" IsVisible="{Binding IsLogsSectionVisible}"
                    Text="{Binding StatusMessage}"
                    Padding="10" />
     </Grid>
