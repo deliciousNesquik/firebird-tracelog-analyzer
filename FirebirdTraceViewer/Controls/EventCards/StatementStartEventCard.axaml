@@ -168,8 +168,8 @@
                         </WrapPanel>
                         
                         <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
-                            <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Row="0" Grid.RowSpan="2"
+                            <Grid RowDefinitions="Auto" ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Row="0"
                                            Grid.Column="0" Grid.ColumnSpan="2"
                                            Cursor="Hand" FontWeight="Bold"
                                            FontFamily="Consolas"
@@ -178,12 +178,10 @@
                                 
                                 <Button x:Name="PART_CopySqlButton"
                                         Background="Transparent"
-                                        VerticalContentAlignment="Center"
+                                        VerticalAlignment="Top"
                                         Height="24" Width="24"
                                         Padding="0"
                                         
-                                        Grid.Row="0"
-                                        Grid.RowSpan="2"
                                         Grid.Column="1">
                                     <Button.Content>
                                         <Grid>

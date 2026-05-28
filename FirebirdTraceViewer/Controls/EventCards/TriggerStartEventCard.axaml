@@ -155,9 +155,9 @@
                         </WrapPanel>
                         
                         <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
-                            <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
+                            <Grid ColumnDefinitions="*,Auto">
                                 
-                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
 
                                     <TextBlock Text="Trigger"
                                                FontFamily="Consolas"
@@ -191,7 +191,16 @@
 
                                 </StackPanel>
                                 
-                                <Button Width="20" Height="20" Grid.Row="0" Grid.Column="1"/>
+                                <Button x:Name="PART_CopyTriggerButton"
+                                        Background="Transparent"
+                                        VerticalContentAlignment="Top"
+                                        Height="24" Width="24"
+                                        Padding="0"
+                                        Grid.Column="1">
+    
+                                    <Svg Path="{DynamicResource CopyIcon}"
+                                         Css="{DynamicResource ThemeIconFill}" />
+                                </Button>
                             </Grid>
                         </Border>
                         
