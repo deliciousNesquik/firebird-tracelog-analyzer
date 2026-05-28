@@ -5,8 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
         xmlns:usercontrols="clr-namespace:FirebirdTraceViewer.UserControls"
-        xmlns:events="clr-namespace:FirebirdTraceViewer.Controls.EventCards"
-        xmlns:local="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -134,7 +132,7 @@
             SelectedItems="{Binding SelectedFileCards}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ItemsSource="{Binding FileCards}">
-            
+
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal" />
@@ -153,12 +151,12 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        
+
         <Border Grid.Row="2" Padding="10" Background="{DynamicResource Surface}"
                 IsVisible="{Binding IsSearchSectionVisible}">
-            
+
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
-                <TextBox Grid.Row="0" Grid.Column="0" 
+                <!--<TextBox Grid.Row="0" Grid.Column="0" 
                          Background="{DynamicResource Surface}"
                          PlaceholderText="Search by SQL text or procedure and trigger name..." 
                          VerticalContentAlignment="Center" />
@@ -168,6 +166,61 @@
                         VerticalContentAlignment="Center"
                         Height="40" Width="40" BorderThickness="1">
                     <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconFill}" />
+                </Button>-->
+
+                <!-- ✅ TextBox с привязкой -->
+                <TextBox Grid.Row="0" Grid.Column="0"
+                         Background="{DynamicResource Surface}"
+                         PlaceholderText="Search by SQL text or procedure and trigger name..."
+                         VerticalContentAlignment="Center"
+                         Text="{Binding SearchText, Mode=TwoWay}">
+
+                    <!-- ✅ Выполнять поиск по Enter -->
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding ExecuteSearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+
+                <!-- ✅ Кнопка поиска -->
+                <Button Grid.Row="0" Grid.Column="1"
+                        Background="Transparent"
+                        VerticalContentAlignment="Center"
+                        Height="40" Width="40"
+                        BorderThickness="1"
+                        Command="{Binding ExecuteSearchCommand}"
+                        ToolTip.Tip="Выполнить поиск (Enter)">
+
+                    <!-- ✅ Badge активного поиска -->
+                    <Grid>
+                        <Svg Path="{DynamicResource SearchIcon}"
+                             Css="{DynamicResource ThemeIconFill}" />
+
+                        <!-- Badge "активен поиск" -->
+                        <Border Background="{DynamicResource Primary}"
+                                CornerRadius="8"
+                                Padding="4,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Margin="0,-6,-6,0"
+                                IsVisible="{Binding IsSearchActive}">
+                            <TextBlock Text="🔍"
+                                       Foreground="White"
+                                       FontSize="9"
+                                       FontWeight="Bold" />
+                        </Border>
+                    </Grid>
+                </Button>
+
+                <!-- ✅ Кнопка сброса поиска -->
+                <Button Grid.Row="0" Grid.Column="2"
+                        Background="Transparent"
+                        Height="40" Width="40"
+                        BorderThickness="1"
+                        Command="{Binding ClearSearchCommand}"
+                        IsVisible="{Binding IsSearchActive}"
+                        ToolTip.Tip="Очистить поиск">
+                    <Svg Path="{DynamicResource CloseIcon}"
+                         Css="{DynamicResource ThemeIconStroke}" />
                 </Button>
 
                 <Button Grid.Row="0"
@@ -251,7 +304,7 @@
                                 FontSize="9"
                                 FontWeight="Bold" />
                         </Border>
-                        
+
                         <!-- Badge с направлением сортировки -->
                         <Border Background="{DynamicResource Primary}"
                                 CornerRadius="8"
@@ -315,7 +368,7 @@
                                         </Grid>
 
                                         <Separator />
-                                        
+
                                         <Button
                                             Content="Apply Filter"
                                             HorizontalContentAlignment="Center"
@@ -325,8 +378,7 @@
                                             Foreground="White"
                                             FontWeight="SemiBold"
                                             Padding="12,8"
-                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}">
-                                        </Button>
+                                            IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}" />
 
                                         <!-- Список фильтров по категориям -->
                                         <ItemsControl

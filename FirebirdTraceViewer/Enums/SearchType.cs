@@ -3,5 +3,5 @@
 public enum SearchType
 {
     Classic,
-    Regexp
+    Regex
 }

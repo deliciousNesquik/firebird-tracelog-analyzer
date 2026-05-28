@@ -15,6 +15,7 @@ using FirebirdTraceViewer.Interfaces;
 using FirebirdTraceViewer.Mocks;
 using FirebirdTraceViewer.Models;
 using FirebirdTraceViewer.Services.Filtering;
+using FirebirdTraceViewer.Services.Searching;
 using FirebirdTraceViewer.Services.Sorting;
 using Microsoft.Extensions.Options;
 using NLog;
@@ -33,6 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ITraceLogParser _parser;
     private readonly ISortingService _sortingService;
     private readonly IFilteringService _filteringService;
+    private readonly ISearchService _searchService;
 
     #endregion
 
@@ -85,10 +87,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #endregion
 
-    #region Observable Properties - Sorting & Filtering
+    #region Observable Properties - Sorting & Filtering & Search
 
     [ObservableProperty] private SortDescriptor? _selectedSort;
     [ObservableProperty] private bool _isSortDescending;
+    
+    [ObservableProperty] 
+    private string _searchText = string.Empty;
+
+    [ObservableProperty] 
+    private bool _isSearchActive;
 
     /// <summary>ViewModel панели фильтров</summary>
     public FiltersPanelViewModel FiltersPanelViewModel { get; }
@@ -110,6 +118,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _fileDialogService = null!;
         _sortingService = null!;
         _filteringService = null!;
+        _searchService = null!;
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
@@ -159,6 +168,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ITraceLogParser parser,
         ISortingService sortingService,
         IFilteringService filteringService,
+        ISearchService searchService,
         IOptions<AppSettings> appSettings,
         IOptions<UiSectionSettings> uiSettings)
     {
@@ -167,6 +177,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
         _sortingService = sortingService ?? throw new ArgumentNullException(nameof(sortingService));
         _filteringService = filteringService ?? throw new ArgumentNullException(nameof(filteringService));
+        _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
         _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _uiSettings = uiSettings?.Value ?? throw new ArgumentNullException(nameof(uiSettings));
 
@@ -200,7 +211,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Search Type
         IsClassicSearch = _appSettings.IsClassicSearch;
-        CurrentSearchType = IsClassicSearch ? SearchType.Classic : SearchType.Regexp;
+        CurrentSearchType = IsClassicSearch ? SearchType.Classic : SearchType.Regex;
 
         Logger.Info("Application settings loaded.");
         StatusMessage = "Application settings loaded.";
@@ -402,12 +413,27 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _isBatchUpdate = true;
 
-            Logger.Info("Начинаю применение фильтров...");
-            var sw = Stopwatch.StartNew();
+            Logger.Info("Начинаю применение фильтров и поиска...");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            IEnumerable<EventBase> query = AllEvents;
+
+            // 0️⃣ ✅ СНАЧАЛА поиск (если активен)
+            if (IsSearchActive && !string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchMode = IsClassicSearch ? SearchType.Classic : SearchType.Regex;
+                query = _searchService.Search(query, SearchText, searchMode);
+                
+                var searchResults = query.ToList();
+                Logger.Info("Поиск завершён за {Elapsed}ms, найдено: {Count}",
+                    sw.ElapsedMilliseconds, searchResults.Count);
+                query = searchResults;
+                sw.Restart();
+            }
 
             // 1️⃣ Применяем фильтры
-            var query = _filteringService.ApplyFilters(
-                AllEvents,
+            query = _filteringService.ApplyFilters(
+                query,
                 FiltersPanelViewModel.AvailableFilters);
 
             var filteredList = query.ToList();
@@ -450,7 +476,16 @@ public partial class MainWindowViewModel : ViewModelBase
             // 7️⃣ Обновляем статистику
             UpdateStatistics();
 
-            StatusMessage = $"Показано событий: {filteredList.Count:N0} из {AllEvents.Count:N0}";
+            var statusParts = new List<string>();
+            
+            if (IsSearchActive)
+                statusParts.Add($"Поиск: '{SearchText}'");
+            
+            statusParts.Add($"{filteredList.Count:N0} из {AllEvents.Count:N0}");
+
+            StatusMessage = string.Join(" • ", statusParts);
+            
+            //StatusMessage = $"Показано событий: {filteredList.Count:N0} из {AllEvents.Count:N0}";
         }
         catch (Exception ex)
         {
@@ -464,7 +499,43 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     #endregion
+    
+    #region Search
 
+    /// <summary>
+    /// ✅ Выполняет поиск (вызывается кнопкой)
+    /// </summary>
+    [RelayCommand]
+    private void ExecuteSearch()
+    {
+        IsSearchActive = !string.IsNullOrWhiteSpace(SearchText);
+        
+        if (!IsSearchActive)
+        {
+            StatusMessage = "Поисковый запрос пуст";
+            Logger.Warn("Попытка поиска с пустым запросом");
+        }
+        
+        // ✅ Применяем фильтры + поиск
+        ApplyAllFilters();
+    }
+
+    /// <summary>
+    /// ✅ Сбрасывает поиск
+    /// </summary>
+    [RelayCommand]
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+        IsSearchActive = false;
+        ApplyAllFilters();
+        
+        StatusMessage = "Поиск сброшен";
+        Logger.Info("Поиск сброшен");
+    }
+
+    #endregion
+    
     #region File Operations
 
     private bool CanOpenFile()
@@ -874,7 +945,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void SwitchSearchType()
     {
         CurrentSearchType = CurrentSearchType == SearchType.Classic
-            ? SearchType.Regexp
+            ? SearchType.Regex
             : SearchType.Classic;
     }
 
