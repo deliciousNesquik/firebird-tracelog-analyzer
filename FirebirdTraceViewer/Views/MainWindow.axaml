@@ -23,9 +23,7 @@
 
         <Menu Grid.Row="0">
 
-            <MenuItem
-                Header="_Open [O]">
-
+            <MenuItem Header="_Open [O]">
                 <MenuItem
                     Header="_Local File"
                     InputGesture="Ctrl+O"
@@ -46,9 +44,7 @@
 
             </MenuItem>
 
-            <MenuItem
-                Header="_Edit [E]">
-
+            <MenuItem Header="_Edit [E]">
                 <MenuItem
                     Header="Reprocess _All Files [A]"
                     InputGesture="Ctrl+R"
@@ -63,9 +59,7 @@
 
             </MenuItem>
 
-            <MenuItem
-                Header="_Window [W]">
-
+            <MenuItem Header="_Window [W]">
                 <MenuItem
                     Header="_Files [F]"
                     InputGesture="Ctrl+Shift+F1"
@@ -120,9 +114,7 @@
 
             </MenuItem>
 
-            <MenuItem
-                Header="_Settings [S]">
-
+            <MenuItem Header="_Settings [S]">
                 <MenuItem
                     Header="Set up remote access" />
 

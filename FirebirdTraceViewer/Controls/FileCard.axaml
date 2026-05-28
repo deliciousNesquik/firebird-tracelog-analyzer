@@ -13,8 +13,8 @@
 
             <ControlTemplate>
 
-                <Border Background="{DynamicResource ThemeBackgroundBrush}"
-                        BorderBrush="#D8D8D8"
+                <Border Background="{DynamicResource SurfaceElevated}"
+                        BorderBrush="{DynamicResource PrimaryText}"
                         BorderThickness="1"
                         Padding="10">
 
@@ -31,10 +31,11 @@
                             <TextBlock Text="TRACE FILE"
                                        FontSize="10"
                                        FontWeight="Bold"
-                                       Foreground="#777" />
+                                       FontFamily="Consolas"
+                                       Foreground="{DynamicResource Primary}" />
 
                             <TextBlock Text="{TemplateBinding FileName}"
-                                       FontSize="15"
+                                       FontSize="16"
                                        FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis" />
 
@@ -50,52 +51,54 @@
 
                             <DropDownButton.Flyout>
                                 <MenuFlyout>
+                                    <MenuItem Header="_Reprocess [R]"
+                                              InputGesture="Shift+R"
+                                              HotKey="Shift+R"
+                                              IsEnabled="False"
+                                              Padding="5"/>
 
-                                    <MenuItem Header="Заново обработать" />
-
-                                    <MenuItem Header="Закрыть"
-                                              Command="{TemplateBinding RemoveFileCommand}" />
+                                    <MenuItem Header="_Close [C]"
+                                              InputGesture="Ctrl+X"
+                                              HotKey="Ctrl+X"
+                                              Command="{TemplateBinding RemoveFileCommand}" Padding="5" />
 
                                 </MenuFlyout>
                             </DropDownButton.Flyout>
 
                         </DropDownButton>
-
-                        <!-- INFO -->
+                        
                         <Grid Grid.Column="0" Grid.Row="1"
                               Grid.ColumnSpan="2"
                               VerticalAlignment="Center"
                               ColumnDefinitions="Auto,*,Auto,Auto"
                               ColumnSpacing="12">
-
-                            <!-- TIME -->
+                            
                             <StackPanel Grid.Column="0"
                                         VerticalAlignment="Center"
                                         Orientation="Horizontal"
                                         Spacing="5">
 
                                 <TextBlock Text="{TemplateBinding StartTrace}"
-                                           FontFamily="Consolas" VerticalAlignment="Center"
+                                           FontFamily="Consolas" VerticalAlignment="Bottom"
                                            FontSize="12" />
 
-                                <TextBlock Text="->" FontSize="12" VerticalAlignment="Center"
-                                           Foreground="#666" />
+                                <TextBlock Text="🠪" FontSize="12" VerticalAlignment="Top"/>
 
                                 <TextBlock Text="{TemplateBinding EndTrace}"
-                                           FontFamily="Consolas" VerticalAlignment="Center"
+                                           FontFamily="Consolas" VerticalAlignment="Bottom"
                                            FontSize="12" />
 
                             </StackPanel>
-
-                            <!-- SIZE -->
+                            
                             <StackPanel Grid.Column="2"
                                         Orientation="Horizontal"
                                         Spacing="4">
 
                                 <TextBlock Text="SIZE"
+                                           FontFamily="Consolas"
+                                           Foreground="{DynamicResource Primary}"
                                            FontSize="11"
-                                           FontWeight="Bold"
-                                           Foreground="#777" />
+                                           FontWeight="Bold"/>
 
                                 <TextBlock
                                     Text="{TemplateBinding FileSize, Converter={x:Static converters:BytesToReadableSizeConverter.Instance}}"
@@ -110,25 +113,20 @@
                                         Spacing="4">
 
                                 <TextBlock Text="EVENTS"
+                                           Foreground="{DynamicResource Primary}"
                                            FontSize="11"
-                                           FontWeight="Bold"
-                                           Foreground="#777" />
+                                           FontFamily="Consolas"
+                                           FontWeight="Bold"/>
 
-                                <TextBlock Text="{TemplateBinding EventCount}"
+                                <TextBlock Text="{Binding EventCount, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:N0}'}"
                                            FontFamily="Consolas"
                                            FontSize="12" />
 
                             </StackPanel>
-
                         </Grid>
-
                     </Grid>
-
                 </Border>
-
             </ControlTemplate>
-
         </Setter>
-
     </Style>
 </Styles>
