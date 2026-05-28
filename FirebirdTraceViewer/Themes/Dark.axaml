@@ -1,12 +1,10 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
-    <CornerRadius x:Key="MenuFlyoutThemeCornerRadius">6</CornerRadius>
+    
     <!-- Base -->
     <Color x:Key="Background">#121212</Color>
     <Color x:Key="Surface">#1C1C1C</Color>
     <Color x:Key="SurfaceElevated">#242424</Color>
-    
     
     <Color x:Key="Primary">#00C2FF</Color>
     <Color x:Key="PrimaryHover">#33D1FF</Color>
@@ -15,7 +13,6 @@
     <Color x:Key="Secondary">#A0A0FF</Color>
     <Color x:Key="SecondaryMuted">#6F6FA8</Color>
     
-
     <!-- Controls -->
     <Color x:Key="CardBackground">#313131</Color>
     <Color x:Key="ControlBackground">#383838</Color>

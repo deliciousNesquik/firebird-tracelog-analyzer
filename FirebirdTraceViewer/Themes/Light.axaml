@@ -2,10 +2,17 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Base -->
-    <Color x:Key="Background">#FFFFFF</Color>
-    <Color x:Key="Surface">#FFFFFF</Color>
-    <Color x:Key="SurfaceElevated">#FAFAFA</Color>
+    <Color x:Key="Background">#EDEDED</Color>
+    <Color x:Key="Surface">#E3E3E3</Color>
+    <Color x:Key="SurfaceElevated">#DBDBDB</Color>
 
+    <Color x:Key="Primary">#00C2FF</Color>
+    <Color x:Key="PrimaryHover">#33D1FF</Color>
+    <Color x:Key="PrimaryActive">#0099CC</Color>
+    
+    <Color x:Key="Secondary">#A0A0FF</Color>
+    <Color x:Key="SecondaryMuted">#6F6FA8</Color>
+    
     <!-- Controls -->
     <Color x:Key="CardBackground">#F5F5F5</Color>
     <Color x:Key="ControlBackground">#FFFFFF</Color>

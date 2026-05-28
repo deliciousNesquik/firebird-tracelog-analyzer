@@ -13,7 +13,7 @@
 
             <ControlTemplate>
 
-                <Border Background="{DynamicResource SurfaceElevated}"
+                <Border 
                         BorderBrush="{DynamicResource PrimaryText}"
                         BorderThickness="1"
                         Padding="10">

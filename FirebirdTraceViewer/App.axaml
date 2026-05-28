@@ -4,7 +4,7 @@
              xmlns:local="using:FirebirdTraceViewer"
              xmlns:events="clr-namespace:FirebirdTraceViewer.Controls.EventCards"
              xmlns:core="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Default">
 
     <Application.DataTemplates>
         <local:ViewLocator/>

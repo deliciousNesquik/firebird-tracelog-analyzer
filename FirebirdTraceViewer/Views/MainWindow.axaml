@@ -134,8 +134,7 @@
             SelectedItems="{Binding SelectedFileCards}"
             ScrollViewer.HorizontalScrollBarVisibility="Auto"
             ItemsSource="{Binding FileCards}">
-
-            <!-- Задаем горизонтальную ориентацию панели элементов -->
+            
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal" />
@@ -154,22 +153,27 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
+        
         <Border Grid.Row="2" Padding="10" Background="{DynamicResource Surface}"
                 IsVisible="{Binding IsSearchSectionVisible}">
-
-            <!--Поисковая строка с иконкой и кнопкой поиска-->
+            
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
-                <TextBox Grid.Row="0" Grid.Column="0" Background="{DynamicResource SecondaryBackground}"
-                         PlaceholderText="Search" VerticalContentAlignment="Center" />
-                <Button Grid.Row="0" Grid.Column="1" Background="Transparent" VerticalContentAlignment="Center"
-                        Height="40" BorderThickness="1">
+                <TextBox Grid.Row="0" Grid.Column="0" 
+                         Background="{DynamicResource Surface}"
+                         PlaceholderText="Search by SQL text or procedure and trigger name..." 
+                         VerticalContentAlignment="Center" />
+                
+                <Button Grid.Row="0" Grid.Column="1" 
+                        Background="Transparent" 
+                        VerticalContentAlignment="Center"
+                        Height="40" Width="40" BorderThickness="1">
                     <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconFill}" />
                 </Button>
 
                 <Button Grid.Row="0"
                         Grid.Column="2"
                         Background="Transparent"
-                        Height="40"
+                        Height="40" Width="40"
                         BorderThickness="1">
 
                     <Button.Flyout>
@@ -229,14 +233,46 @@
                             </Border>
                         </Flyout>
                     </Button.Flyout>
+                    <!-- Иконка с badge -->
+                    <Grid>
+                        <Svg Path="{DynamicResource SortIcon}" Css="{DynamicResource ThemeIconStroke}" />
 
-                    <Svg Path="{DynamicResource SortIcon}" Css="{DynamicResource ThemeIconStroke}" />
+                        <!-- Badge с направлением сортировки -->
+                        <Border Background="{DynamicResource Primary}"
+                                CornerRadius="8"
+                                Padding="5,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Margin="0,-6,-6,0"
+                                IsVisible="{Binding IsSortDescending}">
+                            <TextBlock
+                                Text="🠇"
+                                Foreground="White"
+                                FontSize="9"
+                                FontWeight="Bold" />
+                        </Border>
+                        
+                        <!-- Badge с направлением сортировки -->
+                        <Border Background="{DynamicResource Primary}"
+                                CornerRadius="8"
+                                Padding="5,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Margin="0,-6,-6,0"
+                                IsVisible="{Binding IsSortDescending, Converter={x:Static BoolConverters.Not}}">
+                            <TextBlock
+                                Text="🠅"
+                                Foreground="White"
+                                FontSize="9"
+                                FontWeight="Bold" />
+                        </Border>
+                    </Grid>
                 </Button>
 
                 <Button Grid.Row="0"
                         Grid.Column="3"
                         Background="Transparent"
-                        Height="40"
+                        Height="40" Width="40"
                         BorderThickness="1">
 
                     <Button.Flyout>
@@ -279,8 +315,7 @@
                                         </Grid>
 
                                         <Separator />
-
-                                        <!-- ✅ КНОПКА ПРИМЕНИТЬ ФИЛЬТРЫ -->
+                                        
                                         <Button
                                             Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ApplyFiltersCommand}"
                                             HorizontalAlignment="Stretch"
@@ -426,7 +461,7 @@
                         <Svg Path="{DynamicResource FilterIcon}" Css="{DynamicResource ThemeIconStroke}" />
 
                         <!-- Badge с количеством активных фильтров -->
-                        <Border Background="Red"
+                        <Border Background="{DynamicResource Primary}"
                                 CornerRadius="8"
                                 Padding="4,2"
                                 HorizontalAlignment="Right"
