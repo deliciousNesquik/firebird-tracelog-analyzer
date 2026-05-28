@@ -241,6 +241,10 @@
             <x:String x:Key="FilterIcon">
                 avares://FirebirdTraceViewer/Assets/filter.svg
             </x:String>
+            
+            <x:String x:Key="CopyIcon">
+                avares://FirebirdTraceViewer/Assets/copy.svg
+            </x:String>
 
         </ResourceDictionary>
     </Application.Resources>         

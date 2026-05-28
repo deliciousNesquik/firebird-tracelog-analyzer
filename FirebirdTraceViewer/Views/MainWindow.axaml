@@ -182,7 +182,7 @@
                                 <ScrollViewer MaxHeight="450">
                                     <StackPanel Spacing="8">
 
-                                        <TextBlock Text="Сортировка событий"
+                                        <TextBlock Text="Sorting events"
                                                    FontWeight="SemiBold"
                                                    FontSize="14"
                                                    Margin="4,2,4,8" />
@@ -222,9 +222,9 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
 
-                                        <Separator Margin="0,4" />
+                                        <Separator Margin="0,0" />
 
-                                        <CheckBox Content="По убыванию"
+                                        <CheckBox Content="Descending"
                                                   IsChecked="{Binding IsSortDescending}"
                                                   Margin="8,4" />
 
@@ -284,19 +284,17 @@
 
                                         <!-- Заголовок -->
                                         <Grid ColumnDefinitions="* Auto">
-                                            <TextBlock Grid.Column="0"
-                                                       VerticalAlignment="Center"
-                                                       Text="Фильтрация событий"
+                                            <TextBlock Text="Filtering events"
                                                        FontWeight="SemiBold"
-                                                       FontSize="16"
-                                                       Margin="0,0,0,8" />
+                                                       FontSize="14"
+                                                       Margin="4,2,4,8" />
 
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center"
                                                         Orientation="Horizontal" Spacing="8">
                                                 <!-- Badge с количеством активных фильтров -->
-                                                <Border Background="{DynamicResource AccentColor}"
+                                                <Border Background="{DynamicResource Secondary}"
                                                         CornerRadius="10"
-                                                        Padding="10,2"
+                                                        Padding="8,2"
                                                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                     <TextBlock
                                                         Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ActiveFiltersCount}"
@@ -307,9 +305,11 @@
                                                 </Border>
 
                                                 <!-- Кнопка сброса -->
-                                                <Button Content="Сбросить все"
+                                                <Button Content="Reset All"
+                                                        Background="{DynamicResource  Secondary}"
+                                                        Foreground="White"
                                                         Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ResetAllFiltersCommand}"
-                                                        FontSize="12"
+                                                        FontSize="14"
                                                         Padding="8,4" />
                                             </StackPanel>
                                         </Grid>
@@ -317,19 +317,15 @@
                                         <Separator />
                                         
                                         <Button
+                                            Content="Apply Filter"
+                                            HorizontalContentAlignment="Center"
                                             Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ApplyFiltersCommand}"
                                             HorizontalAlignment="Stretch"
-                                            Background="{DynamicResource AccentColor}"
+                                            Background="{DynamicResource Secondary}"
                                             Foreground="White"
                                             FontWeight="SemiBold"
                                             Padding="12,8"
                                             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}">
-                                            <Button.Content>
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <TextBlock Text="🔍" FontSize="16" />
-                                                    <TextBlock Text="Применить фильтры" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                            </Button.Content>
                                         </Button>
 
                                         <!-- Список фильтров по категориям -->
@@ -337,7 +333,7 @@
                                             ItemsSource="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.FiltersByCategory}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel Spacing="8" Margin="0,0,0,16">
+                                                    <StackPanel Spacing="8">
 
                                                         <!-- Заголовок категории -->
                                                         <TextBlock Text="{Binding Key}"
@@ -352,9 +348,7 @@
                                                                 <DataTemplate>
                                                                     <Border BorderBrush="{DynamicResource BorderBrush}"
                                                                             BorderThickness="1"
-                                                                            CornerRadius="4"
-                                                                            Padding="8"
-                                                                            Margin="0,4">
+                                                                            CornerRadius="4">
 
                                                                         <StackPanel Spacing="6">
 
@@ -375,7 +369,7 @@
                                                                                     IsVisible="{Binding AvailableValues.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                                                     <ItemsControl.ItemTemplate>
                                                                                         <DataTemplate>
-                                                                                            <CheckBox Margin="0,2">
+                                                                                            <CheckBox>
                                                                                                 <CheckBox.Content>
                                                                                                     <StackPanel
                                                                                                         Orientation="Horizontal"
@@ -401,7 +395,7 @@
                                                                                 <!-- Numeric/DateTime Range -->
                                                                                 <StackPanel Spacing="4"
                                                                                     IsVisible="{Binding MinValue, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                                                    <TextBlock Text="Диапазон:"
+                                                                                    <TextBlock Text="Range:"
                                                                                         FontSize="11"
                                                                                         Foreground="{DynamicResource SecondaryText}" />
 
@@ -409,7 +403,7 @@
                                                                                         ColumnDefinitions="Auto,*,Auto,*"
                                                                                         ColumnSpacing="6">
                                                                                         <TextBlock Grid.Column="0"
-                                                                                            Text="От:"
+                                                                                            Text="From:"
                                                                                             VerticalAlignment="Center"
                                                                                             FontSize="11" />
                                                                                         <TextBox Grid.Column="1"
@@ -418,7 +412,7 @@
                                                                                             Text="{Binding CurrentMinValue, Mode=TwoWay}" />
 
                                                                                         <TextBlock Grid.Column="2"
-                                                                                            Text="До:"
+                                                                                            Text="To:"
                                                                                             VerticalAlignment="Center"
                                                                                             FontSize="11" />
                                                                                         <TextBox Grid.Column="3"
@@ -429,9 +423,9 @@
 
                                                                                     <TextBlock FontSize="10"
                                                                                         Foreground="{DynamicResource SecondaryText}">
-                                                                                        <Run Text="Мин:" />
+                                                                                        <Run Text="Min:" />
                                                                                         <Run Text="{Binding MinValue}" />
-                                                                                        <Run Text=" | Макс:" />
+                                                                                        <Run Text=" | Max:" />
                                                                                         <Run Text="{Binding MaxValue}" />
                                                                                     </TextBlock>
                                                                                 </StackPanel>
