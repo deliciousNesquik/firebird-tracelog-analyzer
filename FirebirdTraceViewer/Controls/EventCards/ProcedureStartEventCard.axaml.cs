@@ -1,6 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 
@@ -8,6 +10,34 @@ namespace FirebirdTraceViewer.Controls.EventCards;
 
 public class ProcedureStartEventCard : TemplatedControl
 {
+    
+    private Button? _copyButton;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        // Отписываемся если шаблон переинициализировался
+        if (_copyButton != null)
+            _copyButton.Click -= CopyButtonOnClick;
+
+        _copyButton = e.NameScope.Find<Button>("PART_CopyProcedureButton");
+
+        if (_copyButton != null)
+            _copyButton.Click += CopyButtonOnClick;
+    }
+
+    private async void CopyButtonOnClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+
+        if (topLevel?.Clipboard == null)
+            return;
+
+        await topLevel.Clipboard.SetTextAsync(ProcedureName);
+
+        Console.WriteLine($"Copied: {ProcedureName}");
+    }
     
     public static readonly StyledProperty<DateTime> TimestampProperty =
         AvaloniaProperty.Register<ProcedureStartEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);

@@ -161,7 +161,19 @@
                                            Text="{Binding ProcedureName, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}Procedure {0}:'}"
                                            TextWrapping="Wrap"/>
                                 
-                                <Button Width="20" Height="20" Grid.Row="0" Grid.Column="1"/>
+                                <Button x:Name="PART_CopyProcedureButton"
+                                        Background="Transparent"
+                                        VerticalContentAlignment="Center"
+                                        Height="24" Width="24"
+                                        Padding="0"
+                                        
+                                        Grid.Row="0"
+                                        Grid.RowSpan="2"
+                                        Grid.Column="1">
+    
+                                    <Svg Path="{DynamicResource CopyIcon}"
+                                         Css="{DynamicResource ThemeIconFill}" />
+                                </Button>
                             </Grid>
                         </Border>
                         
