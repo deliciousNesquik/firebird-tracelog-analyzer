@@ -1,6 +1,9 @@
-﻿using Avalonia;
+﻿using System.Text;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 
@@ -8,6 +11,86 @@ namespace FirebirdTraceViewer.Controls.EventCards;
 
 public class StatementFinishEventCard : TemplatedControl
 {
+    
+    private Button? _copyButton;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        // Отписываемся если шаблон переинициализировался
+        if (_copyButton != null)
+            _copyButton.Click -= CopyButtonOnClick;
+
+        _copyButton = e.NameScope.Find<Button>("PART_CopySqlButton");
+
+        if (_copyButton != null)
+            _copyButton.Click += CopyButtonOnClick;
+    }
+
+    private async void CopyButtonOnClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+
+        if (topLevel?.Clipboard == null)
+            return;
+
+        if (Params == null || Params.Count == 0)
+        {
+            await topLevel.Clipboard.SetTextAsync(Sql);
+            Console.WriteLine($"Copied: {Sql}");
+            return;
+        }
+
+        var sql = new StringBuilder();
+        int index = 0;
+
+        foreach (var ch in Sql)
+        {
+            if (ch == '?' && index < Params.Count)
+            {
+                sql.Append(FormatParam(Params[index]));
+                index++;
+            }
+            else
+            {
+                sql.Append(ch);
+            }
+        }
+
+        await topLevel.Clipboard.SetTextAsync(sql.ToString());
+        Console.WriteLine($"Copied: {sql.ToString()}");
+    }
+    
+    private static string FormatParam(SqlParam param)
+    {
+        var value = param.Value?.ToString();
+
+        if (value == "<NULL>")
+            return "NULL";
+
+        return param.Dtype.ToLower() switch
+        {
+            "varchar(32764)" or "varchar" or "char" or "text" =>
+                $"'{value?.Replace("'", "''")}'",
+
+            "timestamp" =>
+                $"'{value}'",
+
+            "date" =>
+                $"'{value}'",
+
+            "time" =>
+                $"'{value}'",
+
+            "bigint" or "int" or "smallint" or "integer" =>
+                value ?? "NULL",
+
+            _ =>
+                value ?? "NULL"
+        };
+    }
+    
     
     public static readonly StyledProperty<DateTime> TimestampProperty =
         AvaloniaProperty.Register<StatementFinishEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
