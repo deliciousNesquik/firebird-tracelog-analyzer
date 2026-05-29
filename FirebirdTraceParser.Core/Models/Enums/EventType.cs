@@ -27,6 +27,10 @@ public enum EventType
     [Description("EXECUTE_STATEMENT_START")]
     ExecuteStatementStart,
     
+    /// <summary>Повторное выполнение statement</summary>
+    [Description("EXECUTE_STATEMENT_RESTART")]
+    ExecuteStatementRestart,
+    
     /// <summary>Завершение выполнения statement</summary>
     [Description("EXECUTE_STATEMENT_FINISH")]
     ExecuteStatementFinish,
@@ -34,6 +38,10 @@ public enum EventType
     /// <summary>Начало выполнения процедуры</summary>
     [Description("EXECUTE_PROCEDURE_START")]
     ExecuteProcedureStart,
+    
+    /// <summary>Повторное выполнение процедуры</summary>
+    [Description("EXECUTE_PROCEDURE_RESTART")]
+    ExecuteProcedureRestart,
     
     /// <summary>Завершение выполнения процедуры</summary>
     [Description("EXECUTE_PROCEDURE_FINISH")]

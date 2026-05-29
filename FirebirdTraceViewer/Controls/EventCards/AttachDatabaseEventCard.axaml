@@ -31,7 +31,7 @@
                     <Grid ColumnDefinitions="Auto * Auto">
                         
                         <Border Grid.Column="0"
-                                Background="#1565C0"
+                                Background="{DynamicResource AttachDatabaseEventColor}"
                                 CornerRadius="5"
                                 Padding="16, 8, 16, 12">
 

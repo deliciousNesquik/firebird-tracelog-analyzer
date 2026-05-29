@@ -41,7 +41,7 @@
 
                             <!-- EVENT TYPE -->
                             <Border Grid.Column="0"
-                                    Background="#2E7D32"
+                                    Background="{DynamicResource ProcedureStartEventColor}"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 

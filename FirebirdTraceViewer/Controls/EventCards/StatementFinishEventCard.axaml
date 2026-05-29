@@ -41,7 +41,7 @@
 
                             <!-- EVENT TYPE -->
                             <Border Grid.Column="0"
-                                    Background="#FB8C00"
+                                    Background="{DynamicResource StatementFinishEventColor}"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 

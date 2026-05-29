@@ -35,6 +35,36 @@
     <Color x:Key="SuccessColor">#2E8B57</Color>
     <Color x:Key="DangerColor">#D64545</Color>
 
+    
+    <!-- СИСТЕМНЫЕ СОБЫТИЯ (Зеленый / Красный) -->
+    <Color x:Key="TraceInitEventColor">#2E7D32</Color> <!-- Темно-зеленый -->
+    <Color x:Key="TraceFiniEventColor">#C62828</Color> <!-- Глубокий красный -->
+
+    <!-- БАЗА ДАННЫХ (Синие оттенки) -->
+    <Color x:Key="AttachDatabaseEventColor">#1565C0</Color> <!-- Синий -->
+    <Color x:Key="DetachDatabaseEventColor">#546E7A</Color> <!-- Серо-синий -->
+
+    <!-- ЗАПРОСЫ / STATEMENTS (Оранжевые оттенки) -->
+    <Color x:Key="StatementStartEventColor">#E65100</Color> <!-- Темно-оранжевый -->
+    <Color x:Key="StatementRestartEventColor">#E65100</Color> 
+    <Color x:Key="StatementFinishEventColor">#FB8C00</Color> <!-- Светло-оранжевый -->
+    <Color x:Key="FailedStatementFinishEventColor">#D50000</Color> <!-- Ярко-красный (Ошибка) -->
+
+    <!-- ПРОЦЕДУРЫ (Зеленые оттенки) -->
+    <Color x:Key="ProcedureStartEventColor">#1B5E20</Color> <!-- Очень темно-зеленый -->
+    <Color x:Key="ProcedureRestartEventColor">#1B5E20</Color>
+    <Color x:Key="ProcedureFinishEventColor">#43A047</Color> <!-- Зеленый -->
+    <Color x:Key="FailedProcedureFinishEventColor">#BF360C</Color> <!-- Ржаво-красный (Ошибка) -->
+
+    <!-- ТРИГГЕРЫ (Фиолетовые оттенки) -->
+    <Color x:Key="TriggerStartEventColor">#6A1B9A</Color> <!-- Глубокий фиолетовый -->
+    <Color x:Key="TriggerFinishEventColor">#8E24AA</Color> <!-- Фиолетовый -->
+    <Color x:Key="FailedTriggerFinishEventColor">#AD1457</Color> <!-- Темно-розовый/Малиновый (Ошибка) -->
+
+    <!-- КРИТИЧЕСКИЕ ОШИБКИ (Красные/Бордовые оттенки) -->
+    <Color x:Key="ErrorAtJResultSetEventColor">#B71C1C</Color>
+    <Color x:Key="ErrorAtJStatementEventColor">#B71C1C</Color>
+    
     <!-- SVG -->
     <x:String x:Key="ThemeIconFill">
         .ThemeIconFill { fill:#141414; }

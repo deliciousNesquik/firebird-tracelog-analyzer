@@ -20,7 +20,7 @@
                     <StackPanel Spacing="10">
                         <Grid ColumnDefinitions="Auto Auto *">
                             <Border Grid.Column="0"
-                                    Background="#B71C1C"
+                                    Background="{DynamicResource TraceFiniEventColor}"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 

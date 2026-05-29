@@ -28,7 +28,7 @@
                     <Grid ColumnDefinitions="Auto * Auto">
                         
                         <Border Grid.Column="0"
-                                Background="#455A64"
+                                Background="{DynamicResource DetachDatabaseEventColor}"
                                 CornerRadius="5"
                                 Padding="16, 8, 16, 12">
 

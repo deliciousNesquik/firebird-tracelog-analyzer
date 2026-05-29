@@ -41,7 +41,7 @@
 
                             <!-- EVENT TYPE -->
                             <Border Grid.Column="0"
-                                    Background="#A08132"
+                                    Background="{DynamicResource FailedProcedureFinishEventColor}"
                                     CornerRadius="5"
                                     Padding="16, 8, 16, 12">
 
