@@ -17,6 +17,9 @@ public sealed class SortFieldInfo
     /// <summary>Приоритет</summary>
     public int Priority { get; }
     
+    /// <summary>Является ли сортировкой по умолчанию</summary>
+    public bool IsDefault { get; init; }
+    
     /// <summary>Тип свойства</summary>
     public Type PropertyType { get; }
 
@@ -25,12 +28,14 @@ public sealed class SortFieldInfo
         string displayName,
         Type propertyType,
         string category,
-        int priority)
+        int priority,
+        bool isDefault = false)
     {
         PropertyPath = propertyPath;
         DisplayName = displayName;
         PropertyType = propertyType;
         Category = category;
         Priority = priority;
+        IsDefault = isDefault;
     }
 }

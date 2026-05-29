@@ -1,68 +1,54 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceViewer.ViewModels;
 
 namespace FirebirdTraceViewer.Services.Sorting;
 
 /// <summary>
 /// Описывает один вариант сортировки.
 /// </summary>
-public sealed class SortDescriptor : INotifyPropertyChanged
+public partial class SortDescriptor : ViewModelBase
 {
-    private bool _isSelected;
     
-    /// <summary>Уникальный идентификатор</summary>
+    /// <summary>Уникальный идентификатор сортировки</summary>
     public string Id { get; }
     
-    /// <summary>Отображаемое имя</summary>
+    /// <summary>Отображаемое имя сортировки</summary>
     public string DisplayName { get; }
     
-    /// <summary>Категория в UI</summary>
+    /// <summary>Категория сортировки</summary>
     public string Category { get; }
     
-    /// <summary>Приоритет отображения</summary>
+    /// <summary>Приоритет отображения сортировки</summary>
     public int Priority { get; }
     
-    /// <summary>Функция сравнения событий</summary>
+    /// <summary>Функция сравнения событий для сортировки</summary>
     public Func<EventBase, EventBase, bool, int> Comparer { get; }
-    //public Comparison<EventBase> Comparer { get; }
     
     /// <summary>Является ли сортировкой по умолчанию</summary>
     public bool IsDefault { get; init; }
 
     /// <summary>Выбрана ли эта сортировка в данный момент</summary>
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set
-        {
-            if (_isSelected != value)
-            {
-                _isSelected = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    [ObservableProperty]
+    public partial bool IsSelected { get; set; }
 
     public SortDescriptor(
         string id,
         string displayName,
         Func<EventBase, EventBase, bool, int> comparer,
+        bool isDefault,
         string category = "Общие",
         int priority = 100)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         Comparer = comparer ?? throw new ArgumentNullException(nameof(comparer));
+        IsDefault = isDefault;
         Category = category;
         Priority = priority;
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        IsDefault = isDefault;
     }
 }

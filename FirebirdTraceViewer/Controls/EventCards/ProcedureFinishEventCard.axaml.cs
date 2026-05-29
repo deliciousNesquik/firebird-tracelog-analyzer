@@ -40,8 +40,6 @@ public class ProcedureFinishEventCard : TemplatedControl
             return;
 
         await topLevel.Clipboard.SetTextAsync(ProcedureName);
-
-        Console.WriteLine($"Copied: {ProcedureName}");
     }
     
     private async void CopyButtonWithParamsOnClick(object? sender, RoutedEventArgs e)
@@ -75,8 +73,6 @@ public class ProcedureFinishEventCard : TemplatedControl
         execute.Append(')');
         
         await topLevel.Clipboard.SetTextAsync(execute.ToString());
-
-        Console.WriteLine($"Copied: {execute.ToString()}");
     }
     
     

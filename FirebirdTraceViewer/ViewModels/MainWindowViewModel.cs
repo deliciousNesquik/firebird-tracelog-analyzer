@@ -202,6 +202,7 @@ public partial class MainWindowViewModel : ViewModelBase
             "custom_user_activity",
             "User Activity",
             CustomUserActivityComparer,
+            false,
             "Analytics",
             50));
 
@@ -209,6 +210,7 @@ public partial class MainWindowViewModel : ViewModelBase
             "heavy_queries",
             "Heavy Queries",
             HeavyQueriesComparer,
+            false,
             "Analytics",
             2));
 

@@ -35,8 +35,6 @@ public class TriggerStartEventCard : TemplatedControl
             return;
 
         await topLevel.Clipboard.SetTextAsync(TriggerName);
-
-        Console.WriteLine($"Copied: {TriggerName}");
     }
     
     public static readonly StyledProperty<DateTime> TimestampProperty =

@@ -15,6 +15,9 @@ public sealed class SortableFieldAttribute : Attribute
     /// <summary>Категория сортировки (например, "Общие", "Производительность")</summary>
     public string Category { get; init; } = "Общие";
 
+    /// <summary>Является ли сортировкой по умолчанию</summary>
+    public bool IsDefault { get; init; } = false;
+
     public SortableFieldAttribute(string displayName)
     {
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));

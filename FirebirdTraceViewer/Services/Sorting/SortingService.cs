@@ -12,14 +12,14 @@ public sealed class SortingService : ISortingService
     private readonly Dictionary<Type, List<SortFieldInfo>> _fieldCache = new();
     private readonly Dictionary<string, SortDescriptor> _customSorts = new();
 
-    // ✅ Кэш последних сортировок
+    // Кэш последних сортировок
     private List<SortDescriptor>? _lastGeneratedSorts;
     private HashSet<Type>? _lastEventTypes;
 
     public void RegisterCustomSort(SortDescriptor descriptor)
     {
         _customSorts[descriptor.Id] = descriptor;
-        Logger.Info("Зарегистрирована сортировка: {DisplayName}", descriptor.DisplayName);
+        Logger.Info("Registered sort: {DisplayName}", descriptor.DisplayName);
     }
 
     public IReadOnlyList<SortDescriptor> GetAvailableSorts(IEnumerable<EventBase> events)
@@ -33,7 +33,7 @@ public sealed class SortingService : ISortingService
                 .ToList();
         }
 
-        // ✅ Проверяем, изменились ли типы событий
+        // Проверяем, изменились ли типы событий
         var currentEventTypes = eventList
             .Select(e => e.GetType())
             .ToHashSet();
@@ -42,15 +42,15 @@ public sealed class SortingService : ISortingService
             _lastGeneratedSorts != null &&
             currentEventTypes.SetEquals(_lastEventTypes))
         {
-            Logger.Debug("Типы событий не изменились, переиспользуем сортировки");
+            Logger.Debug("Event types haven't changed, we'll reuse sorting");
             return _lastGeneratedSorts;
         }
 
-        Logger.Info("Типы событий изменились, генерируем новые сортировки");
+        Logger.Info("Event types have changed, we are generating new sortings");
 
         var availableSorts = new List<SortDescriptor>(_customSorts.Values);
 
-        // ✅ Собираем только ОБЩИЕ поля
+        // Собираем только ОБЩИЕ поля для пересеченных полей
         var commonFields = AnalyzeCommonFields(eventList);
 
         foreach (var field in commonFields)
@@ -77,7 +77,7 @@ public sealed class SortingService : ISortingService
     }
 
     /// <summary>
-    /// ✅ Собирает ОБЩИЕ поля (пересечение всех типов)
+    /// Собирает ОБЩИЕ поля (пересечение всех типов)
     /// </summary>
     private List<SortFieldInfo> AnalyzeCommonFields(List<EventBase> events)
     {
@@ -112,7 +112,7 @@ public sealed class SortingService : ISortingService
             .OrderBy(f => f.Priority)
             .ToList();
 
-        Logger.Info("Найдено {Count} общих полей для сортировки из {TypeCount} типов",
+        Logger.Info("Find {Count} common fields for sorting from {TypeCount} types",
             commonFields.Count, eventTypes.Count);
 
         return commonFields;
@@ -172,6 +172,7 @@ public sealed class SortingService : ISortingService
         if (type.Namespace?.StartsWith("System") == true)
             return false;
 
+        Console.WriteLine(type.Namespace);
         return type.IsClass &&
                type.Namespace?.StartsWith("FirebirdTraceParser.Core") == true;
     }
@@ -182,6 +183,7 @@ public sealed class SortingService : ISortingService
             $"field_{field.PropertyPath.Replace(".", "_").ToLower()}",
             field.DisplayName,
             CreatePropertyComparer(field.PropertyPath),
+            field.IsDefault,
             field.Category,
             field.Priority + 100);
     }
@@ -233,14 +235,14 @@ public sealed class SortingService : ISortingService
     {
         if (!_customSorts.TryGetValue(sortId, out var descriptor))
         {
-            Logger.Warn("Сортировка не найдена: {SortId}", sortId);
+            Logger.Warn("Sort is not found: {SortId}", sortId);
             return events;
         }
 
         var sorted = events.ToList();
         sorted.Sort((a, b) => descriptor.Comparer(a, b, descending));
 
-        Logger.Info("Применена сортировка: {DisplayName}, descending={Descending}",
+        Logger.Info("Sorting applied: {DisplayName}, descending={Descending}",
             descriptor.DisplayName, descending);
 
         return sorted;

@@ -141,9 +141,7 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
     /// </summary>
     public void UpdatePredicate(Func<EventBase, bool> newPredicate)
     {
-        Console.WriteLine(FilterPredicate(new EventBase(){EventType = EventType.AttachDatabase, TraceId = 1, HexTraceId = "0x3", Timestamp = new DateTime()}));
         _filterPredicate = newPredicate ?? throw new ArgumentNullException(nameof(newPredicate));
-        Console.WriteLine(FilterPredicate(new EventBase(){EventType = EventType.AttachDatabase, TraceId = 1, HexTraceId = "0x3", Timestamp = new DateTime()}));
     }
 
     /// <summary>

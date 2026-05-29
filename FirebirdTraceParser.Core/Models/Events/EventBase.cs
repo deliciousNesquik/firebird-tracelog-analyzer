@@ -11,7 +11,7 @@ namespace FirebirdTraceParser.Core.Models.Events;
 public class EventBase
 {
     /// <summary>Время события в формате ISO 8601</summary>
-    [SortableField("Время события", Priority = 1, Category = "Общие")]
+    [SortableField("Время события", Priority = 1, Category = "Общие", IsDefault = true)]
     [FilterableField("Время события", Category = "Общие", FilterType = FilterType.DateTimeRange)]
     public required DateTime Timestamp { get; init; }
     

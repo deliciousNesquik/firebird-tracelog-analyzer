@@ -38,7 +38,6 @@ public class StatementFinishEventCard : TemplatedControl
         if (Params == null || Params.Count == 0)
         {
             await topLevel.Clipboard.SetTextAsync(Sql);
-            Console.WriteLine($"Copied: {Sql}");
             return;
         }
 
@@ -59,7 +58,6 @@ public class StatementFinishEventCard : TemplatedControl
         }
 
         await topLevel.Clipboard.SetTextAsync(sql.ToString());
-        Console.WriteLine($"Copied: {sql.ToString()}");
     }
     
     private static string FormatParam(SqlParam param)
