@@ -16,7 +16,7 @@ public sealed class SearchService : ISearchService
     {
         if (string.IsNullOrWhiteSpace(searchText))
         {
-            Logger.Debug("Поисковый запрос пуст, возвращаю все события");
+            Logger.Debug("The search query is empty, returning all events");
             return events;
         }
 
@@ -31,7 +31,7 @@ public sealed class SearchService : ISearchService
 
         var resultList = results.ToList();
 
-        Logger.Info("Поиск '{Query}' ({Mode}) завершён за {Elapsed}ms, найдено: {Count}",
+        Logger.Info("Search '{Query}' ({Mode}) finish at {Elapsed} ms, find: {Count}",
             searchText, mode, sw.ElapsedMilliseconds, resultList.Count);
 
         return resultList;
@@ -40,34 +40,30 @@ public sealed class SearchService : ISearchService
     private IEnumerable<EventBase> SearchClassic(IEnumerable<EventBase> events, string searchText)
     {
         var query = searchText.Trim();
-        var comparison = StringComparison.OrdinalIgnoreCase;
+        const StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
         foreach (var evt in events)
         {
-            // Поиск в SQL
-            if (evt is StatementEventBase stmtEvt &&
-                !string.IsNullOrWhiteSpace(stmtEvt.Sql) &&
-                stmtEvt.Sql.Contains(query, comparison))
+            switch (evt)
             {
-                yield return evt;
-                continue;
-            }
-
-            // Поиск в процедурах
-            if (evt is ProcedureEventBase procEvt &&
-                !string.IsNullOrWhiteSpace(procEvt.ProcedureName) &&
-                procEvt.ProcedureName.Contains(query, comparison))
-            {
-                yield return evt;
-                continue;
-            }
-
-            // Поиск в триггерах
-            if (evt is TriggerEventBase triggerEvt &&
-                !string.IsNullOrWhiteSpace(triggerEvt.TriggerName) &&
-                triggerEvt.TriggerName.Contains(query, comparison))
-            {
-                yield return evt;
+                // Поиск в SQL
+                case StatementEventBase stmtEvt when
+                    !string.IsNullOrWhiteSpace(stmtEvt.Sql) &&
+                    stmtEvt.Sql.Contains(query, comparison):
+                
+                // Поиск в процедурах
+                case ProcedureEventBase procEvt when
+                    !string.IsNullOrWhiteSpace(procEvt.ProcedureName) &&
+                    procEvt.ProcedureName.Contains(query, comparison):
+                    yield return evt;
+                    continue;
+                
+                // Поиск в триггерах
+                case TriggerEventBase triggerEvt when
+                    !string.IsNullOrWhiteSpace(triggerEvt.TriggerName) &&
+                    triggerEvt.TriggerName.Contains(query, comparison):
+                    yield return evt;
+                    break;
             }
         }
     }
@@ -82,43 +78,50 @@ public sealed class SearchService : ISearchService
         }
         catch (ArgumentException ex)
         {
-            Logger.Error(ex, "Неверное регулярное выражение: {Pattern}", pattern);
+            Logger.Error(ex, "Invalid regular expression: {Pattern}", pattern);
             yield break;
         }
 
         foreach (var evt in events)
         {
-            try
+            bool isMatch;
+            switch (evt)
             {
                 // Поиск в SQL
-                if (evt is StatementEventBase stmtEvt &&
-                    !string.IsNullOrWhiteSpace(stmtEvt.Sql) &&
-                    regex.IsMatch(stmtEvt.Sql))
-                {
-                    //yield return evt;
-                    continue;
-                }
+                case StatementEventBase stmtEvt 
+                    when !string.IsNullOrWhiteSpace(stmtEvt.Sql):
+                        try {isMatch = regex.IsMatch(stmtEvt.Sql); }
+                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
+                    
+                        if (isMatch)
+                            yield return evt;
 
+                        isMatch = false;
+                        continue;
+                
                 // Поиск в процедурах
-                if (evt is ProcedureEventBase procEvt &&
-                    !string.IsNullOrWhiteSpace(procEvt.ProcedureName) &&
-                    regex.IsMatch(procEvt.ProcedureName))
-                {
-                    //yield return evt;
-                    continue;
-                }
+                case ProcedureEventBase procEvt 
+                    when !string.IsNullOrWhiteSpace(procEvt.ProcedureName):
+                        try {isMatch = regex.IsMatch(procEvt.ProcedureName); }
+                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
+                        
+                        if (isMatch)
+                            yield return evt;
 
+                        isMatch = false;
+                        continue;
+                
                 // Поиск в триггерах
-                if (evt is TriggerEventBase triggerEvt &&
-                    !string.IsNullOrWhiteSpace(triggerEvt.TriggerName) &&
-                    regex.IsMatch(triggerEvt.TriggerName))
-                {
-                    //yield return evt;
-                }
-            }
-            catch (RegexMatchTimeoutException)
-            {
-                Logger.Warn("Timeout при поиске regex для события {EventType}", evt.EventType);
+                case TriggerEventBase triggerEvt 
+                    when !string.IsNullOrWhiteSpace(triggerEvt.TriggerName):
+                        try {isMatch = regex.IsMatch(triggerEvt.TriggerName); }
+                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
+                            
+                        if (isMatch)
+                            yield return evt;
+
+                        isMatch = false;
+                        break;
             }
         }
     }
