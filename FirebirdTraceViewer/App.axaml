@@ -140,7 +140,7 @@
                 ConsistencyMode="{Binding Transaction.ConsistencyMode}"
                 LockMode="{Binding Transaction.LockMode}"
                 AccessMode="{Binding Transaction.AccessMode}"
-                Params="{Binding Params}" />
+                Params="{Binding Parameters}" />
         </DataTemplate>
 
         <DataTemplate DataType="core:ProcedureFinishEvent">
@@ -164,7 +164,36 @@
                 ConsistencyMode="{Binding Transaction.ConsistencyMode}"
                 LockMode="{Binding Transaction.LockMode}"
                 AccessMode="{Binding Transaction.AccessMode}"
-                Params="{Binding Params}"
+                Params="{Binding Parameters}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:FailedProcedureFinishEvent">
+            <events:FailedProcedureFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}"
                 ExecuteMs="{Binding Performance.ExecuteMs}"
                 ReadCount="{Binding Performance.ReadCount}"
                 WriteCount="{Binding Performance.WriteCount}"
@@ -289,6 +318,7 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ProcedureStartEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ProcedureFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/FailedProcedureFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerStartEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/InfoTip.axaml"/>

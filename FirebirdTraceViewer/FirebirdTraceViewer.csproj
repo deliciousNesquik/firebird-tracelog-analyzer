@@ -115,5 +115,9 @@
         <DependentUpon>TriggerStartEventCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\EventCards\FailedProcedureFinishEventCard.axaml.cs">
+        <DependentUpon>FailedProcedureFinishEventCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

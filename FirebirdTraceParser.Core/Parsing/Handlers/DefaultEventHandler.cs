@@ -58,7 +58,8 @@ public sealed class DefaultEventHandler : IEventHandler
                 [EventType.ExecuteProcedureStart] = HandleProcedureStart,
                 [EventType.ExecuteProcedureFinish] = HandleProcedureFinish,
                 [EventType.ExecuteTriggerStart] = HandleTriggerStart,
-                [EventType.ExecuteTriggerFinish] = HandleTriggerFinish
+                [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
+                [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
             };
     }
 
@@ -249,7 +250,7 @@ public sealed class DefaultEventHandler : IEventHandler
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             ProcedureName = data.ProcedureName,
-            Params = data.Params
+            Parameters = data.Params
         };
     }
 
@@ -269,7 +270,36 @@ public sealed class DefaultEventHandler : IEventHandler
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             ProcedureName = data.ProcedureName,
-            Params = data.Params,
+            Parameters = data.Params,
+            Performance = data.Performance ?? new PerformanceInfo
+            {
+                ExecuteMs = 0,
+                FetchCount = 0,
+                ReadCount = 0,
+                WriteCount = 0,
+                MarkCount = 0
+            },
+            PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
+        };
+    }
+    
+    private FailedProcedureFinishEvent? HandleFailedProcedureFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
+    {
+        var data = ParseProcedureData(bodyLines, rules, true);
+        if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
+            return null;
+
+        return new FailedProcedureFinishEvent
+        {
+            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            HexTraceId = header.Groups["hex_trace_id"].Value,
+            EventType = EventType.FailedExecuteProcedureFinish,
+            Attachment = data.Attachment,
+            Transaction = data.Transaction,
+            ProcedureName = data.ProcedureName,
+            Parameters = data.Params,
             Performance = data.Performance ?? new PerformanceInfo
             {
                 ExecuteMs = 0,
@@ -662,7 +692,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var pmProc = rules["procedure"].Match(line);
             if (pmProc.Success)
             {
-                procedureName = pmProc.Groups["procedure_name"].Value;
+                procedureName = StringPool.Intern(pmProc.Groups["procedure_name"].Value);
                 continue;
             }
 
