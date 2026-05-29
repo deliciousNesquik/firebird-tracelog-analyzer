@@ -1,0 +1,329 @@
+﻿using System.Text;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
+using FirebirdTraceParser.Core.Models.Enums;
+using FirebirdTraceParser.Core.Models.ValueObjects;
+
+namespace FirebirdTraceViewer.Controls.EventCards;
+
+public class FailedStatementFinishEventCard : TemplatedControl
+{
+    
+    private Button? _copyButton;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        // Отписываемся если шаблон переинициализировался
+        if (_copyButton != null)
+            _copyButton.Click -= CopyButtonOnClick;
+
+        _copyButton = e.NameScope.Find<Button>("PART_CopySqlButton");
+
+        if (_copyButton != null)
+            _copyButton.Click += CopyButtonOnClick;
+    }
+
+    private async void CopyButtonOnClick(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+
+        if (topLevel?.Clipboard == null)
+            return;
+
+        if (Params == null || Params.Count == 0)
+        {
+            await topLevel.Clipboard.SetTextAsync(Sql);
+            Console.WriteLine($"Copied: {Sql}");
+            return;
+        }
+
+        var sql = new StringBuilder();
+        int index = 0;
+
+        foreach (var ch in Sql)
+        {
+            if (ch == '?' && index < Params.Count)
+            {
+                sql.Append(FormatParam(Params[index]));
+                index++;
+            }
+            else
+            {
+                sql.Append(ch);
+            }
+        }
+
+        await topLevel.Clipboard.SetTextAsync(sql.ToString());
+        Console.WriteLine($"Copied: {sql.ToString()}");
+    }
+    
+    private static string FormatParam(SqlParam param)
+    {
+        var value = param.Value?.ToString();
+
+        if (value == "<NULL>")
+            return "NULL";
+
+        return param.Dtype.ToLower() switch
+        {
+            "varchar(32764)" or "varchar" or "char" or "text" =>
+                $"'{value?.Replace("'", "''")}'",
+
+            "timestamp" =>
+                $"'{value}'",
+
+            "date" =>
+                $"'{value}'",
+
+            "time" =>
+                $"'{value}'",
+
+            "bigint" or "int" or "smallint" or "integer" =>
+                value ?? "NULL",
+
+            _ =>
+                value ?? "NULL"
+        };
+    }
+    
+    
+    public static readonly StyledProperty<DateTime> TimestampProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
+    
+    public static readonly StyledProperty<int> TraceIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(TraceId), 0);
+    
+    public static readonly StyledProperty<string> HexTraceIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(HexTraceId), "0");
+    
+    public static readonly StyledProperty<int> StatementIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(StatementId), 0);
+    
+    public static readonly StyledProperty<string> DatabasePathProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(DatabasePath), "<not set>");
+    
+    public static readonly StyledProperty<string> UserProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(User), "<not set>");
+    
+    public static readonly StyledProperty<string> RoleProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(Role), "<not set>");
+    
+    public static readonly StyledProperty<int> AttachmentIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(AttachmentId), 0);
+    
+    public static readonly StyledProperty<string> ProtocolProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(Protocol), "<not set>");
+    
+    public static readonly StyledProperty<string> AddressProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(Address), "<not set>");
+    
+    public static readonly StyledProperty<int> PortProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(Port), 0);
+    
+    public static readonly StyledProperty<string> CharsetProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(Charset), "<not set>");
+    
+    public static readonly StyledProperty<string> ProcessPathProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(ProcessPath), "<not set>");
+    
+    public static readonly StyledProperty<int> ProcessIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(ProcessId), 0);
+    
+    public static readonly StyledProperty<int> TransactionIdProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(TransactionId), 0);
+    
+    public static readonly StyledProperty<string> IsolationLevelProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(IsolationLevel), "<not set>");
+    
+    public static readonly StyledProperty<string> ConsistencyModeProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(ConsistencyMode), "<not set>");
+    
+    public static readonly StyledProperty<string> LockModeProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(LockMode), "<not set>");
+    
+    public static readonly StyledProperty<string> AccessModeProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(AccessMode), "<not set>");
+    
+    public static readonly StyledProperty<string> SqlProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, string>(nameof(Sql), "<not set>");
+    
+    public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
+    
+    public static readonly StyledProperty<int> ExecuteMsProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(ExecuteMs), 0);
+    
+    public static readonly StyledProperty<int> FetchCountProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(FetchCount), 0);
+    
+    public static readonly StyledProperty<int> ReadCountProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(ReadCount), 0);
+    
+    public static readonly StyledProperty<int> WriteCountProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(WriteCount), 0);
+    
+    public static readonly StyledProperty<int> MarkCountProperty =
+        AvaloniaProperty.Register<StatementFinishEventCard, int>(nameof(MarkCount), 0);
+    
+    public DateTime Timestamp
+    {
+        get => GetValue(TimestampProperty);
+        set => SetValue(TimestampProperty, value);
+    }
+    
+    public int TraceId
+    {
+        get => GetValue(TraceIdProperty);
+        set => SetValue(TraceIdProperty, value);
+    }
+    
+    public string HexTraceId
+    {
+        get => GetValue(HexTraceIdProperty);
+        set => SetValue(HexTraceIdProperty, value);
+    }
+    
+    public int StatementId
+    {
+        get => GetValue(StatementIdProperty);
+        set => SetValue(StatementIdProperty, value);
+    }
+    
+    public string DatabasePath
+    {
+        get => GetValue(DatabasePathProperty);
+        set => SetValue(DatabasePathProperty, value);
+    }
+    
+    public string User
+    {
+        get => GetValue(UserProperty);
+        set => SetValue(UserProperty, value);
+    }
+    
+    public string Role
+    {
+        get => GetValue(RoleProperty);
+        set => SetValue(RoleProperty, value);
+    }
+    
+    public int AttachmentId
+    {
+        get => GetValue(AttachmentIdProperty);
+        set => SetValue(AttachmentIdProperty, value);
+    }
+    
+    public string Protocol
+    {
+        get => GetValue(ProtocolProperty);
+        set => SetValue(ProtocolProperty, value);
+    }
+    
+    public string Address
+    {
+        get => GetValue(AddressProperty);
+        set => SetValue(AddressProperty, value);
+    }
+    
+    public int Port
+    {
+        get => GetValue(PortProperty);
+        set => SetValue(PortProperty, value);
+    }
+    
+    public string Charset
+    {
+        get => GetValue(CharsetProperty);
+        set => SetValue(CharsetProperty, value);
+    }
+    
+    public string ProcessPath
+    {
+        get => GetValue(ProcessPathProperty);
+        set => SetValue(ProcessPathProperty, value);
+    }
+    
+    public int ProcessId
+    {
+        get => GetValue(ProcessIdProperty);
+        set => SetValue(ProcessIdProperty, value);
+    }
+    
+    public int TransactionId
+    {
+        get => GetValue(TransactionIdProperty);
+        set => SetValue(TransactionIdProperty, value);
+    }
+ 
+    public string IsolationLevel
+    {
+        get => GetValue(IsolationLevelProperty);
+        set => SetValue(IsolationLevelProperty, value);
+    }
+    
+    public string ConsistencyMode
+    {
+        get => GetValue(ConsistencyModeProperty);
+        set => SetValue(ConsistencyModeProperty, value);
+    }
+    
+    public string LockMode
+    {
+        get => GetValue(LockModeProperty);
+        set => SetValue(LockModeProperty, value);
+    }
+    
+    public string AccessMode
+    {
+        get => GetValue(AccessModeProperty);
+        set => SetValue(AccessModeProperty, value);
+    }
+    
+    public string Sql
+    {
+        get => GetValue(SqlProperty);
+        set => SetValue(SqlProperty, value);
+    }
+    
+    public IReadOnlyList<SqlParam> Params
+    {
+        get => GetValue(ParamsProperty);
+        set => SetValue(ParamsProperty, value);
+    }
+    
+    public int ExecuteMs
+    {
+        get => GetValue(ExecuteMsProperty);
+        set => SetValue(ExecuteMsProperty, value);
+    }
+    
+    public int FetchCount
+    {
+        get => GetValue(FetchCountProperty);
+        set => SetValue(FetchCountProperty, value);
+    }
+    
+    public int ReadCount
+    {
+        get => GetValue(ReadCountProperty);
+        set => SetValue(ReadCountProperty, value);
+    }
+    
+    public int WriteCount
+    {
+        get => GetValue(WriteCountProperty);
+        set => SetValue(WriteCountProperty, value);
+    }
+    
+    public int MarkCount
+    {
+        get => GetValue(MarkCountProperty);
+        set => SetValue(MarkCountProperty, value);
+    }
+    
+}

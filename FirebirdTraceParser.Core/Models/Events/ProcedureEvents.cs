@@ -10,9 +10,7 @@ public class ProcedureEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
-
     public required string ProcedureName { get; init; }
-
     public required IReadOnlyList<SqlParam> Parameters { get; init; }
 }
 

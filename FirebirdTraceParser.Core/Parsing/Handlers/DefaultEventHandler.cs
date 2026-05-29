@@ -60,6 +60,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 [EventType.ExecuteTriggerStart] = HandleTriggerStart,
                 [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
                 [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
+                [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
             };
     }
 
@@ -200,7 +201,7 @@ public sealed class DefaultEventHandler : IEventHandler
             Transaction = data.Transaction,
             StatementId = data.StatementId.Value,
             Sql = data.Sql ?? string.Empty,
-            Params = data.Params
+            Parameters = data.Params
         };
     }
 
@@ -221,7 +222,37 @@ public sealed class DefaultEventHandler : IEventHandler
             Transaction = data.Transaction,
             StatementId = data.StatementId.Value,
             Sql = data.Sql ?? string.Empty,
-            Params = data.Params,
+            Parameters = data.Params,
+            Performance = data.Performance ?? new PerformanceInfo
+            {
+                ExecuteMs = 0,
+                FetchCount = 0,
+                ReadCount = 0,
+                WriteCount = 0,
+                MarkCount = 0
+            },
+            PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
+        };
+    }
+    
+    private FailedStatementFinishEvent? HandleFailedStatementFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
+    {
+        var data = ParseStatementData(bodyLines, rules, true);
+        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+            return null;
+
+        return new FailedStatementFinishEvent
+        {
+            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            HexTraceId = header.Groups["hex_trace_id"].Value,
+            EventType = EventType.FailedExecuteStatementFinish,
+            Attachment = data.Attachment,
+            Transaction = data.Transaction,
+            StatementId = data.StatementId.Value,
+            Sql = data.Sql ?? string.Empty,
+            Parameters = data.Params,
             Performance = data.Performance ?? new PerformanceInfo
             {
                 ExecuteMs = 0,
@@ -582,7 +613,7 @@ public sealed class DefaultEventHandler : IEventHandler
                     i++;
                 }
 
-                sql = string.Join("\n", sqlLines).Trim();
+                sql = StringPool.Intern(string.Join("\n", sqlLines).Trim());
                 i--; // Корректировка индекса
                 continue;
             }
