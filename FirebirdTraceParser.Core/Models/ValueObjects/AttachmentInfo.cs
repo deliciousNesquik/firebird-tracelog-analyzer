@@ -9,11 +9,7 @@ namespace FirebirdTraceParser.Core.Models.ValueObjects;
 public sealed record AttachmentInfo
 {
     [FilterableField("Database path", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string DatabasePath
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public required string DatabasePath { get; init; }
 
     [SortableField("Attachment ID", Priority = 9, Category = "Attachment")]
     [FilterableField("Attachment ID", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
@@ -21,43 +17,23 @@ public sealed record AttachmentInfo
     
     [SortableField("User", Priority = 10, Category = "Attachment")]
     [FilterableField("User", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string User
-    {
-        get => field; 
-        init => field = StringPool.Intern(value);
-    }
+    public required string User { get; init; }
 
     [SortableField("Role", Priority = 11, Category = "Attachment")]
     [FilterableField("Role", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string Role
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public required string Role { get; init; }
 
     [SortableField("Charset", Priority = 12, Category = "Attachment")]
     [FilterableField("Charset", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string Charset
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public required string Charset { get; init; }
 
     [SortableField("Protocol", Priority = 13, Category = "Attachment")]
     [FilterableField("Protocol", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string Protocol
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public required string Protocol { get; init; }
 
     [SortableField("Address", Priority = 14, Category = "Attachment")]
     [FilterableField("Address", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public required string Address
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public required string Address { get; init; }
     
     [SortableField("Port", Priority = 14, Category = "Attachment")]
     [FilterableField("Port", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
@@ -66,11 +42,7 @@ public sealed record AttachmentInfo
     
     /// <summary>Путь к исполняемому файлу клиента (опционально)</summary>
     [FilterableField("Client Application", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
-    public string? ProcessPath
-    {
-        get => field;
-        init => field = StringPool.Intern(value);
-    }
+    public string? ProcessPath { get; init; }
     
     /// <summary>ID процесса клиента (опционально)</summary>
     [FilterableField("Client application PID", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]

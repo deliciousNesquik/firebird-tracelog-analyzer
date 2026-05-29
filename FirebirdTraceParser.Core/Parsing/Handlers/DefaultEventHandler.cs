@@ -453,13 +453,14 @@ public sealed class DefaultEventHandler : IEventHandler
             if (am.Success && attachment is null)
                 attachment = new AttachmentInfo
                 {
-                    DatabasePath = am.Groups["database_path"].Value,
+                    DatabasePath = StringPool.Intern(am.Groups["database_path"].Value),
                     AttachmentId = int.Parse(am.Groups["attachment_id"].Value),
-                    User = am.Groups["user"].Value,
-                    Role = am.Groups["role"].Value,
-                    Charset = am.Groups["charset"].Value,
-                    Protocol = am.Groups["protocol"].Value.Trim(),
-                    Address = am.Groups["address"].Success ? am.Groups["address"].Value : "<internal>",
+                    User = StringPool.Intern(am.Groups["user"].Value),
+                    Role = StringPool.Intern(am.Groups["role"].Value),
+                    Charset = StringPool.Intern(am.Groups["charset"].Value),
+                    Protocol = StringPool.Intern(am.Groups["protocol"].Value.Trim()),
+                    Address = am.Groups["address"].Success ? StringPool.Intern(am.Groups["address"].Value) : 
+                        StringPool.Intern("<internal>"),
                     Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
                     ProcessPath = null,
                     ProcessId = null
@@ -469,7 +470,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var pm = rules["process"].Match(line);
             if (pm.Success)
             {
-                procPath = pm.Groups["process_path"].Value;
+                procPath = StringPool.Intern(pm.Groups["process_path"].Value);
                 procId = int.Parse(pm.Groups["process_id"].Value);
             }
         }
@@ -508,10 +509,10 @@ public sealed class DefaultEventHandler : IEventHandler
             return new TransactionInfo
             {
                 TransactionId = tid,
-                IsolationLevel = parts[0],
-                ConsistencyMode = parts[1],
-                LockMode = parts[2],
-                AccessMode = parts[3]
+                IsolationLevel = StringPool.Intern(parts[0]),
+                ConsistencyMode = StringPool.Intern(parts[1]),
+                LockMode = StringPool.Intern(parts[2]),
+                AccessMode = StringPool.Intern(parts[3])
             };
         }
 
@@ -574,13 +575,14 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = new AttachmentInfo
                     {
-                        DatabasePath = m.Groups["database_path"].Value,
+                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
                         AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = m.Groups["user"].Value,
-                        Role = m.Groups["role"].Value,
-                        Charset = m.Groups["charset"].Value,
-                        Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
+                        User = StringPool.Intern(m.Groups["user"].Value),
+                        Role = StringPool.Intern(m.Groups["role"].Value),
+                        Charset = StringPool.Intern(m.Groups["charset"].Value),
+                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
+                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
+                            StringPool.Intern("<internal>"),
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null
@@ -597,7 +599,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = attachment with
                     {
-                        ProcessPath = pm.Groups["process_path"].Value,
+                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
                         ProcessId = int.Parse(pm.Groups["process_id"].Value)
                     };
                     continue;
@@ -651,9 +653,9 @@ public sealed class DefaultEventHandler : IEventHandler
 
                 paramsList.Add(new SqlParameters
                 {
-                    Name = paramM.Groups["name"].Value,
-                    Dtype = paramM.Groups["dtype"].Value,
-                    Value = value
+                    Name = StringPool.Intern(paramM.Groups["name"].Value),
+                    Dtype = StringPool.Intern(paramM.Groups["dtype"].Value),
+                    Value = StringPool.Intern(value)
                 });
                 continue;
             }
@@ -708,13 +710,14 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = new AttachmentInfo
                     {
-                        DatabasePath = m.Groups["database_path"].Value,
+                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
                         AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = m.Groups["user"].Value,
-                        Role = m.Groups["role"].Value,
-                        Charset = m.Groups["charset"].Value,
-                        Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
+                        User = StringPool.Intern(m.Groups["user"].Value),
+                        Role = StringPool.Intern(m.Groups["role"].Value),
+                        Charset = StringPool.Intern(m.Groups["charset"].Value),
+                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
+                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
+                            StringPool.Intern("<internal>"),
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null
@@ -730,7 +733,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = attachment with
                     {
-                        ProcessPath = pm.Groups["process_path"].Value,
+                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
                         ProcessId = int.Parse(pm.Groups["process_id"].Value)
                     };
                     continue;
@@ -759,9 +762,9 @@ public sealed class DefaultEventHandler : IEventHandler
 
                 paramsList.Add(new SqlParameters
                 {
-                    Name = paramM.Groups["name"].Value,
-                    Dtype = paramM.Groups["dtype"].Value,
-                    Value = value
+                    Name = StringPool.Intern(paramM.Groups["name"].Value),
+                    Dtype = StringPool.Intern(paramM.Groups["dtype"].Value),
+                    Value = StringPool.Intern(value)
                 });
                 continue;
             }
@@ -797,13 +800,14 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = new AttachmentInfo
                     {
-                        DatabasePath = m.Groups["database_path"].Value,
+                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
                         AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = m.Groups["user"].Value,
-                        Role = m.Groups["role"].Value,
-                        Charset = m.Groups["charset"].Value,
-                        Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
+                        User = StringPool.Intern(m.Groups["user"].Value),
+                        Role = StringPool.Intern(m.Groups["role"].Value),
+                        Charset = StringPool.Intern(m.Groups["charset"].Value),
+                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
+                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
+                            StringPool.Intern("<internal>"),
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null
@@ -819,7 +823,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 {
                     attachment = attachment with
                     {
-                        ProcessPath = pm.Groups["process_path"].Value,
+                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
                         ProcessId = int.Parse(pm.Groups["process_id"].Value)
                     };
                     continue;
