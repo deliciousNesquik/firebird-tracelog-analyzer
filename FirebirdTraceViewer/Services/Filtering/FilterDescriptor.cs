@@ -1,22 +1,19 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FirebirdTraceParser.Core.Attributes;
 using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceViewer.ViewModels;
 
 namespace FirebirdTraceViewer.Services.Filtering;
 
 /// <summary>
 /// Описывает один фильтр со всеми его настройками.
 /// </summary>
-public sealed class FilterDescriptor : INotifyPropertyChanged
+public partial class FilterDescriptor : ViewModelBase
 {
-    private bool _isActive;
-    private object? _currentMinValue;
-    private object? _currentMaxValue;
-    private string? _searchText;
-    private Func<EventBase, bool> _filterPredicate;
 
     /// <summary>Уникальный ID фильтра</summary>
     public string Id { get; }
@@ -46,77 +43,24 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
     public object? MaxValue { get; set; }
 
     /// <summary>Текущее минимальное значение фильтра</summary>
-    public object? CurrentMinValue
-    {
-        get => _currentMinValue;
-        set
-        {
-            if (!Equals(_currentMinValue, value))
-            {
-                _currentMinValue = value;
-                OnPropertyChanged();
-                // ❌ УБРАЛИ автоприменение
-                // OnRangeValueChanged();
-            }
-        }
-    }
+    [ObservableProperty]
+    public partial object? CurrentMinValue { get; set; }
 
     /// <summary>Текущее максимальное значение фильтра</summary>
-    public object? CurrentMaxValue
-    {
-        get => _currentMaxValue;
-        set
-        {
-            if (!Equals(_currentMaxValue, value))
-            {
-                _currentMaxValue = value;
-                OnPropertyChanged();
-                // ❌ УБРАЛИ автоприменение
-                // OnRangeValueChanged();
-            }
-        }
-    }
+    [ObservableProperty]
+    public partial object? CurrentMaxValue { get; set; }
 
     /// <summary>Текст для поиска (для TextSearch)</summary>
-    public string? SearchText
-    {
-        get => _searchText;
-        set
-        {
-            if (_searchText != value)
-            {
-                _searchText = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    [ObservableProperty]
+    public partial string? SearchText { get; set; }
 
     /// <summary>Активен ли фильтр</summary>
-    public bool IsActive
-    {
-        get => _isActive;
-        set
-        {
-            if (_isActive != value)
-            {
-                _isActive = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    [ObservableProperty]
+    public partial bool IsActive { get; set; }
 
     /// <summary>Функция проверки события</summary>
-    public Func<EventBase, bool> FilterPredicate
-    {
-        get => _filterPredicate;
-        set
-        {
-            if (_filterPredicate != value)
-                _filterPredicate = value;
-            
-            OnPropertyChanged();
-        }
-    }
+    [ObservableProperty]
+    public partial Func<EventBase, bool> FilterPredicate { get; set; }
 
     public FilterDescriptor(
         string id,
@@ -131,7 +75,7 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         FilterType = filterType;
         PropertyPath = propertyPath;
-        _filterPredicate = filterPredicate ?? throw new ArgumentNullException(nameof(filterPredicate));
+        FilterPredicate = filterPredicate ?? throw new ArgumentNullException(nameof(filterPredicate));
         Category = category;
         Priority = priority;
     }
@@ -141,7 +85,7 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
     /// </summary>
     public void UpdatePredicate(Func<EventBase, bool> newPredicate)
     {
-        _filterPredicate = newPredicate ?? throw new ArgumentNullException(nameof(newPredicate));
+        FilterPredicate = newPredicate ?? throw new ArgumentNullException(nameof(newPredicate));
     }
 
     /// <summary>
@@ -156,12 +100,5 @@ public sealed class FilterDescriptor : INotifyPropertyChanged
 
         foreach (var value in AvailableValues)
             value.IsSelected = false;
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

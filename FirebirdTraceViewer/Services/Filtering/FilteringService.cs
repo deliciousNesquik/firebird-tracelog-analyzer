@@ -16,14 +16,14 @@ public sealed class FilteringService : IFilteringService
     // Пользовательские фильтры
     private readonly Dictionary<string, FilterDescriptor> _customFilters = new();
 
-    // ✅ Кэш последних созданных фильтров (для оптимизации)
+    // Кэш последних созданных фильтров (для оптимизации)
     private List<FilterDescriptor>? _lastGeneratedFilters;
     private HashSet<Type>? _lastEventTypes;
 
     public void RegisterCustomFilter(FilterDescriptor descriptor)
     {
         _customFilters[descriptor.Id] = descriptor;
-        Logger.Info("Зарегистрирован фильтр: {DisplayName}", descriptor.DisplayName);
+        Logger.Info("Register filter: {DisplayName}", descriptor.DisplayName);
     }
 
     public IReadOnlyList<FilterDescriptor> GetAvailableFilters(IEnumerable<EventBase> events)
@@ -37,7 +37,7 @@ public sealed class FilteringService : IFilteringService
                 .ToList();
         }
 
-        // ✅ Проверяем, изменились ли типы событий
+        // Проверяем, изменились ли типы событий
         var currentEventTypes = eventList
             .Select(e => e.GetType())
             .ToHashSet();
@@ -47,17 +47,17 @@ public sealed class FilteringService : IFilteringService
             currentEventTypes.SetEquals(_lastEventTypes))
         {
             // Типы не изменились — обновляем только счётчики
-            Logger.Debug("Типы событий не изменились, переиспользуем фильтры");
+            Logger.Debug("Event types haven't changed, we'll reuse filters");
             UpdateFilterValues(_lastGeneratedFilters, eventList);
             return _lastGeneratedFilters;
         }
 
         // Типы изменились — пересоздаём фильтры
-        Logger.Info("Типы событий изменились, генерируем новые фильтры");
+        Logger.Info("Event types have changed, we are generating new filters");
 
         var availableFilters = new List<FilterDescriptor>(_customFilters.Values);
 
-        // ✅ Собираем только ОБЩИЕ поля (пересечение типов)
+        // Собираем только ОБЩИЕ поля (пересечение типов)
         var commonFields = AnalyzeCommonFields(eventList);
 
         foreach (var field in commonFields)
@@ -93,13 +93,14 @@ public sealed class FilteringService : IFilteringService
     {
         foreach (var filter in filters)
         {
-            if (filter.FilterType is FilterType.EnumMultiSelect or FilterType.StringMultiSelect)
+            switch (filter.FilterType)
             {
-                UpdateMultiSelectFilter(filter, events);
-            }
-            else if (filter.FilterType is FilterType.NumericRange or FilterType.DateTimeRange)
-            {
-                UpdateRangeFilter(filter, events);
+                case FilterType.EnumMultiSelect or FilterType.StringMultiSelect:
+                    UpdateMultiSelectFilter(filter, events);
+                    break;
+                case FilterType.NumericRange or FilterType.DateTimeRange:
+                    UpdateRangeFilter(filter, events);
+                    break;
             }
         }
     }
@@ -121,7 +122,7 @@ public sealed class FilteringService : IFilteringService
         // Обновляем счётчики
         foreach (var item in filter.AvailableValues)
         {
-            item.Count = valueCounts.TryGetValue(item.Value, out var count) ? count : 0;
+            item.Count = valueCounts.GetValueOrDefault(item.Value, 0);
         }
 
         // Добавляем новые значения (если появились)
@@ -146,7 +147,7 @@ public sealed class FilteringService : IFilteringService
             filter.MinValue = values.Min();
             filter.MaxValue = values.Max();
 
-            // ✅ НЕ сбрасываем CurrentMinValue/CurrentMaxValue — пользователь мог их изменить
+            // НЕ сбрасываем CurrentMinValue/CurrentMaxValue — пользователь мог их изменить
             // Только если они null
             filter.CurrentMinValue ??= filter.MinValue;
             filter.CurrentMaxValue ??= filter.MaxValue;
@@ -162,13 +163,13 @@ public sealed class FilteringService : IFilteringService
         if (activeFilters.Count == 0)
             return events;
 
-        Logger.Info("Применяю {Count} активных фильтров", activeFilters.Count);
+        Logger.Info("Apply {Count} activity filter(s)", activeFilters.Count);
 
         return events.Where(evt => activeFilters.All(filter => filter.FilterPredicate(evt)));
     }
 
     /// <summary>
-    /// ✅ Собирает ОБЩИЕ поля (пересечение всех типов событий)
+    /// Собирает ОБЩИЕ поля (пересечение всех типов событий)
     /// </summary>
     private List<FilterFieldInfo> AnalyzeCommonFields(List<EventBase> events)
     {
@@ -188,7 +189,7 @@ public sealed class FilteringService : IFilteringService
         if (fieldsByType.Count == 0)
             return [];
 
-        // ✅ Находим пересечение полей
+        // Находим пересечение полей
         var commonPaths = fieldsByType
             .Skip(1)
             .Aggregate(
@@ -204,7 +205,7 @@ public sealed class FilteringService : IFilteringService
             .OrderBy(f => f.Priority)
             .ToList();
 
-        Logger.Info("Найдено {Count} общих полей из {TypeCount} типов",
+        Logger.Info("Find {Count} common field(s) from {TypeCount} type(s)",
             commonFields.Count, eventTypes.Count);
 
         return commonFields;
@@ -225,17 +226,9 @@ public sealed class FilteringService : IFilteringService
     private void ScanProperties(Type type, string pathPrefix, List<FilterFieldInfo> results, int depth = 0)
     {
         if (depth > 3)
-        {
-            Logger.Warn("⚠️ Достигнута максимальная глубина сканирования для {Type}", type.Name);
             return;
-        }
-
-        Logger.Debug("🔎 Сканирую тип: {Type}, prefix: '{Prefix}', depth: {Depth}", 
-            type.Name, pathPrefix, depth);
 
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-    
-        Logger.Debug("  Найдено {Count} свойств в {Type}", properties.Length, type.Name);
 
         foreach (var prop in properties)
         {
@@ -245,7 +238,7 @@ public sealed class FilteringService : IFilteringService
                 ? prop.Name
                 : $"{pathPrefix}.{prop.Name}";
 
-            Logger.Debug("    Свойство: {Name}, Атрибут: {HasAttr}, Тип: {Type}", 
+            Logger.Debug("Property: {Name}, Attribute: {HasAttr}, Type: {Type}", 
                 prop.Name, filterAttr != null, prop.PropertyType.Name);
 
             if (filterAttr != null)
@@ -258,12 +251,12 @@ public sealed class FilteringService : IFilteringService
                     filterAttr.Priority,
                     filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
             
-                Logger.Info("      ✅ Добавлено поле: {Path}", path);
+                Logger.Info("Added field: {Path}", path);
             }
 
             if (ShouldScanNestedType(prop.PropertyType))
             {
-                Logger.Debug("      🔄 Рекурсивное сканирование: {Type}", prop.PropertyType.Name);
+                Logger.Debug("Recursive scanning: {Type}", prop.PropertyType.Name);
                 ScanProperties(prop.PropertyType, path, results, depth + 1);
             }
         }
@@ -430,7 +423,7 @@ public sealed class FilteringService : IFilteringService
             CurrentMaxValue = max
         };
 
-        // ✅ Динамический предикат (читает текущие значения)
+        // Динамический предикат (читает текущие значения)
         descriptor.UpdatePredicate(evt =>
         {
             var value = GetPropertyValue(evt, descriptor.PropertyPath) as IComparable;
