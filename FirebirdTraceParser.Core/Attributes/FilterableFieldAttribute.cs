@@ -13,7 +13,7 @@ public sealed class FilterableFieldAttribute : Attribute
     public int Priority { get; init; } = 100;
     
     /// <summary>Категория фильтра (например, "Общие", "Подключение")</summary>
-    public string Category { get; init; } = "Общие";
+    public string Category { get; init; } = "General";
     
     /// <summary>Тип фильтра (автоопределяется, но можно переопределить)</summary>
     public FilterType FilterType { get; init; } = FilterType.Auto;

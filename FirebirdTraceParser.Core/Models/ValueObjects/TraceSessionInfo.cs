@@ -4,11 +4,11 @@ namespace FirebirdTraceParser.Core.Models.ValueObjects;
 
 /// <summary>
 /// Информация о глобальной сессии трассировки Firebird.
-/// Соответствует Python TraceSessionInfo.
 /// </summary>
 public sealed record TraceSessionInfo
 {
     /// <summary>Идентификатор глобальной trace‑сессии</summary>
-    [FilterableField("ID сессии", Category = "Общие", FilterType =  FilterType.StringMultiSelect)]
+    [SortableField("Session ID", Priority = 2, Category = "Global")]
+    [FilterableField("Session ID", Category = "Global", FilterType =  FilterType.StringMultiSelect)]
     public required int SessionId { get; init; }
 }

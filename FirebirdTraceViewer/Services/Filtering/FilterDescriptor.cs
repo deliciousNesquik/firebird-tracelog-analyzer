@@ -68,7 +68,7 @@ public partial class FilterDescriptor : ViewModelBase
         FilterType filterType,
         string propertyPath,
         Func<EventBase, bool> filterPredicate,
-        string category = "Общие",
+        string category = "General",
         int priority = 100)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));

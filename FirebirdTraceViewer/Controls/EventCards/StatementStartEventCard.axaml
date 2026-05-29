@@ -208,7 +208,7 @@
                         
                         <ItemsControl ItemsSource="{Binding Params, RelativeSource={RelativeSource TemplatedParent}}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:SqlParam">
+                                <DataTemplate x:DataType="models:SqlParameters">
                                     <Grid ColumnDefinitions="200,*">
 
                                         <TextBlock Text="{Binding Name}"

@@ -247,7 +247,7 @@ public sealed class FilteringService : IFilteringService
                     path,
                     filterAttr.DisplayName ?? prop.Name,
                     prop.PropertyType,
-                    filterAttr.Category ?? "Общие",
+                    filterAttr.Category ?? "General",
                     filterAttr.Priority,
                     filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
             

@@ -40,7 +40,7 @@ public partial class SortDescriptor : ViewModelBase
         string displayName,
         Func<EventBase, EventBase, bool, int> comparer,
         bool isDefault,
-        string category = "Общие",
+        string category = "General",
         int priority = 100)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));

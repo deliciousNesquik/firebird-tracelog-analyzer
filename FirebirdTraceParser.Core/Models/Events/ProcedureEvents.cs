@@ -1,5 +1,5 @@
-﻿using FirebirdTraceParser.Core.Models.ValueObjects;
-using FirebirdTraceParser.Core.Parsing.Utils;
+﻿using FirebirdTraceParser.Core.Attributes;
+using FirebirdTraceParser.Core.Models.ValueObjects;
 
 namespace FirebirdTraceParser.Core.Models.Events;
 
@@ -10,8 +10,11 @@ public class ProcedureEventBase : EventBase
 {
     public required AttachmentInfo Attachment { get; init; }
     public required TransactionInfo Transaction { get; init; }
+    
+    [SortableField("Procedure name", Priority = 2, Category = "Procedures")]
+    [FilterableField("Procedure name", Category = "Procedures", FilterType =  FilterType.StringMultiSelect)]
     public required string ProcedureName { get; init; }
-    public required IReadOnlyList<SqlParam> Parameters { get; init; }
+    public required IReadOnlyList<SqlParameters> Parameters { get; init; }
 }
 
 /// <summary>

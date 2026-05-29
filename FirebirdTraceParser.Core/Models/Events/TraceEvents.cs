@@ -4,7 +4,6 @@ namespace FirebirdTraceParser.Core.Models.Events;
 
 /// <summary>
 /// Событие начала trace‑сессии.
-/// Соответствует Python TraceInitEvent.
 /// </summary>
 public sealed class TraceInitEvent : EventBase
 {
@@ -13,7 +12,6 @@ public sealed class TraceInitEvent : EventBase
 
 /// <summary>
 /// Событие завершения trace‑сессии.
-/// Соответствует Python TraceFinishEvent.
 /// </summary>
 public sealed class TraceFinishEvent : EventBase
 {
@@ -22,7 +20,6 @@ public sealed class TraceFinishEvent : EventBase
 
 /// <summary>
 /// Событие подключения к БД.
-/// Соответствует Python AttachDatabaseEvent.
 /// </summary>
 public sealed class AttachDatabaseEvent : EventBase
 {
@@ -31,7 +28,6 @@ public sealed class AttachDatabaseEvent : EventBase
 
 /// <summary>
 /// Событие отключения от БД.
-/// Соответствует Python DetachDatabaseEvent.
 /// </summary>
 public sealed class DetachDatabaseEvent : EventBase
 {

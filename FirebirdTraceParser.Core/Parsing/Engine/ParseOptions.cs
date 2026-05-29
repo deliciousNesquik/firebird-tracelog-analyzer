@@ -3,18 +3,6 @@
 namespace FirebirdTraceParser.Core.Parsing.Engine;
 
 /// <summary>
-/// Режим валидации при парсинге.
-/// </summary>
-public enum ValidationMode
-{
-    /// <summary>Строгий режим: любая ошибка парсинга блока - warning</summary>
-    Strict,
-    
-    /// <summary>Мягкий режим: пропускаются только критические ошибки</summary>
-    Relaxed
-}
-
-/// <summary>
 /// Опции парсинга trace логов.
 /// </summary>
 public sealed record ParseOptions
@@ -28,7 +16,7 @@ public sealed record ParseOptions
     /// <summary>Размер батча для потоковой обработки</summary>
     public int BatchSize { get; init; } = 256;
     
-    /// <summary>Таймаут для regex операций</summary>
+    /// <summary>Тайм-аут для regex операций</summary>
     public TimeSpan RegexTimeout { get; init; } = TimeSpan.FromSeconds(1);
     
     /// <summary>Включить парсинг таблиц производительности</summary>

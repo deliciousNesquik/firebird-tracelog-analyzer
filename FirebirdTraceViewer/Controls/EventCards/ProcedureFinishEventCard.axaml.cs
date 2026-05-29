@@ -133,8 +133,8 @@ public class ProcedureFinishEventCard : TemplatedControl
     public static readonly StyledProperty<string> ProcedureNameProperty =
         AvaloniaProperty.Register<ProcedureFinishEventCard, string>(nameof(ProcedureName), "<not set>");
     
-    public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<ProcedureFinishEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
+    public static readonly StyledProperty<IReadOnlyList<SqlParameters>> ParamsProperty =
+        AvaloniaProperty.Register<ProcedureFinishEventCard, IReadOnlyList<SqlParameters>>(nameof(Params), null);
     
     public static readonly StyledProperty<int> ExecuteMsProperty =
         AvaloniaProperty.Register<ProcedureFinishEventCard, int>(nameof(ExecuteMs), 0);
@@ -265,7 +265,7 @@ public class ProcedureFinishEventCard : TemplatedControl
         set => SetValue(ProcedureNameProperty, value);
     }
     
-    public IReadOnlyList<SqlParam> Params
+    public IReadOnlyList<SqlParameters> Params
     {
         get => GetValue(ParamsProperty);
         set => SetValue(ParamsProperty, value);

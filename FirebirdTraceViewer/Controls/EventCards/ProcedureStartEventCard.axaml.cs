@@ -132,8 +132,8 @@ public class ProcedureStartEventCard : TemplatedControl
     public static readonly StyledProperty<string> ProcedureNameProperty =
         AvaloniaProperty.Register<ProcedureStartEventCard, string>(nameof(ProcedureName), "<not set>");
     
-    public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<ProcedureStartEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
+    public static readonly StyledProperty<IReadOnlyList<SqlParameters>> ParamsProperty =
+        AvaloniaProperty.Register<ProcedureStartEventCard, IReadOnlyList<SqlParameters>>(nameof(Params), null);
     
     public DateTime Timestamp
     {
@@ -249,7 +249,7 @@ public class ProcedureStartEventCard : TemplatedControl
         set => SetValue(ProcedureNameProperty, value);
     }
     
-    public IReadOnlyList<SqlParam> Params
+    public IReadOnlyList<SqlParameters> Params
     {
         get => GetValue(ParamsProperty);
         set => SetValue(ParamsProperty, value);

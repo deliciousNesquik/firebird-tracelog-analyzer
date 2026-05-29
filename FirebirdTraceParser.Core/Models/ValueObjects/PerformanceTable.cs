@@ -2,7 +2,6 @@
 
 /// <summary>
 /// Статистика по одной таблице.
-/// Расширенная версия Python модели.
 /// </summary>
 public sealed record PerformanceTableItem
 {
@@ -19,7 +18,6 @@ public sealed record PerformanceTableItem
 
 /// <summary>
 /// Таблица статистики производительности.
-/// В Python определена, но НЕ используется.
 /// </summary>
 public sealed record PerformanceTable
 {

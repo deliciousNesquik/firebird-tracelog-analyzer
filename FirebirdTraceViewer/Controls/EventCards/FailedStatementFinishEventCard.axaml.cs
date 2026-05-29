@@ -60,14 +60,14 @@ public class FailedStatementFinishEventCard : TemplatedControl
         await topLevel.Clipboard.SetTextAsync(sql.ToString());
     }
     
-    private static string FormatParam(SqlParam param)
+    private static string FormatParam(SqlParameters parameters)
     {
-        var value = param.Value?.ToString();
+        var value = parameters.Value?.ToString();
 
         if (value == "<NULL>")
             return "NULL";
 
-        return param.Dtype.ToLower() switch
+        return parameters.Dtype.ToLower() switch
         {
             "varchar(32764)" or "varchar" or "char" or "text" =>
                 $"'{value?.Replace("'", "''")}'",
@@ -150,8 +150,8 @@ public class FailedStatementFinishEventCard : TemplatedControl
     public static readonly StyledProperty<string> SqlProperty =
         AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Sql), "<not set>");
     
-    public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
+    public static readonly StyledProperty<IReadOnlyList<SqlParameters>> ParamsProperty =
+        AvaloniaProperty.Register<FailedStatementFinishEventCard, IReadOnlyList<SqlParameters>>(nameof(Params), null);
     
     public static readonly StyledProperty<int> ExecuteMsProperty =
         AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(ExecuteMs), 0);
@@ -288,7 +288,7 @@ public class FailedStatementFinishEventCard : TemplatedControl
         set => SetValue(SqlProperty, value);
     }
     
-    public IReadOnlyList<SqlParam> Params
+    public IReadOnlyList<SqlParameters> Params
     {
         get => GetValue(ParamsProperty);
         set => SetValue(ParamsProperty, value);

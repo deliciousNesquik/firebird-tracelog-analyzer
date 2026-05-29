@@ -17,7 +17,7 @@ public sealed class DefaultEventHandler : IEventHandler
     private readonly ILogger _logger;
     private readonly ParseOptions _options;
     
-    private static readonly IReadOnlyDictionary<string, EventType> EventTypeMapping = new Dictionary<string, EventType>(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, EventType> EventTypeMapping = new Dictionary<string, EventType>(StringComparer.OrdinalIgnoreCase)
     {
         ["TRACE_INIT"] = EventType.TraceInit,
         ["TRACE_FINI"] = EventType.TraceFinish,
@@ -36,9 +36,7 @@ public sealed class DefaultEventHandler : IEventHandler
         ["ERROR AT JS"] = EventType.ErrorAtJs
     };
 
-    private readonly
-        Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
-        _handlers;
+    private readonly Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>> _handlers;
 
     public DefaultEventHandler(ILogger logger, ParseOptions? options = null)
     {
@@ -73,14 +71,6 @@ public sealed class DefaultEventHandler : IEventHandler
         var eventTypeStr = blockHeader.Groups["event_type"].Value.Trim();
     
         _logger.Debug("Handling event: {EventType}, body lines: {LineCount}", eventTypeStr, bodyLines.Count);
-
-        /*if (!Enum.TryParse<EventType>(eventTypeStr.Replace(" ", ""), out var eventType))
-        {
-            _logger.Warn("Unknown event type: '{EventType}' (after replace: '{Replaced}')", 
-                eventTypeStr, eventTypeStr.Replace(" ", ""));
-            return null;
-        }
-        */
         
         if (!EventTypeMapping.TryGetValue(eventTypeStr, out var eventType))
         {
@@ -131,7 +121,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.TraceInit,
             Session = session
         };
@@ -147,7 +137,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.TraceFinish,
             Session = session
         };
@@ -163,7 +153,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.AttachDatabase,
             Attachment = attachment
         };
@@ -179,7 +169,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.DetachDatabase,
             Attachment = attachment
         };
@@ -196,7 +186,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteStatementStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -217,7 +207,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -247,7 +237,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -277,7 +267,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteProcedureStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -297,7 +287,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteProcedureFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -326,7 +316,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteProcedureFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -356,7 +346,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteTriggerStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -379,7 +369,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteTriggerFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -411,7 +401,7 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
             TraceId = int.Parse(header.Groups["trace_id"].Value),
-            HexTraceId = header.Groups["hex_trace_id"].Value,
+            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteTriggerFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -535,7 +525,7 @@ public sealed class DefaultEventHandler : IEventHandler
         TransactionInfo? Transaction,
         int? StatementId,
         string? Sql,
-        IReadOnlyList<SqlParam> Params,
+        IReadOnlyList<SqlParameters> Params,
         PerformanceInfo? Performance,
         PerformanceTable? PerformanceTable);
 
@@ -543,7 +533,7 @@ public sealed class DefaultEventHandler : IEventHandler
         AttachmentInfo? Attachment,
         TransactionInfo? Transaction,
         string? ProcedureName,
-        IReadOnlyList<SqlParam> Params,
+        IReadOnlyList<SqlParameters> Params,
         PerformanceInfo? Performance,
         PerformanceTable? PerformanceTable);
 
@@ -568,7 +558,7 @@ public sealed class DefaultEventHandler : IEventHandler
         TransactionInfo? transaction = null;
         int? statementId = null;
         string? sql = null;
-        var paramsList = new List<SqlParam>();
+        var paramsList = new List<SqlParameters>();
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
@@ -659,7 +649,7 @@ public sealed class DefaultEventHandler : IEventHandler
                     ? paramM.Groups["value"].Value
                     : paramM.Groups["value_null"].Value;
 
-                paramsList.Add(new SqlParam
+                paramsList.Add(new SqlParameters
                 {
                     Name = paramM.Groups["name"].Value,
                     Dtype = paramM.Groups["dtype"].Value,
@@ -703,7 +693,7 @@ public sealed class DefaultEventHandler : IEventHandler
         AttachmentInfo? attachment = null;
         TransactionInfo? transaction = null;
         string? procedureName = null;
-        var paramsList = new List<SqlParam>();
+        var paramsList = new List<SqlParameters>();
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
@@ -767,7 +757,7 @@ public sealed class DefaultEventHandler : IEventHandler
                     ? paramM.Groups["value"].Value
                     : paramM.Groups["value_null"].Value;
 
-                paramsList.Add(new SqlParam
+                paramsList.Add(new SqlParameters
                 {
                     Name = paramM.Groups["name"].Value,
                     Dtype = paramM.Groups["dtype"].Value,
