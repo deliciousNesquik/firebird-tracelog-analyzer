@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceViewer.Enums;
 using NLog;
@@ -20,9 +21,9 @@ public sealed class SearchService : ISearchService
             return events;
         }
 
-        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
 
-        IEnumerable<EventBase> results = mode switch
+        var results = mode switch
         {
             SearchType.Classic => SearchClassic(events, searchText),
             SearchType.Regex => SearchRegex(events, searchText),
@@ -43,21 +44,20 @@ public sealed class SearchService : ISearchService
         const StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
         foreach (var evt in events)
-        {
             switch (evt)
             {
                 // Поиск в SQL
                 case StatementEventBase stmtEvt when
                     !string.IsNullOrWhiteSpace(stmtEvt.Sql) &&
                     stmtEvt.Sql.Contains(query, comparison):
-                
+
                 // Поиск в процедурах
                 case ProcedureEventBase procEvt when
                     !string.IsNullOrWhiteSpace(procEvt.ProcedureName) &&
                     procEvt.ProcedureName.Contains(query, comparison):
                     yield return evt;
                     continue;
-                
+
                 // Поиск в триггерах
                 case TriggerEventBase triggerEvt when
                     !string.IsNullOrWhiteSpace(triggerEvt.TriggerName) &&
@@ -65,7 +65,6 @@ public sealed class SearchService : ISearchService
                     yield return evt;
                     break;
             }
-        }
     }
 
     private IEnumerable<EventBase> SearchRegex(IEnumerable<EventBase> events, string pattern)
@@ -88,40 +87,61 @@ public sealed class SearchService : ISearchService
             switch (evt)
             {
                 // Поиск в SQL
-                case StatementEventBase stmtEvt 
+                case StatementEventBase stmtEvt
                     when !string.IsNullOrWhiteSpace(stmtEvt.Sql):
-                        try {isMatch = regex.IsMatch(stmtEvt.Sql); }
-                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
-                    
-                        if (isMatch)
-                            yield return evt;
-
-                        isMatch = false;
-                        continue;
-                
-                // Поиск в процедурах
-                case ProcedureEventBase procEvt 
-                    when !string.IsNullOrWhiteSpace(procEvt.ProcedureName):
-                        try {isMatch = regex.IsMatch(procEvt.ProcedureName); }
-                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
-                        
-                        if (isMatch)
-                            yield return evt;
-
-                        isMatch = false;
-                        continue;
-                
-                // Поиск в триггерах
-                case TriggerEventBase triggerEvt 
-                    when !string.IsNullOrWhiteSpace(triggerEvt.TriggerName):
-                        try {isMatch = regex.IsMatch(triggerEvt.TriggerName); }
-                        catch (RegexMatchTimeoutException) { Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType); break; }
-                            
-                        if (isMatch)
-                            yield return evt;
-
-                        isMatch = false;
+                    try
+                    {
+                        isMatch = regex.IsMatch(stmtEvt.Sql);
+                    }
+                    catch (RegexMatchTimeoutException)
+                    {
+                        Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType);
                         break;
+                    }
+
+                    if (isMatch)
+                        yield return evt;
+
+                    isMatch = false;
+                    continue;
+
+                // Поиск в процедурах
+                case ProcedureEventBase procEvt
+                    when !string.IsNullOrWhiteSpace(procEvt.ProcedureName):
+                    try
+                    {
+                        isMatch = regex.IsMatch(procEvt.ProcedureName);
+                    }
+                    catch (RegexMatchTimeoutException)
+                    {
+                        Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType);
+                        break;
+                    }
+
+                    if (isMatch)
+                        yield return evt;
+
+                    isMatch = false;
+                    continue;
+
+                // Поиск в триггерах
+                case TriggerEventBase triggerEvt
+                    when !string.IsNullOrWhiteSpace(triggerEvt.TriggerName):
+                    try
+                    {
+                        isMatch = regex.IsMatch(triggerEvt.TriggerName);
+                    }
+                    catch (RegexMatchTimeoutException)
+                    {
+                        Logger.Warn("Timeout when searching for regex for an event {EventType}", evt.EventType);
+                        break;
+                    }
+
+                    if (isMatch)
+                        yield return evt;
+
+                    isMatch = false;
+                    break;
             }
         }
     }
