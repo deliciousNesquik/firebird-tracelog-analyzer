@@ -49,61 +49,61 @@ public class TriggerFinishEventCard : TemplatedControl
         AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(HexTraceId), "0");
     
     public static readonly StyledProperty<string> DatabasePathProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(DatabasePath), "database_path");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(DatabasePath), "<not set>");
     
     public static readonly StyledProperty<string> UserProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(User), "user_name");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(User), "<not set>");
     
     public static readonly StyledProperty<string> RoleProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Role), "role_name");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Role), "<not set>");
     
     public static readonly StyledProperty<int> AttachmentIdProperty =
         AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(AttachmentId), 0);
     
     public static readonly StyledProperty<string> ProtocolProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Protocol), "TCPv4");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Protocol), "<not set>");
     
     public static readonly StyledProperty<string> AddressProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Address), "192.168.3.5");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Address), "<not set>");
     
     public static readonly StyledProperty<int> PortProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(Port), 3050);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(Port), 0);
     
     public static readonly StyledProperty<string> CharsetProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Charset), "WIN1251");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Charset), "<not set>");
     
     public static readonly StyledProperty<string> ProcessPathProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(ProcessPath), "<not set>");
     
     public static readonly StyledProperty<int> ProcessIdProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(ProcessId), 12341);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(ProcessId), 0);
     
     public static readonly StyledProperty<int> TransactionIdProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(TransactionId), 12341);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(TransactionId), 0);
     
     public static readonly StyledProperty<string> IsolationLevelProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(IsolationLevel), "READ_COMMITTED");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(IsolationLevel), "<not set>");
     
     public static readonly StyledProperty<string> ConsistencyModeProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(ConsistencyMode), "READ_CONSISTENCY");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(ConsistencyMode), "<not set>");
     
     public static readonly StyledProperty<string> LockModeProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(LockMode), "NOWAIT");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(LockMode), "<not set>");
     
     public static readonly StyledProperty<string> AccessModeProperty =
-        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(AccessMode), "READ_ONLY");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(AccessMode), "<not set>");
     
     public static readonly StyledProperty<string> TriggerNameProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(TriggerName), "KPK$SERVCHAINSHED_BU0");
+        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(TriggerName), "<not set>");
     
     public static readonly StyledProperty<string> TableProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Table), "KPK$SERVCHAINSHED");
+        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Table), "<not set>");
     
     public static readonly StyledProperty<string> TimingProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Timing), "BEFORE");
+        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Timing), "<not set>");
     
     public static readonly StyledProperty<string> EventProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Event), "UPDATE");
+        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Event), "<not set>");
     
     public static readonly StyledProperty<int> ExecuteMsProperty =
         AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(ExecuteMs), 0);

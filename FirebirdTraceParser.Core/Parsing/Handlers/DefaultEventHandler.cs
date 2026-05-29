@@ -375,7 +375,6 @@ public sealed class DefaultEventHandler : IEventHandler
                     Role = am.Groups["role"].Value,
                     Charset = am.Groups["charset"].Value,
                     Protocol = am.Groups["protocol"].Value.Trim(),
-                    //Address = am.Groups["address"].Success ? am.Groups["address"].Value : string.Empty,
                     Address = am.Groups["address"].Success ? am.Groups["address"].Value : "<internal>",
                     Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
                     ProcessPath = null,
@@ -497,7 +496,7 @@ public sealed class DefaultEventHandler : IEventHandler
                         Role = m.Groups["role"].Value,
                         Charset = m.Groups["charset"].Value,
                         Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : string.Empty,
+                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null
@@ -631,7 +630,7 @@ public sealed class DefaultEventHandler : IEventHandler
                         Role = m.Groups["role"].Value,
                         Charset = m.Groups["charset"].Value,
                         Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : string.Empty,
+                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null
@@ -720,7 +719,7 @@ public sealed class DefaultEventHandler : IEventHandler
                         Role = m.Groups["role"].Value,
                         Charset = m.Groups["charset"].Value,
                         Protocol = m.Groups["protocol"].Value.Trim(),
-                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : string.Empty,
+                        Address = m.Groups["address"].Success ? m.Groups["address"].Value : "<internal>",
                         Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
                         ProcessPath = null,
                         ProcessId = null

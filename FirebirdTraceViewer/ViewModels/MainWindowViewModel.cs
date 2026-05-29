@@ -9,6 +9,7 @@ using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceParser.Core.Models.ValueObjects;
 using FirebirdTraceParser.Core.Parsing.Engine;
+using FirebirdTraceParser.Core.Parsing.Utils;
 using FirebirdTraceViewer.Core;
 using FirebirdTraceViewer.Enums;
 using FirebirdTraceViewer.Interfaces;
@@ -124,33 +125,6 @@ public partial class MainWindowViewModel : ViewModelBase
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
         FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters);
 
-        // Mock данные
-        foreach (var fileInfo in TraceFilesInfosMock.Mocks)
-            FileCards.Add(CreateFileCardViewModel(fileInfo));
-
-        AllEvents.Add(new AttachDatabaseEvent
-        {
-            Attachment = new AttachmentInfo
-            {
-                Address = "192.168.3.5",
-                AttachmentId = 123,
-                Charset = "UTF-8",
-                DatabasePath = "C:\\Database\\test.fdb",
-                Port = 3050,
-                Protocol = "TCP",
-                ProcessId = 12345,
-                ProcessPath = "C:\\App\\app.exe",
-                User = "BERDIN.A",
-                Role = "ADMIN"
-            },
-            EventType = EventType.AttachDatabase,
-            Timestamp = DateTime.Now,
-            TraceId = 437236,
-            HexTraceId = "0x7f3133ba1dc0"
-        });
-
-        VisibleEvents.Add(AllEvents[0]);
-
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", FileCards.Count.ToString()),
             new StatisticInfoModel("All Events:", AllEvents.Count.ToString()),
@@ -172,6 +146,10 @@ public partial class MainWindowViewModel : ViewModelBase
         IOptions<AppSettings> appSettings,
         IOptions<UiSectionSettings> uiSettings)
     {
+        StringPool.Reset();
+        VisibleEvents.Clear();
+        AllEvents.Clear();
+        
         // Dependency Injection
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
@@ -412,7 +390,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _isBatchUpdate = true;
-
+            
             Logger.Info("Начинаю применение фильтров и поиска...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
 

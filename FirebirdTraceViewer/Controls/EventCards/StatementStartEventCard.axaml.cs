@@ -103,55 +103,55 @@ public class StatementStartEventCard : TemplatedControl
         AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(StatementId), 0);
     
     public static readonly StyledProperty<string> DatabasePathProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(DatabasePath), "database_path");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(DatabasePath), "<not set>");
     
     public static readonly StyledProperty<string> UserProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(User), "user_name");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(User), "<not set>");
     
     public static readonly StyledProperty<string> RoleProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Role), "role_name");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Role), "<not set>");
     
     public static readonly StyledProperty<int> AttachmentIdProperty =
         AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(AttachmentId), 0);
     
     public static readonly StyledProperty<string> ProtocolProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Protocol), "TCPv4");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Protocol), "<not set>");
     
     public static readonly StyledProperty<string> AddressProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Address), "192.168.3.5");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Address), "<not set>");
     
     public static readonly StyledProperty<int> PortProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(Port), 3050);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(Port), 0);
     
     public static readonly StyledProperty<string> CharsetProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Charset), "WIN1251");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Charset), "<not set>");
     
     public static readonly StyledProperty<string> ProcessPathProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ProcessPath), "C:/Program/App.exe");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ProcessPath), "<not set>");
     
     public static readonly StyledProperty<int> ProcessIdProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(ProcessId), 12341);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(ProcessId), 0);
     
     public static readonly StyledProperty<int> TransactionIdProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(TransactionId), 12341);
+        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(TransactionId), 0);
     
     public static readonly StyledProperty<string> IsolationLevelProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(IsolationLevel), "READ_COMMITTED");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(IsolationLevel), "<not set>");
     
     public static readonly StyledProperty<string> ConsistencyModeProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ConsistencyMode), "READ_CONSISTENCY");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(ConsistencyMode), "<not set>");
     
     public static readonly StyledProperty<string> LockModeProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(LockMode), "NOWAIT");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(LockMode), "<not set>");
     
     public static readonly StyledProperty<string> AccessModeProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(AccessMode), "READ_ONLY");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(AccessMode), "<not set>");
     
     public static readonly StyledProperty<string> SqlProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Sql), "select * from rdb$database as rd where rd.int = 10");
+        AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Sql), "<not set>");
     
     public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, IReadOnlyList<SqlParam>>(nameof(Params), new List<SqlParam>());
+        AvaloniaProperty.Register<StatementStartEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
     
     public DateTime Timestamp
     {

@@ -20,4 +20,10 @@ public static class StringPool
             return value;
         }
     }
+
+    public static void Reset()
+    {
+        lock (Lock)
+            Pool.Clear();
+    }
 }

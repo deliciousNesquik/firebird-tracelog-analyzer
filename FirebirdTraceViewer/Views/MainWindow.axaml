@@ -538,7 +538,7 @@
 
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <VirtualizingStackPanel CacheLength="0.5" />
+                    <VirtualizingStackPanel/>
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
 

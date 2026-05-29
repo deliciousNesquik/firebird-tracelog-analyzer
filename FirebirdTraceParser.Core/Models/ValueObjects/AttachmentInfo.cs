@@ -68,7 +68,14 @@ public sealed record AttachmentInfo
     public required string Address
     {
         get => _address;
-        init => _address = StringPool.Intern(value);
+        init
+        {
+            _address = StringPool.Intern(value);
+            if (value == "<internal>")
+            {
+                Console.WriteLine($"value is init, intern return: {_address}");
+            }
+        }
     }
     public required int Port { get; init; }
 
