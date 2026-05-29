@@ -287,6 +287,37 @@
                 FetchCount="{Binding Performance.FetchCount}"
                 MarkCount="{Binding Performance.MarkCount}" />
         </DataTemplate>
+        
+        <DataTemplate DataType="core:FailedTriggerFinishEvent">
+            <events:FailedTriggerFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
     </Application.DataTemplates>
     
     <Application.Resources>
@@ -352,6 +383,7 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/FailedProcedureFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerStartEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/FailedTriggerFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/InfoTip.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Styles/Menu.axaml"/>
         

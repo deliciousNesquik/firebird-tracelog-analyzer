@@ -94,31 +94,31 @@ public class TriggerFinishEventCard : TemplatedControl
         AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(AccessMode), "<not set>");
     
     public static readonly StyledProperty<string> TriggerNameProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(TriggerName), "<not set>");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(TriggerName), "<not set>");
     
     public static readonly StyledProperty<string> TableProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Table), "<not set>");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Table), "<not set>");
     
     public static readonly StyledProperty<string> TimingProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Timing), "<not set>");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Timing), "<not set>");
     
     public static readonly StyledProperty<string> EventProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, string>(nameof(Event), "<not set>");
+        AvaloniaProperty.Register<TriggerFinishEventCard, string>(nameof(Event), "<not set>");
     
     public static readonly StyledProperty<int> ExecuteMsProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(ExecuteMs), 0);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(ExecuteMs), 0);
     
     public static readonly StyledProperty<int> FetchCountProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(FetchCount), 0);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(FetchCount), 0);
     
     public static readonly StyledProperty<int> ReadCountProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(ReadCount), 0);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(ReadCount), 0);
     
     public static readonly StyledProperty<int> WriteCountProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(WriteCount), 0);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(WriteCount), 0);
     
     public static readonly StyledProperty<int> MarkCountProperty =
-        AvaloniaProperty.Register<TriggerStartEventCard, int>(nameof(MarkCount), 0);
+        AvaloniaProperty.Register<TriggerFinishEventCard, int>(nameof(MarkCount), 0);
     
     public DateTime Timestamp
     {

@@ -61,6 +61,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
                 [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
                 [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
+                [EventType.FailedExecuteTriggerFinish] = HandleFailedTriggerFinish,
             };
     }
 
@@ -380,6 +381,38 @@ public sealed class DefaultEventHandler : IEventHandler
             TraceId = int.Parse(header.Groups["trace_id"].Value),
             HexTraceId = header.Groups["hex_trace_id"].Value,
             EventType = EventType.ExecuteTriggerFinish,
+            Attachment = data.Attachment,
+            Transaction = data.Transaction,
+            TriggerName = data.TriggerName,
+            Table = data.Table,
+            Timing = data.Timing,
+            Event = data.Event,
+            Performance = data.Performance ?? new PerformanceInfo
+            {
+                ExecuteMs = 0,
+                FetchCount = 0,
+                ReadCount = 0,
+                WriteCount = 0,
+                MarkCount = 0
+            },
+            PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
+        };
+    }
+    
+    private FailedTriggerFinishEvent? HandleFailedTriggerFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
+    {
+        var data = ParseTriggerData(bodyLines, rules, true);
+        if (data.Attachment is null || data.Transaction is null ||
+            data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
+            return null;
+
+        return new FailedTriggerFinishEvent
+        {
+            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            HexTraceId = header.Groups["hex_trace_id"].Value,
+            EventType = EventType.FailedExecuteTriggerFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             TriggerName = data.TriggerName,
@@ -812,10 +845,10 @@ public sealed class DefaultEventHandler : IEventHandler
             var tm = rules["trigger"].Match(line);
             if (tm.Success)
             {
-                triggerName = tm.Groups["trigger_name"].Value;
-                table = tm.Groups["table"].Value;
-                timing = tm.Groups["timing"].Value;
-                eventType = tm.Groups["event"].Value;
+                triggerName = StringPool.Intern(tm.Groups["trigger_name"].Value);
+                table = StringPool.Intern(tm.Groups["table"].Value);
+                timing = StringPool.Intern(tm.Groups["timing"].Value);
+                eventType = StringPool.Intern(tm.Groups["event"].Value);
                 continue;
             }
 

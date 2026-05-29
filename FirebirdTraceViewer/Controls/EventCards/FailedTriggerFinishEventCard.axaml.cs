@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input.Platform;
@@ -9,7 +8,7 @@ using FirebirdTraceParser.Core.Models.ValueObjects;
 
 namespace FirebirdTraceViewer.Controls.EventCards;
 
-public class FailedStatementFinishEventCard : TemplatedControl
+public class FailedTriggerFinishEventCard : TemplatedControl
 {
     
     private Button? _copyButton;
@@ -22,7 +21,7 @@ public class FailedStatementFinishEventCard : TemplatedControl
         if (_copyButton != null)
             _copyButton.Click -= CopyButtonOnClick;
 
-        _copyButton = e.NameScope.Find<Button>("PART_CopySqlButton");
+        _copyButton = e.NameScope.Find<Button>("PART_CopyTriggerButton");
 
         if (_copyButton != null)
             _copyButton.Click += CopyButtonOnClick;
@@ -35,140 +34,91 @@ public class FailedStatementFinishEventCard : TemplatedControl
         if (topLevel?.Clipboard == null)
             return;
 
-        if (Params == null || Params.Count == 0)
-        {
-            await topLevel.Clipboard.SetTextAsync(Sql);
-            Console.WriteLine($"Copied: {Sql}");
-            return;
-        }
+        await topLevel.Clipboard.SetTextAsync(TriggerName);
 
-        var sql = new StringBuilder();
-        int index = 0;
-
-        foreach (var ch in Sql)
-        {
-            if (ch == '?' && index < Params.Count)
-            {
-                sql.Append(FormatParam(Params[index]));
-                index++;
-            }
-            else
-            {
-                sql.Append(ch);
-            }
-        }
-
-        await topLevel.Clipboard.SetTextAsync(sql.ToString());
-        Console.WriteLine($"Copied: {sql.ToString()}");
+        Console.WriteLine($"Copied: {TriggerName}");
     }
-    
-    private static string FormatParam(SqlParam param)
-    {
-        var value = param.Value?.ToString();
-
-        if (value == "<NULL>")
-            return "NULL";
-
-        return param.Dtype.ToLower() switch
-        {
-            "varchar(32764)" or "varchar" or "char" or "text" =>
-                $"'{value?.Replace("'", "''")}'",
-
-            "timestamp" =>
-                $"'{value}'",
-
-            "date" =>
-                $"'{value}'",
-
-            "time" =>
-                $"'{value}'",
-
-            "bigint" or "int" or "smallint" or "integer" =>
-                value ?? "NULL",
-
-            _ =>
-                value ?? "NULL"
-        };
-    }
-    
     
     public static readonly StyledProperty<DateTime> TimestampProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, DateTime>(nameof(Timestamp), DateTime.MinValue);
     
     public static readonly StyledProperty<int> TraceIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(TraceId), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(TraceId), 0);
     
     public static readonly StyledProperty<string> HexTraceIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(HexTraceId), "0");
-    
-    public static readonly StyledProperty<int> StatementIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(StatementId), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(HexTraceId), "0");
     
     public static readonly StyledProperty<string> DatabasePathProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(DatabasePath), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(DatabasePath), "<not set>");
     
     public static readonly StyledProperty<string> UserProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(User), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(User), "<not set>");
     
     public static readonly StyledProperty<string> RoleProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Role), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Role), "<not set>");
     
     public static readonly StyledProperty<int> AttachmentIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(AttachmentId), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(AttachmentId), 0);
     
     public static readonly StyledProperty<string> ProtocolProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Protocol), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Protocol), "<not set>");
     
     public static readonly StyledProperty<string> AddressProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Address), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Address), "<not set>");
     
     public static readonly StyledProperty<int> PortProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(Port), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(Port), 0);
     
     public static readonly StyledProperty<string> CharsetProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Charset), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Charset), "<not set>");
     
     public static readonly StyledProperty<string> ProcessPathProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(ProcessPath), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(ProcessPath), "<not set>");
     
     public static readonly StyledProperty<int> ProcessIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(ProcessId), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(ProcessId), 0);
     
     public static readonly StyledProperty<int> TransactionIdProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(TransactionId), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(TransactionId), 0);
     
     public static readonly StyledProperty<string> IsolationLevelProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(IsolationLevel), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(IsolationLevel), "<not set>");
     
     public static readonly StyledProperty<string> ConsistencyModeProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(ConsistencyMode), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(ConsistencyMode), "<not set>");
     
     public static readonly StyledProperty<string> LockModeProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(LockMode), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(LockMode), "<not set>");
     
     public static readonly StyledProperty<string> AccessModeProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(AccessMode), "<not set>");
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(AccessMode), "<not set>");
     
-    public static readonly StyledProperty<string> SqlProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, string>(nameof(Sql), "<not set>");
+    public static readonly StyledProperty<string> TriggerNameProperty =
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(TriggerName), "<not set>");
     
-    public static readonly StyledProperty<IReadOnlyList<SqlParam>> ParamsProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, IReadOnlyList<SqlParam>>(nameof(Params), null);
+    public static readonly StyledProperty<string> TableProperty =
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Table), "<not set>");
+    
+    public static readonly StyledProperty<string> TimingProperty =
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Timing), "<not set>");
+    
+    public static readonly StyledProperty<string> EventProperty =
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, string>(nameof(Event), "<not set>");
     
     public static readonly StyledProperty<int> ExecuteMsProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(ExecuteMs), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(ExecuteMs), 0);
     
     public static readonly StyledProperty<int> FetchCountProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(FetchCount), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(FetchCount), 0);
     
     public static readonly StyledProperty<int> ReadCountProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(ReadCount), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(ReadCount), 0);
     
     public static readonly StyledProperty<int> WriteCountProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(WriteCount), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(WriteCount), 0);
     
     public static readonly StyledProperty<int> MarkCountProperty =
-        AvaloniaProperty.Register<FailedStatementFinishEventCard, int>(nameof(MarkCount), 0);
+        AvaloniaProperty.Register<FailedTriggerFinishEventCard, int>(nameof(MarkCount), 0);
     
     public DateTime Timestamp
     {
@@ -186,12 +136,6 @@ public class FailedStatementFinishEventCard : TemplatedControl
     {
         get => GetValue(HexTraceIdProperty);
         set => SetValue(HexTraceIdProperty, value);
-    }
-    
-    public int StatementId
-    {
-        get => GetValue(StatementIdProperty);
-        set => SetValue(StatementIdProperty, value);
     }
     
     public string DatabasePath
@@ -284,16 +228,28 @@ public class FailedStatementFinishEventCard : TemplatedControl
         set => SetValue(AccessModeProperty, value);
     }
     
-    public string Sql
+    public string TriggerName
     {
-        get => GetValue(SqlProperty);
-        set => SetValue(SqlProperty, value);
+        get => GetValue(TriggerNameProperty);
+        set => SetValue(TriggerNameProperty, value);
     }
     
-    public IReadOnlyList<SqlParam> Params
+    public string Table
     {
-        get => GetValue(ParamsProperty);
-        set => SetValue(ParamsProperty, value);
+        get => GetValue(TableProperty);
+        set => SetValue(TableProperty, value);
+    }
+    
+    public string Timing
+    {
+        get => GetValue(TimingProperty);
+        set => SetValue(TimingProperty, value);
+    }
+    
+    public string Event
+    {
+        get => GetValue(EventProperty);
+        set => SetValue(EventProperty, value);
     }
     
     public int ExecuteMs
