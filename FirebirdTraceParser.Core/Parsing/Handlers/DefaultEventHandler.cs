@@ -430,10 +430,13 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             var m = rules["session"].Match(line);
             if (m.Success)
+            {
                 return new TraceSessionInfo
                 {
                     SessionId = int.Parse(m.Groups["session_id"].Value)
-                };
+                };    
+            }
+            
         }
 
         return null;
