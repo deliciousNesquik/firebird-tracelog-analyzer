@@ -375,7 +375,8 @@ public sealed class DefaultEventHandler : IEventHandler
                     Role = am.Groups["role"].Value,
                     Charset = am.Groups["charset"].Value,
                     Protocol = am.Groups["protocol"].Value.Trim(),
-                    Address = am.Groups["address"].Success ? am.Groups["address"].Value : string.Empty,
+                    //Address = am.Groups["address"].Success ? am.Groups["address"].Value : string.Empty,
+                    Address = am.Groups["address"].Success ? am.Groups["address"].Value : "<internal>",
                     Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
                     ProcessPath = null,
                     ProcessId = null
