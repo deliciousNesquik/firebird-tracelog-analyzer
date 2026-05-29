@@ -535,7 +535,7 @@ public partial class MainWindowViewModel : ViewModelBase
             cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _loadingCts = cts;
 
-            var files = await _fileDialogService.OpenTraceFilesAsync();
+            var files = await _fileDialogService.PickTraceFilesAsync();
 
             if (files.Count == 0)
             {

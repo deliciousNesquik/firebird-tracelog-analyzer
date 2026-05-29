@@ -1,51 +1,57 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
 using FirebirdTraceViewer.Interfaces;
+using NLog;
 
 namespace FirebirdTraceViewer.Services;
 
 public class FileDialogService : IFileDialogService
 {
-    public async Task<IReadOnlyList<IStorageFile>> OpenTraceFilesAsync()
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly IWindowProvider _windowProvider;
+
+    public FileDialogService(IWindowProvider windowProvider)
     {
-        // Получаем главное окно динамически
-        var mainWindow = GetMainWindow();
-        if (mainWindow == null)
-        {
-            return Array.Empty<IStorageFile>();
-        }
-
-        var files = await mainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Выберите файлы логов трассировки",
-            AllowMultiple = true,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("Trace Logs")
-                {
-                    Patterns = new[] { "*.log", "*.txt" }
-                },
-                FilePickerFileTypes.All
-            }
-        });
-
-        return files;
+        _windowProvider = windowProvider
+                          ?? throw new ArgumentNullException(nameof(windowProvider));
     }
 
-    /// <summary>
-    /// Получает главное окно приложения из текущего ApplicationLifetime.
-    /// </summary>
-    private static Window? GetMainWindow()
+    public async Task<IReadOnlyList<IStorageFile>> PickTraceFilesAsync()
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        var topLevel = _windowProvider.GetCurrent();
+
+        if (topLevel == null)
         {
-            return desktop.MainWindow;
+            Logger.Warn("Active window not found.");
+            return [];
         }
 
-        return null;
+        if (!topLevel.StorageProvider.CanOpen)
+        {
+            Logger.Warn("StorageProvider does not support opening files.");
+            return [];
+        }
+
+        try
+        {
+            return await topLevel.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    Title = "Select trace log files",
+                    AllowMultiple = true,
+                    FileTypeFilter =
+                    [
+                        new FilePickerFileType("Trace Logs")
+                        {
+                            Patterns = ["*.log", "*.txt"]
+                        },
+                        FilePickerFileTypes.All
+                    ]
+                });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error opening file selection dialog.");
+            return [];
+        }
     }
 }

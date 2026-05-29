@@ -75,6 +75,7 @@ internal sealed class Program
 
         // UI сервисы
         services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton<IWindowProvider, WindowProvider>();
         services.AddSingleton<ISortingService, SortingService>();
         services.AddSingleton<IFilteringService, FilteringService>();
         services.AddSingleton<ISearchService, SearchService>();
