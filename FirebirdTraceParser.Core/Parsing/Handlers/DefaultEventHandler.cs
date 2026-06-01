@@ -423,7 +423,7 @@ public sealed class DefaultEventHandler : IEventHandler
 
     // ==================== Parsing helpers (nested) ====================
 
-    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
+    /*private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
         IReadOnlyDictionary<string, Regex> rules)
     {
         foreach (var line in lines)
@@ -437,6 +437,25 @@ public sealed class DefaultEventHandler : IEventHandler
                 };    
             }
             
+        }
+
+        return null;
+    }*/
+    
+    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules)
+    {
+        foreach (var line in lines)
+        {
+            var m = rules["session"].Match(line);
+            if (m.Success)
+            {
+                // Берем ID сессии
+                int sessionId = int.Parse(m.Groups["session_id"].Value);
+            
+                // Получаем объект из пула вместо создания через new
+                return TraceSessionInfoPool.Get(sessionId);
+            }
         }
 
         return null;
