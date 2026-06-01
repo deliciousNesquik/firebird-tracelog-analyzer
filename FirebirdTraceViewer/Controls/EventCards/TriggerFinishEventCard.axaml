@@ -14,9 +14,9 @@
                 Charset="WIN1251"
                 User="BERDIN.A"
                 TriggerName="SET_DOCPAY_AUTO_TORG2_NEW"
-                Table="KPK$SERVCHAINSHED"
-                Timing="BEFORE"
-                Event="UPDATE"
+                Table=""
+                Timing=""
+                Event="ON CONNECT"
                 TransactionId="13605966"
                 IsolationLevel="READ_COMMITTED"
                 ConsistencyMode="READ_CONSISTENCY"
@@ -156,39 +156,10 @@
 
                         <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
                             <Grid RowDefinitions="Auto" ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Orientation="Horizontal" Spacing="5">
-
-                                    <TextBlock Text="Trigger"
-                                               FontFamily="Consolas"
-                                               FontWeight="Medium"/>
-
-                                    <TextBlock Text="{TemplateBinding TriggerName}"
-                                               Cursor="Hand"
-                                               FontFamily="Consolas"
-                                               FontWeight="Bold"/>
-
-                                    <TextBlock Text="FOR" FontFamily="Consolas"
-                                               FontWeight="Medium"/>
-
-                                    <TextBlock Text="{TemplateBinding Table}"
-                                               FontWeight="Bold"
-                                               FontFamily="Consolas"/>
-
-                                    <TextBlock Text="(" FontFamily="Consolas"
-                                               FontWeight="Medium"/>
-
-                                    <TextBlock Text="{TemplateBinding Timing}"
-                                               FontWeight="Bold"
-                                               FontFamily="Consolas"/>
-
-                                    <TextBlock Text="{TemplateBinding Event}"
-                                               FontWeight="Bold"
-                                               FontFamily="Consolas"/>
-
-                                    <TextBlock Text="):" FontFamily="Consolas"
-                                               FontWeight="Medium"/>
-
-                                </StackPanel>
+                                <TextBlock Text="{Binding TriggerDescription,
+                                    RelativeSource={RelativeSource TemplatedParent}}"
+                                           FontFamily="Consolas"
+                                           FontWeight="SemiBold"/>
                                 
                                 <Button x:Name="PART_CopyTriggerButton"
                                         Background="Transparent"

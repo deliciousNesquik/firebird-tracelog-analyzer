@@ -79,11 +79,11 @@
       "sample": "Procedure SP_GET_USER:"
     },
     "trigger": {
-      "pattern": "^Trigger\\s+(?<trigger_name>[^\\s]+)\\s+FOR\\s+(?<table>[^\\s]+)\\s+\\((?<timing>BEFORE|AFTER)\\s+(?<event>INSERT|UPDATE|DELETE)\\)\\s*:\\s*$",
+      "pattern": "^Trigger\\s+(?<trigger_name>[^\\s]+)\\s+(?:FOR\\s+(?<table>[^\\s]+)\\s+\\((?<timing>BEFORE|AFTER)\\s+(?<event>INSERT|UPDATE|DELETE)\\)|\\((?<ddl_event>ON\\s+[^)]+)\\))\\s*:\\s*$",
       "flags": ["IgnorePatternWhitespace"],
-      "description": "Регулярное выражение для извлечения информации о триггере.",
-      "requiredGroups": ["trigger_name", "table", "timing", "event"],
-      "sample": "Trigger KPK$SERVCHAINSHED_BU0 FOR KPK$SERVCHAINSHED (BEFORE UPDATE):"
+      "description": "Регулярное выражение для извлечения информации о триггере (DML и DDL).",
+      "requiredGroups": ["trigger_name"],
+      "sample": "Trigger ON_CONNECT_USER_LOG (ON CONNECT):"
     },
     "performance_table_header": {
       "pattern": "^Table\\s+Natural\\s+Index\\s+Update\\s+Insert\\s+Delete\\s+Backout\\s+Purge\\s+Expunge\\s*$",

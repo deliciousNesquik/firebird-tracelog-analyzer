@@ -370,8 +370,8 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, false);
-        if (data.Attachment is null || data.Transaction is null ||
-            data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
+        
+        if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -395,8 +395,8 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, true);
-        if (data.Attachment is null || data.Transaction is null ||
-            data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
+        
+        if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -422,8 +422,8 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, true);
-        if (data.Attachment is null || data.Transaction is null ||
-            data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
+        
+        if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -732,8 +732,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new ProcedureData(attachment, transaction, procedureName, paramsList, performance, performanceTable);
     }
 
-    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules,
-        bool includePerformance)
+    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
     {
         var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
@@ -758,9 +757,21 @@ public sealed class DefaultEventHandler : IEventHandler
             if (tm.Success)
             {
                 triggerName = StringPool.Intern(tm.Groups["trigger_name"].Value);
-                table = StringPool.Intern(tm.Groups["table"].Value);
-                timing = StringPool.Intern(tm.Groups["timing"].Value);
-                eventType = StringPool.Intern(tm.Groups["event"].Value);
+            
+                // проверяем тип триггера (DML или DDL)
+                if (tm.Groups["table"].Success) // DML триггер (FOR table)
+                {
+                    table = StringPool.Intern(tm.Groups["table"].Value);
+                    timing = StringPool.Intern(tm.Groups["timing"].Value);
+                    eventType = StringPool.Intern(tm.Groups["event"].Value);
+                }
+                else if (tm.Groups["ddl_event"].Success) // DDL триггер (ON ...)
+                {
+                    table = null;
+                    timing = null;
+                    eventType = StringPool.Intern(tm.Groups["ddl_event"].Value); // "ON CONNECT", "ON DISCONNECT", etc.
+                }
+            
                 continue;
             }
 
@@ -768,8 +779,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 performance = ParsePerformance(new[] { line }, rules);
         }
 
-        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance,
-            performanceTable);
+        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance, performanceTable);
     }
 
     private static PerformanceInfo? ParsePerformance(IReadOnlyList<string> lines,

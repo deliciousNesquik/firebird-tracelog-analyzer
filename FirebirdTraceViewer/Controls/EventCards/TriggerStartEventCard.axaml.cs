@@ -236,4 +236,19 @@ public class TriggerStartEventCard : TemplatedControl
         set => SetValue(EventProperty, value);
     }
     
+    public string TriggerDescription
+    {
+        get
+        {
+            // Database trigger
+            if (string.IsNullOrWhiteSpace(Table))
+            {
+                return $"Trigger {TriggerName} ({Event}):";
+            }
+
+            // DML trigger
+            return $"Trigger {TriggerName} FOR {Table} ({Timing} {Event}):";
+        }
+    }
+    
 }

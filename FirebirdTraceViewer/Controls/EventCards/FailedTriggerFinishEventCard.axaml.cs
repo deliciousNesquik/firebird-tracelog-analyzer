@@ -280,4 +280,19 @@ public class FailedTriggerFinishEventCard : TemplatedControl
         set => SetValue(MarkCountProperty, value);
     }
     
+    public string TriggerDescription
+    {
+        get
+        {
+            // Database trigger
+            if (string.IsNullOrWhiteSpace(Table))
+            {
+                return $"Trigger {TriggerName} ({Event}):";
+            }
+
+            // DML trigger
+            return $"Trigger {TriggerName} FOR {Table} ({Timing} {Event}):";
+        }
+    }
+    
 }
