@@ -17,9 +17,9 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
-    
+
     <Window.Resources>
-        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
     </Window.Resources>
 
     <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
@@ -128,7 +128,7 @@
         </Menu>
 
 
-        <ListBox
+        <!--<ListBox
             Grid.Row="1"
             Padding="10"
             Background="{DynamicResource Surface}"
@@ -154,26 +154,76 @@
                         RemoveFileCommand="{Binding RemoveFileCommand}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
-        </ListBox>
+        </ListBox>-->
+
+        <Grid Grid.Row="1"
+              Background="{DynamicResource Surface}"
+              IsVisible="{Binding IsTraceFilesSectionVisible}">
+
+            <ListBox
+                Padding="10"
+                SelectionMode="Multiple"
+                SelectedItems="{Binding SelectedFileCards}"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ItemsSource="{Binding FileCards}"
+                IsVisible="{Binding FileCards.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <controls:FileCard
+                            FileName="{Binding FileInfo.FileName}"
+                            FileSize="{Binding FileInfo.FileSize}"
+                            EventCount="{Binding FileInfo.EventCount}"
+                            StartTrace="{Binding FileInfo.StartTrace}"
+                            EndTrace="{Binding FileInfo.EndTrace}"
+                            RemoveFileCommand="{Binding RemoveFileCommand}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- ✅ ПУСТОЕ СОСТОЯНИЕ (когда нет файлов) -->
+            <Border
+                Padding="40"
+                IsVisible="{Binding !FileCards.Count}">
+
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="16"
+                    MaxWidth="400">
+
+                    <!-- Заголовок -->
+                    <TextBlock
+                        Text="No trace files loaded"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center"
+                        Foreground="{DynamicResource PrimaryText}" />
+
+                    <!-- Описание -->
+                    <TextBlock
+                        Text="Start by opening Firebird trace log files to analyze database events, performance metrics, and SQL queries."
+                        FontSize="12"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource SecondaryText}"/>
+
+                </StackPanel>
+            </Border>
+
+        </Grid>
 
 
         <Border Grid.Row="2" Padding="10" Background="{DynamicResource Surface}"
                 IsVisible="{Binding IsSearchSectionVisible}">
 
             <Grid ColumnDefinitions="* Auto Auto Auto" RowDefinitions="Auto Auto" ColumnSpacing="5">
-                <!--<TextBox Grid.Row="0" Grid.Column="0" 
-                         Background="{DynamicResource Surface}"
-                         PlaceholderText="Search by SQL text or procedure and trigger name..." 
-                         VerticalContentAlignment="Center" />
-                
-                <Button Grid.Row="0" Grid.Column="1" 
-                        Background="Transparent" 
-                        VerticalContentAlignment="Center"
-                        Height="40" Width="40" BorderThickness="1">
-                    <Svg Path="{DynamicResource SearchIcon}" Css="{DynamicResource ThemeIconFill}" />
-                </Button>-->
-
-                <!-- ✅ TextBox с привязкой -->
                 <TextBox Grid.Row="0" Grid.Column="0"
                          Background="{DynamicResource Surface}"
                          PlaceholderText="Search by SQL text or procedure and trigger name..."
@@ -408,19 +458,21 @@
                                                         <ItemsControl ItemsSource="{Binding}">
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Border BorderBrush="{DynamicResource BorderBrush}"
-                                                                            BorderThickness="1"
-                                                                            CornerRadius="4"
-                                                                            Padding="8"
-                                                                            Margin="0,4">
+                                                                    <Border
+                                                                        BorderBrush="{DynamicResource BorderBrush}"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="4"
+                                                                        Padding="8"
+                                                                        Margin="0,4">
 
                                                                         <StackPanel Spacing="6">
 
                                                                             <!-- Заголовок фильтра -->
-                                                                            <CheckBox Content="{Binding DisplayName}"
-                                                                                    IsChecked="{Binding IsActive}"
-                                                                                    FontWeight="Medium"
-                                                                                    FontSize="12" />
+                                                                            <CheckBox
+                                                                                Content="{Binding DisplayName}"
+                                                                                IsChecked="{Binding IsActive}"
+                                                                                FontWeight="Medium"
+                                                                                FontSize="12" />
 
                                                                             <!-- Содержимое фильтра -->
                                                                             <StackPanel Spacing="4"
@@ -505,9 +557,11 @@
                                                                                     <TextBlock FontSize="10"
                                                                                         Foreground="{DynamicResource SecondaryText}">
                                                                                         <Run Text="Min:" />
-                                                                                        <Run Text="{Binding MinValue}" />
+                                                                                        <Run
+                                                                                            Text="{Binding MinValue}" />
                                                                                         <Run Text=" | Max:" />
-                                                                                        <Run Text="{Binding MaxValue}" />
+                                                                                        <Run
+                                                                                            Text="{Binding MaxValue}" />
                                                                                     </TextBlock>
                                                                                 </StackPanel>
 
