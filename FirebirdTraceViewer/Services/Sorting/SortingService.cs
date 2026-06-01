@@ -171,8 +171,7 @@ public sealed class SortingService : ISortingService
 
         if (type.Namespace?.StartsWith("System") == true)
             return false;
-
-        Console.WriteLine(type.Namespace);
+        
         return type.IsClass &&
                type.Namespace?.StartsWith("FirebirdTraceParser.Core") == true;
     }

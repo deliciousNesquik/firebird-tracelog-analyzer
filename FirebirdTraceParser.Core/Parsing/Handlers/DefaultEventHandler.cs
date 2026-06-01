@@ -17,7 +17,7 @@ public sealed class DefaultEventHandler : IEventHandler
     private readonly ILogger _logger;
     private readonly ParseOptions _options;
     
-    private static readonly Dictionary<string, EventType> EventTypeMapping = new Dictionary<string, EventType>(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, EventType> EventTypeMapping = new(StringComparer.OrdinalIgnoreCase)
     {
         ["TRACE_INIT"] = EventType.TraceInit,
         ["TRACE_FINI"] = EventType.TraceFinish,
@@ -43,32 +43,27 @@ public sealed class DefaultEventHandler : IEventHandler
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? ParseOptions.Default;
 
-        _handlers =
-            new Dictionary<EventType,
-                Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
-            {
-                [EventType.TraceInit] = HandleTraceInit,
-                [EventType.TraceFinish] = HandleTraceFinish,
-                [EventType.AttachDatabase] = HandleAttach,
-                [EventType.DetachDatabase] = HandleDetach,
-                [EventType.ExecuteStatementStart] = HandleStatementStart,
-                [EventType.ExecuteStatementFinish] = HandleStatementFinish,
-                [EventType.ExecuteProcedureStart] = HandleProcedureStart,
-                [EventType.ExecuteProcedureFinish] = HandleProcedureFinish,
-                [EventType.ExecuteTriggerStart] = HandleTriggerStart,
-                [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
-                [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
-                [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
-                [EventType.FailedExecuteTriggerFinish] = HandleFailedTriggerFinish,
-            };
+        _handlers = new Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
+        {
+            [EventType.TraceInit] = HandleTraceInit,
+            [EventType.TraceFinish] = HandleTraceFinish,
+            [EventType.AttachDatabase] = HandleAttach,
+            [EventType.DetachDatabase] = HandleDetach,
+            [EventType.ExecuteStatementStart] = HandleStatementStart,
+            [EventType.ExecuteStatementFinish] = HandleStatementFinish,
+            [EventType.ExecuteProcedureStart] = HandleProcedureStart,
+            [EventType.ExecuteProcedureFinish] = HandleProcedureFinish,
+            [EventType.ExecuteTriggerStart] = HandleTriggerStart,
+            [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
+            [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
+            [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
+            [EventType.FailedExecuteTriggerFinish] = HandleFailedTriggerFinish,
+        };
     }
 
-    public EventBase? Handle(
-        Match blockHeader,
-        IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    public EventBase? Handle(Match blockHeader, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var eventTypeStr = blockHeader.Groups["event_type"].Value.Trim();
+        var eventTypeStr = blockHeader.Groups["event_type"].Value;
     
         _logger.Debug("Handling event: {EventType}, body lines: {LineCount}", eventTypeStr, bodyLines.Count);
         
@@ -87,106 +82,122 @@ public sealed class DefaultEventHandler : IEventHandler
         var result = handler(blockHeader, bodyLines, rules);
     
         if (result == null)
-        {
             _logger.Warn("Handler returned null for {EventType}", eventType);
-        }
         else
-        {
             _logger.Debug("Successfully parsed {EventType}", eventType);
-        }
 
         return result;
     }
 
-    // ==================== Helpers ====================
-    private static DateTime ParseTimestamp(string ts)
+    // ==================== Common Event Metadata Parsing ====================
+    
+    /// <summary>
+    /// Извлекает общие метаданные заголовка события (timestamp, trace_id, hex_trace_id).
+    /// </summary>
+    private static (DateTime Timestamp, int TraceId, string HexTraceId) ParseEventMetadata(Match header)
     {
-        return DateTime.Parse(ts, CultureInfo.InvariantCulture);
+        return (
+            Timestamp: DateTime.Parse(header.Groups["ts"].Value, CultureInfo.InvariantCulture),
+            TraceId: int.Parse(header.Groups["trace_id"].ValueSpan),
+            HexTraceId: StringPool.Intern(header.Groups["hex_trace_id"].Value)
+        );
     }
 
-    private static int ParseInt(string? value)
+    /// <summary>
+    /// Создает PerformanceInfo по умолчанию (все нули).
+    /// </summary>
+    private static PerformanceInfo CreateDefaultPerformance() => new()
     {
-        return string.IsNullOrEmpty(value) ? 0 : int.Parse(value, CultureInfo.InvariantCulture);
-    }
+        ExecuteMs = 0,
+        FetchCount = 0,
+        ReadCount = 0,
+        WriteCount = 0,
+        MarkCount = 0
+    };
 
     // ==================== Handlers ====================
 
-    private TraceInitEvent? HandleTraceInit(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private TraceInitEvent? HandleTraceInit(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
         var session = ParseSessionInfo(bodyLines, rules);
         if (session is null) return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new TraceInitEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.TraceInit,
             Session = session
         };
     }
 
-    private TraceFinishEvent? HandleTraceFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private TraceFinishEvent? HandleTraceFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
         var session = ParseSessionInfo(bodyLines, rules);
         if (session is null) return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new TraceFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.TraceFinish,
             Session = session
         };
     }
 
-    private AttachDatabaseEvent? HandleAttach(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private AttachDatabaseEvent? HandleAttach(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
         var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new AttachDatabaseEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.AttachDatabase,
             Attachment = attachment
         };
     }
 
-    private DetachDatabaseEvent? HandleDetach(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private DetachDatabaseEvent? HandleDetach(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
         var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new DetachDatabaseEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.DetachDatabase,
             Attachment = attachment
         };
     }
 
-    private StatementStartEvent? HandleStatementStart(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private StatementStartEvent? HandleStatementStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, false);
+        var data = ParseStatementData(bodyLines, rules, includePerformance: false);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new StatementStartEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteStatementStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -196,78 +207,67 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private StatementFinishEvent? HandleStatementFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private StatementFinishEvent? HandleStatementFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, true);
+        var data = ParseStatementData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new StatementFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             StatementId = data.StatementId.Value,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
     
-    private FailedStatementFinishEvent? HandleFailedStatementFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private FailedStatementFinishEvent? HandleFailedStatementFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, true);
+        var data = ParseStatementData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new FailedStatementFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.FailedExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             StatementId = data.StatementId.Value,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
 
-    private ProcedureStartEvent? HandleProcedureStart(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private ProcedureStartEvent? HandleProcedureStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, false);
+        var data = ParseProcedureData(bodyLines, rules, includePerformance: false);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new ProcedureStartEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteProcedureStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -276,77 +276,66 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private ProcedureFinishEvent? HandleProcedureFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private ProcedureFinishEvent? HandleProcedureFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, true);
+        var data = ParseProcedureData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new ProcedureFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteProcedureFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             ProcedureName = data.ProcedureName,
             Parameters = data.Params,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
     
-    private FailedProcedureFinishEvent? HandleFailedProcedureFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private FailedProcedureFinishEvent? HandleFailedProcedureFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, true);
+        var data = ParseProcedureData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new FailedProcedureFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.FailedExecuteProcedureFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
             ProcedureName = data.ProcedureName,
             Parameters = data.Params,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
 
-    private TriggerStartEvent? HandleTriggerStart(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private TriggerStartEvent? HandleTriggerStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, false);
+        var data = ParseTriggerData(bodyLines, rules, includePerformance: false);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new TriggerStartEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteTriggerStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -357,19 +346,20 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private TriggerFinishEvent? HandleTriggerFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private TriggerFinishEvent? HandleTriggerFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, true);
+        var data = ParseTriggerData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new TriggerFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.ExecuteTriggerFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -377,31 +367,25 @@ public sealed class DefaultEventHandler : IEventHandler
             Table = data.Table,
             Timing = data.Timing,
             Event = data.Event,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
     
-    private FailedTriggerFinishEvent? HandleFailedTriggerFinish(Match header, IReadOnlyList<string> bodyLines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private FailedTriggerFinishEvent? HandleFailedTriggerFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, true);
+        var data = ParseTriggerData(bodyLines, rules, includePerformance: true);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
 
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
         return new FailedTriggerFinishEvent
         {
-            Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
-            HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
             EventType = EventType.FailedExecuteTriggerFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
@@ -409,32 +393,21 @@ public sealed class DefaultEventHandler : IEventHandler
             Table = data.Table,
             Timing = data.Timing,
             Event = data.Event,
-            Performance = data.Performance ?? new PerformanceInfo
-            {
-                ExecuteMs = 0,
-                FetchCount = 0,
-                ReadCount = 0,
-                WriteCount = 0,
-                MarkCount = 0
-            },
+            Performance = data.Performance ?? CreateDefaultPerformance(),
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
 
-    // ==================== Parsing helpers (nested) ====================
+    // ==================== Parsing helpers ====================
     
-    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
     {
         foreach (var line in lines)
         {
             var m = rules["session"].Match(line);
             if (m.Success)
             {
-                // Берем ID сессии
                 int sessionId = int.Parse(m.Groups["session_id"].ValueSpan);
-            
-                // Получаем объект из пула вместо создания через new
                 return TraceSessionInfoPool.Intern(sessionId);
             }
         }
@@ -447,7 +420,6 @@ public sealed class DefaultEventHandler : IEventHandler
         Match? am = null;
         Match? pm = null;
 
-        // Ищем нужные строки
         foreach (var line in lines)
         {
             if (am is null)
@@ -467,13 +439,11 @@ public sealed class DefaultEventHandler : IEventHandler
 
         if (am is null) return null;
 
-        // Получаем ID и проверяем ПУЛ
         var attachmentId = int.Parse(am.Groups["attachment_id"].ValueSpan);
     
         if (AttachmentInfoPool.TryGet(attachmentId, out var cachedInfo))
-            return cachedInfo; // Никаких новых объектов (аллокаций) не создаем.
+            return cachedInfo;
 
-        // Если в пуле нет - создаем
         var newInfo = new AttachmentInfo
         {
             AttachmentId = attachmentId,
@@ -488,12 +458,10 @@ public sealed class DefaultEventHandler : IEventHandler
             ProcessId = pm is not null ? int.Parse(pm.Groups["process_id"].ValueSpan) : null
         };
 
-        // Добавляем в пул и возвращаем
         return AttachmentInfoPool.Add(newInfo);
     }
 
-    private static TransactionInfo? ParseTransactionInfo(IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private static TransactionInfo? ParseTransactionInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
     {
         foreach (var line in lines)
         {
@@ -505,13 +473,11 @@ public sealed class DefaultEventHandler : IEventHandler
             var tid = int.Parse(m.Groups[1].ValueSpan);
             var rawParams = m.Groups[2].Value;
 
-            // Парсим параметры изоляции (аналог Python logic)
             var parts = rawParams.Split('|')
                 .Select(p => p.Trim().ToUpperInvariant())
                 .Where(p => !string.IsNullOrEmpty(p) && p != "NONE" && p != "(NONE)")
                 .ToList();
 
-            // Заполняем недостающие слоты значениями по умолчанию
             while (parts.Count < 4)
                 parts.Add("NONE");
 
@@ -526,6 +492,27 @@ public sealed class DefaultEventHandler : IEventHandler
         }
 
         return null;
+    }
+    
+    /// <summary>
+    /// Парсит одну строку SQL-параметра и возвращает объект SqlParameters или null.
+    /// </summary>
+    private static SqlParameters? ParseSqlParameter(string line, IReadOnlyDictionary<string, Regex> rules)
+    {
+        var paramM = rules["parameters"].Match(line);
+        if (!paramM.Success) 
+            return null;
+
+        var value = paramM.Groups["value"].Success
+            ? paramM.Groups["value"].Value
+            : paramM.Groups["value_null"].Value;
+
+        return new SqlParameters
+        {
+            Name = StringPool.Intern(paramM.Groups["name"].Value),
+            Dtype = StringPool.Intern(paramM.Groups["dtype"].Value),
+            Value = StringPool.Intern(value)
+        };
     }
 
     // ==================== Data Records ====================
@@ -559,12 +546,9 @@ public sealed class DefaultEventHandler : IEventHandler
 
     // ==================== Complex Parsers ====================
 
-    private static StatementData ParseStatementData(
-        IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules,
-        bool includePerformance)
+    private static StatementData ParseStatementData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
     {
-        AttachmentInfo? attachment = null;
+        var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
         int? statementId = null;
         string? sql = null;
@@ -572,21 +556,16 @@ public sealed class DefaultEventHandler : IEventHandler
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
-        // attachment
-        attachment = ParseAttachmentInfo(lines, rules);
-        
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
 
-            // transaction
             if (transaction is null)
             {
                 transaction = ParseTransactionInfo(new[] { line }, rules);
                 if (transaction is not null) continue;
             }
 
-            // statement id
             var sm = rules["statement"].Match(line);
             if (sm.Success)
             {
@@ -594,7 +573,6 @@ public sealed class DefaultEventHandler : IEventHandler
                 continue;
             }
 
-            // SQL block start
             if (line.Trim().StartsWith("-----"))
             {
                 var sqlLines = new List<string>();
@@ -602,7 +580,6 @@ public sealed class DefaultEventHandler : IEventHandler
                 while (i < lines.Count)
                 {
                     var l = lines[i];
-                    // break if param or performance/fetched
                     if (rules["parameters"].IsMatch(l) ||
                         (includePerformance && (rules["fetched"].IsMatch(l) || rules["performance"].IsMatch(l))))
                         break;
@@ -612,60 +589,36 @@ public sealed class DefaultEventHandler : IEventHandler
                 }
 
                 sql = StringPool.Intern(string.Join("\n", sqlLines).Trim());
-                i--; // Корректировка индекса
+                i--;
                 continue;
             }
 
-            // parameters
-            var paramM = rules["parameters"].Match(line);
-            if (paramM.Success)
+            var param = ParseSqlParameter(line, rules);
+            if (param is not null)
             {
-                var value = paramM.Groups["value"].Success
-                    ? paramM.Groups["value"].Value
-                    : paramM.Groups["value_null"].Value;
-
-                paramsList.Add(new SqlParameters
-                {
-                    Name = StringPool.Intern(paramM.Groups["name"].Value),
-                    Dtype = StringPool.Intern(paramM.Groups["dtype"].Value),
-                    Value = StringPool.Intern(value)
-                });
+                paramsList.Add(param);
                 continue;
             }
 
-            // performance
             if (includePerformance && performance is null)
             {
                 performance = ParsePerformance(new[] { line }, rules);
                 if (performance is not null) continue;
             }
 
-            // performance table
             if (includePerformance && performanceTable is null)
             {
                 var slice = lines.Skip(i).ToArray();
                 performanceTable = PerformanceTableParser.ParsePerformanceTable(slice, rules);
             }
         }
-        
-        
-        return new StatementData(
-            Attachment: attachment,
-            Transaction: transaction,
-            StatementId: statementId,
-            Sql: sql,
-            Params: paramsList,
-            Performance: performance,
-            PerformanceTable: performanceTable
-        );
+
+        return new StatementData(attachment, transaction, statementId, sql, paramsList, performance, performanceTable);
     }
 
-    private static ProcedureData ParseProcedureData(
-        IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules,
-        bool includePerformance)
+    private static ProcedureData ParseProcedureData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
     {
-        AttachmentInfo? attachment = null;
+        var attachment = ParseAttachmentInfo(lines, rules); // ← ИСПРАВЛЕНО: добавлен парсинг
         TransactionInfo? transaction = null;
         string? procedureName = null;
         var paramsList = new List<SqlParameters>();
@@ -689,34 +642,23 @@ public sealed class DefaultEventHandler : IEventHandler
                 continue;
             }
 
-            var paramM = rules["parameters"].Match(line);
-            if (paramM.Success)
+            var param = ParseSqlParameter(line, rules);
+            if (param is not null)
             {
-                var value = paramM.Groups["value"].Success
-                    ? paramM.Groups["value"].Value
-                    : paramM.Groups["value_null"].Value;
-
-                paramsList.Add(new SqlParameters
-                {
-                    Name = StringPool.Intern(paramM.Groups["name"].Value),
-                    Dtype = StringPool.Intern(paramM.Groups["dtype"].Value),
-                    Value = StringPool.Intern(value)
-                });
+                paramsList.Add(param);
                 continue;
             }
 
-            if (includePerformance && performance is null) performance = ParsePerformance(new[] { line }, rules);
+            if (includePerformance && performance is null)
+                performance = ParsePerformance(new[] { line }, rules);
         }
 
         return new ProcedureData(attachment, transaction, procedureName, paramsList, performance, performanceTable);
     }
 
-    private static TriggerData ParseTriggerData(
-        IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules,
-        bool includePerformance)
+    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
     {
-        AttachmentInfo? attachment = null;
+        var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
         string? triggerName = null;
         string? table = null;
@@ -725,9 +667,6 @@ public sealed class DefaultEventHandler : IEventHandler
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
-        // attachment
-        attachment = ParseAttachmentInfo(lines, rules);
-        
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
@@ -748,27 +687,23 @@ public sealed class DefaultEventHandler : IEventHandler
                 continue;
             }
 
-            if (includePerformance && performance is null) performance = ParsePerformance(new[] { line }, rules);
+            if (includePerformance && performance is null)
+                performance = ParsePerformance(new[] { line }, rules);
         }
 
-        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance,
-            performanceTable);
+        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance, performanceTable);
     }
 
-    private static PerformanceInfo? ParsePerformance(
-        IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private static PerformanceInfo? ParsePerformance(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
     {
         var fetchCount = 0;
 
         foreach (var line in lines)
         {
-            // Fetch count
             var mFetched = rules["fetched"].Match(line);
             if (mFetched.Success)
                 fetchCount = int.Parse(mFetched.Groups["fetch_count"].ValueSpan);
 
-            // Metrics
             var mPerf = rules["performance"].Match(line);
             if (mPerf.Success)
                 return new PerformanceInfo

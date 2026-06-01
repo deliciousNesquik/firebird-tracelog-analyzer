@@ -43,6 +43,13 @@
       "requiredGroups": [],
       "sample": "(TRA_123, READ_COMMITTED | READ_CONSISTENCY | NOWAIT | READ_WRITE)"
     },
+    "restarted": {
+      "pattern": "Restarted\\s+(?<count>\\d+)\\s+time\\(s\\)",
+      "flags": [],
+      "description": "Регулярное выражение для извлечения количества перезапусков",
+      "requiredGroups": ["count"],
+      "sample": "Restarted 1 time(s)"
+    },
     "parameters": {
       "pattern": "^\\s*(?<name>param\\d+)\\s*=\\s*(?<dtype>[^,]+?),\\s*(?:\"(?<value>.*?)\"|(?<value_null>NULL))\\s*$",
       "flags": [],
