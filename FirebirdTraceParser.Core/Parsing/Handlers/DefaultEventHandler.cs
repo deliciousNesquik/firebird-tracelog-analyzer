@@ -16,7 +16,7 @@ public sealed class DefaultEventHandler : IEventHandler
 {
     private readonly ILogger _logger;
     private readonly ParseOptions _options;
-    
+
     private static readonly Dictionary<string, EventType> EventTypeMapping = new(StringComparer.OrdinalIgnoreCase)
     {
         ["TRACE_INIT"] = EventType.TraceInit,
@@ -24,6 +24,7 @@ public sealed class DefaultEventHandler : IEventHandler
         ["ATTACH_DATABASE"] = EventType.AttachDatabase,
         ["DETACH_DATABASE"] = EventType.DetachDatabase,
         ["EXECUTE_STATEMENT_START"] = EventType.ExecuteStatementStart,
+        ["EXECUTE_STATEMENT_RESTART"] = EventType.ExecuteStatementRestart,
         ["EXECUTE_STATEMENT_FINISH"] = EventType.ExecuteStatementFinish,
         ["EXECUTE_PROCEDURE_START"] = EventType.ExecuteProcedureStart,
         ["EXECUTE_PROCEDURE_FINISH"] = EventType.ExecuteProcedureFinish,
@@ -36,37 +37,43 @@ public sealed class DefaultEventHandler : IEventHandler
         ["ERROR AT JS"] = EventType.ErrorAtJs
     };
 
-    private readonly Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>> _handlers;
+    private readonly
+        Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
+        _handlers;
 
     public DefaultEventHandler(ILogger logger, ParseOptions? options = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _options = options ?? ParseOptions.Default;
 
-        _handlers = new Dictionary<EventType, Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
-        {
-            [EventType.TraceInit] = HandleTraceInit,
-            [EventType.TraceFinish] = HandleTraceFinish,
-            [EventType.AttachDatabase] = HandleAttach,
-            [EventType.DetachDatabase] = HandleDetach,
-            [EventType.ExecuteStatementStart] = HandleStatementStart,
-            [EventType.ExecuteStatementFinish] = HandleStatementFinish,
-            [EventType.ExecuteProcedureStart] = HandleProcedureStart,
-            [EventType.ExecuteProcedureFinish] = HandleProcedureFinish,
-            [EventType.ExecuteTriggerStart] = HandleTriggerStart,
-            [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
-            [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
-            [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
-            [EventType.FailedExecuteTriggerFinish] = HandleFailedTriggerFinish,
-        };
+        _handlers =
+            new Dictionary<EventType,
+                Func<Match, IReadOnlyList<string>, IReadOnlyDictionary<string, Regex>, EventBase?>>
+            {
+                [EventType.TraceInit] = HandleTraceInit,
+                [EventType.TraceFinish] = HandleTraceFinish,
+                [EventType.AttachDatabase] = HandleAttach,
+                [EventType.DetachDatabase] = HandleDetach,
+                [EventType.ExecuteStatementStart] = HandleStatementStart,
+                [EventType.ExecuteStatementRestart] = HandleStatementRestart,
+                [EventType.ExecuteStatementFinish] = HandleStatementFinish,
+                [EventType.ExecuteProcedureStart] = HandleProcedureStart,
+                [EventType.ExecuteProcedureFinish] = HandleProcedureFinish,
+                [EventType.ExecuteTriggerStart] = HandleTriggerStart,
+                [EventType.ExecuteTriggerFinish] = HandleTriggerFinish,
+                [EventType.FailedExecuteProcedureFinish] = HandleFailedProcedureFinish,
+                [EventType.FailedExecuteStatementFinish] = HandleFailedStatementFinish,
+                [EventType.FailedExecuteTriggerFinish] = HandleFailedTriggerFinish
+            };
     }
 
-    public EventBase? Handle(Match blockHeader, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    public EventBase? Handle(Match blockHeader, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var eventTypeStr = blockHeader.Groups["event_type"].Value;
-    
+
         _logger.Debug("Handling event: {EventType}, body lines: {LineCount}", eventTypeStr, bodyLines.Count);
-        
+
         if (!EventTypeMapping.TryGetValue(eventTypeStr, out var eventType))
         {
             _logger.Warn("Unknown event type: '{EventType}'", eventTypeStr);
@@ -78,9 +85,9 @@ public sealed class DefaultEventHandler : IEventHandler
             _logger.Debug("No handler for event type: {EventType}", eventType);
             return null;
         }
-    
+
         var result = handler(blockHeader, bodyLines, rules);
-    
+
         if (result == null)
             _logger.Warn("Handler returned null for {EventType}", eventType);
         else
@@ -90,9 +97,9 @@ public sealed class DefaultEventHandler : IEventHandler
     }
 
     // ==================== Common Event Metadata Parsing ====================
-    
+
     /// <summary>
-    /// Извлекает общие метаданные заголовка события (timestamp, trace_id, hex_trace_id).
+    ///     Извлекает общие метаданные заголовка события (timestamp, trace_id, hex_trace_id).
     /// </summary>
     private static (DateTime Timestamp, int TraceId, string HexTraceId) ParseEventMetadata(Match header)
     {
@@ -104,20 +111,24 @@ public sealed class DefaultEventHandler : IEventHandler
     }
 
     /// <summary>
-    /// Создает PerformanceInfo по умолчанию (все нули).
+    ///     Создает PerformanceInfo по умолчанию (все нули).
     /// </summary>
-    private static PerformanceInfo CreateDefaultPerformance() => new()
+    private static PerformanceInfo CreateDefaultPerformance()
     {
-        ExecuteMs = 0,
-        FetchCount = 0,
-        ReadCount = 0,
-        WriteCount = 0,
-        MarkCount = 0
-    };
+        return new PerformanceInfo
+        {
+            ExecuteMs = 0,
+            FetchCount = 0,
+            ReadCount = 0,
+            WriteCount = 0,
+            MarkCount = 0
+        };
+    }
 
     // ==================== Handlers ====================
 
-    private TraceInitEvent? HandleTraceInit(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private TraceInitEvent? HandleTraceInit(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var session = ParseSessionInfo(bodyLines, rules);
         if (session is null) return null;
@@ -134,7 +145,8 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private TraceFinishEvent? HandleTraceFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private TraceFinishEvent? HandleTraceFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var session = ParseSessionInfo(bodyLines, rules);
         if (session is null) return null;
@@ -151,7 +163,8 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private AttachDatabaseEvent? HandleAttach(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private AttachDatabaseEvent? HandleAttach(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
@@ -168,7 +181,8 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private DetachDatabaseEvent? HandleDetach(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private DetachDatabaseEvent? HandleDetach(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
@@ -185,9 +199,10 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private StatementStartEvent? HandleStatementStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private StatementStartEvent? HandleStatementStart(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, includePerformance: false);
+        var data = ParseStatementData(bodyLines, rules, false, false);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
@@ -207,9 +222,34 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private StatementFinishEvent? HandleStatementFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private StatementRestartEvent? HandleStatementRestart(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, includePerformance: true);
+        var data = ParseStatementData(bodyLines, rules, false, true);
+        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+            return null;
+
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
+        return new StatementRestartEvent
+        {
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
+            EventType = EventType.ExecuteStatementRestart,
+            Attachment = data.Attachment,
+            Transaction = data.Transaction,
+            StatementId = data.StatementId.Value,
+            RestartCount = data.RestartCount,
+            Sql = data.Sql ?? string.Empty,
+            Parameters = data.Params
+        };
+    }
+
+    private StatementFinishEvent? HandleStatementFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
+    {
+        var data = ParseStatementData(bodyLines, rules, true, true);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
@@ -230,10 +270,11 @@ public sealed class DefaultEventHandler : IEventHandler
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
-    
-    private FailedStatementFinishEvent? HandleFailedStatementFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+
+    private FailedStatementFinishEvent? HandleFailedStatementFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseStatementData(bodyLines, rules, includePerformance: true);
+        var data = ParseStatementData(bodyLines, rules, true, true);
         if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
             return null;
 
@@ -255,9 +296,10 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private ProcedureStartEvent? HandleProcedureStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private ProcedureStartEvent? HandleProcedureStart(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, includePerformance: false);
+        var data = ParseProcedureData(bodyLines, rules, false);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
@@ -276,9 +318,10 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private ProcedureFinishEvent? HandleProcedureFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private ProcedureFinishEvent? HandleProcedureFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, includePerformance: true);
+        var data = ParseProcedureData(bodyLines, rules, true);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
@@ -298,10 +341,11 @@ public sealed class DefaultEventHandler : IEventHandler
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
-    
-    private FailedProcedureFinishEvent? HandleFailedProcedureFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+
+    private FailedProcedureFinishEvent? HandleFailedProcedureFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseProcedureData(bodyLines, rules, includePerformance: true);
+        var data = ParseProcedureData(bodyLines, rules, true);
         if (data.Attachment is null || data.Transaction is null || data.ProcedureName is null)
             return null;
 
@@ -322,9 +366,10 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private TriggerStartEvent? HandleTriggerStart(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private TriggerStartEvent? HandleTriggerStart(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, includePerformance: false);
+        var data = ParseTriggerData(bodyLines, rules, false);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
@@ -346,9 +391,10 @@ public sealed class DefaultEventHandler : IEventHandler
         };
     }
 
-    private TriggerFinishEvent? HandleTriggerFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    private TriggerFinishEvent? HandleTriggerFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, includePerformance: true);
+        var data = ParseTriggerData(bodyLines, rules, true);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
@@ -371,10 +417,11 @@ public sealed class DefaultEventHandler : IEventHandler
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
-    
-    private FailedTriggerFinishEvent? HandleFailedTriggerFinish(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+
+    private FailedTriggerFinishEvent? HandleFailedTriggerFinish(Match header, IReadOnlyList<string> bodyLines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
-        var data = ParseTriggerData(bodyLines, rules, includePerformance: true);
+        var data = ParseTriggerData(bodyLines, rules, true);
         if (data.Attachment is null || data.Transaction is null ||
             data.TriggerName is null || data.Table is null || data.Timing is null || data.Event is null)
             return null;
@@ -399,15 +446,16 @@ public sealed class DefaultEventHandler : IEventHandler
     }
 
     // ==================== Parsing helpers ====================
-    
-    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
+
+    private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         foreach (var line in lines)
         {
             var m = rules["session"].Match(line);
             if (m.Success)
             {
-                int sessionId = int.Parse(m.Groups["session_id"].ValueSpan);
+                var sessionId = int.Parse(m.Groups["session_id"].ValueSpan);
                 return TraceSessionInfoPool.Intern(sessionId);
             }
         }
@@ -415,7 +463,8 @@ public sealed class DefaultEventHandler : IEventHandler
         return null;
     }
 
-    private static AttachmentInfo? ParseAttachmentInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
+    private static AttachmentInfo? ParseAttachmentInfo(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         Match? am = null;
         Match? pm = null;
@@ -440,7 +489,7 @@ public sealed class DefaultEventHandler : IEventHandler
         if (am is null) return null;
 
         var attachmentId = int.Parse(am.Groups["attachment_id"].ValueSpan);
-    
+
         if (AttachmentInfoPool.TryGet(attachmentId, out var cachedInfo))
             return cachedInfo;
 
@@ -452,7 +501,9 @@ public sealed class DefaultEventHandler : IEventHandler
             Role = StringPool.Intern(am.Groups["role"].Value),
             Charset = StringPool.Intern(am.Groups["charset"].Value),
             Protocol = StringPool.Intern(am.Groups["protocol"].Value.Trim()),
-            Address = am.Groups["address"].Success ? StringPool.Intern(am.Groups["address"].Value) : StringPool.Intern("<internal>"),
+            Address = am.Groups["address"].Success
+                ? StringPool.Intern(am.Groups["address"].Value)
+                : StringPool.Intern("<internal>"),
             Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].ValueSpan) : 0,
             ProcessPath = pm is not null ? StringPool.Intern(pm.Groups["process_path"].Value) : null,
             ProcessId = pm is not null ? int.Parse(pm.Groups["process_id"].ValueSpan) : null
@@ -461,7 +512,8 @@ public sealed class DefaultEventHandler : IEventHandler
         return AttachmentInfoPool.Add(newInfo);
     }
 
-    private static TransactionInfo? ParseTransactionInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
+    private static TransactionInfo? ParseTransactionInfo(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         foreach (var line in lines)
         {
@@ -493,14 +545,14 @@ public sealed class DefaultEventHandler : IEventHandler
 
         return null;
     }
-    
+
     /// <summary>
-    /// Парсит одну строку SQL-параметра и возвращает объект SqlParameters или null.
+    ///     Парсит одну строку SQL-параметра и возвращает объект SqlParameters или null.
     /// </summary>
     private static SqlParameters? ParseSqlParameter(string line, IReadOnlyDictionary<string, Regex> rules)
     {
         var paramM = rules["parameters"].Match(line);
-        if (!paramM.Success) 
+        if (!paramM.Success)
             return null;
 
         var value = paramM.Groups["value"].Success
@@ -524,7 +576,8 @@ public sealed class DefaultEventHandler : IEventHandler
         string? Sql,
         IReadOnlyList<SqlParameters> Params,
         PerformanceInfo? Performance,
-        PerformanceTable? PerformanceTable);
+        PerformanceTable? PerformanceTable,
+        int? RestartCount);
 
     private sealed record ProcedureData(
         AttachmentInfo? Attachment,
@@ -546,7 +599,8 @@ public sealed class DefaultEventHandler : IEventHandler
 
     // ==================== Complex Parsers ====================
 
-    private static StatementData ParseStatementData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
+    private static StatementData ParseStatementData(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules, bool includePerformance, bool isRestarted)
     {
         var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
@@ -555,6 +609,7 @@ public sealed class DefaultEventHandler : IEventHandler
         var paramsList = new List<SqlParameters>();
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
+        int? restartCount = null;
 
         for (var i = 0; i < lines.Count; i++)
         {
@@ -572,7 +627,18 @@ public sealed class DefaultEventHandler : IEventHandler
                 statementId = int.Parse(sm.Groups["statement_id"].ValueSpan);
                 continue;
             }
+            
+            if (isRestarted && restartCount is null)
+            {
+                var rm = rules["restarted"].Match(line);
+                if (rm.Success)
+                {
+                    restartCount = int.Parse(rm.Groups["count"].ValueSpan);
+                    continue;
+                }
+            }
 
+            // SQL block start
             if (line.Trim().StartsWith("-----"))
             {
                 var sqlLines = new List<string>();
@@ -580,6 +646,15 @@ public sealed class DefaultEventHandler : IEventHandler
                 while (i < lines.Count)
                 {
                     var l = lines[i];
+                    
+                    if (isRestarted && rules["restarted"].IsMatch(l))
+                    {
+                        // Не добавляем эту строку в SQL, она будет обработана на следующей итерации основного цикла
+                        i--; // Откатываем индекс, чтобы основной цикл обработал эту строку
+                        break;
+                    }
+
+                    // break if param or performance/fetched
                     if (rules["parameters"].IsMatch(l) ||
                         (includePerformance && (rules["fetched"].IsMatch(l) || rules["performance"].IsMatch(l))))
                         break;
@@ -589,7 +664,6 @@ public sealed class DefaultEventHandler : IEventHandler
                 }
 
                 sql = StringPool.Intern(string.Join("\n", sqlLines).Trim());
-                i--;
                 continue;
             }
 
@@ -613,10 +687,12 @@ public sealed class DefaultEventHandler : IEventHandler
             }
         }
 
-        return new StatementData(attachment, transaction, statementId, sql, paramsList, performance, performanceTable);
+        return new StatementData(attachment, transaction, statementId, sql, paramsList, performance, performanceTable,
+            restartCount);
     }
 
-    private static ProcedureData ParseProcedureData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
+    private static ProcedureData ParseProcedureData(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
     {
         var attachment = ParseAttachmentInfo(lines, rules); // ← ИСПРАВЛЕНО: добавлен парсинг
         TransactionInfo? transaction = null;
@@ -656,7 +732,8 @@ public sealed class DefaultEventHandler : IEventHandler
         return new ProcedureData(attachment, transaction, procedureName, paramsList, performance, performanceTable);
     }
 
-    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
+    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules,
+        bool includePerformance)
     {
         var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
@@ -691,10 +768,12 @@ public sealed class DefaultEventHandler : IEventHandler
                 performance = ParsePerformance(new[] { line }, rules);
         }
 
-        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance, performanceTable);
+        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance,
+            performanceTable);
     }
 
-    private static PerformanceInfo? ParsePerformance(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
+    private static PerformanceInfo? ParsePerformance(IReadOnlyList<string> lines,
+        IReadOnlyDictionary<string, Regex> rules)
     {
         var fetchCount = 0;
 

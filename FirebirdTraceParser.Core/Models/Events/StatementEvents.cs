@@ -24,6 +24,12 @@ public class StatementEventBase : EventBase
 /// </summary>
 public sealed class StatementStartEvent : StatementEventBase;
 
+
+public sealed class StatementRestartEvent : StatementEventBase
+{
+    public required int? RestartCount { get; init; } 
+}
+
 /// <summary>
 /// Событие завершения выполнения statement.
 /// </summary>

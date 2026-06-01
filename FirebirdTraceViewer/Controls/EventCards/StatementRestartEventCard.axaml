@@ -1,0 +1,238 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:events="using:FirebirdTraceViewer.Controls.EventCards"
+        xmlns:controls="using:FirebirdTraceViewer.Controls"
+        xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <events:StatementRestartEventCard
+                Width="900"
+                Timestamp="2026 05 18 11:30:00"
+                TraceId="437236" HexTraceId="0x7f3133ba1dc0" StatementId="329549018"
+                RestartCount="2"
+                DatabasePath="/interbas/reid_2022.gdb"
+                ProcessPath="C:\KPK_REID21_IP\KPKReplicator.exe"
+                ProcessId="5432"
+                Charset="WIN1251"
+                User="BERDIN.A"
+                Sql="select * from rdb$database as rd where rd.int = 10"
+                TransactionId="13605966"
+                IsolationLevel="READ_COMMITTED"
+                ConsistencyMode="READ_CONSISTENCY"
+                LockMode="WAIT"
+                AccessMode="READ_WRITE"
+                Role="ORDINARY USER"
+                AttachmentId="11335646" />
+        </Border>
+
+    </Design.PreviewWith>
+
+    <Style Selector="events|StatementRestartEventCard">
+
+        <Setter Property="Template">
+
+            <ControlTemplate>
+
+                <Border BorderThickness="1" Padding="10" BorderBrush="Black">
+
+                    <StackPanel Spacing="10">
+
+                        <!-- HEADER -->
+                        <Grid ColumnDefinitions="Auto Auto *">
+
+                            <!-- EVENT TYPE -->
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource StatementRestartEventColor}"
+                                    CornerRadius="5"
+                                    Padding="16, 8, 16, 12">
+
+                                <TextBlock Text="STATEMENT RESTART"
+                                           Foreground="White"
+                                           FontWeight="Bold"
+                                           FontSize="16" />
+                            </Border>
+
+                            <!-- TIMESTAMP -->
+                            <TextBlock Grid.Column="2"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Timestamp, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:yyyy-MM-ddTHH:mm:ss.ffff}'}"
+                                       FontFamily="Consolas"
+                                       FontSize="16"
+                                       FontWeight="DemiBold" />
+
+                        </Grid>
+                        
+                        <Border>
+                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                  ColumnSpacing="30">
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="TRACE ID"
+                                                   FontSize="11"
+                                                   Foreground="#777" />
+                                        <controls:InfoTip
+                                            Text="Unique identifier of trace event thread/session inside Firebird trace engine."/>
+                                    </StackPanel>
+                                    <TextBlock Text="{TemplateBinding TraceId}"
+                                               FontWeight="Bold"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            Spacing="4">
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="HEX"
+                                                   FontSize="11"
+                                                   Foreground="#777" />
+                                        <controls:InfoTip
+                                            Text="Unique thread/session identifier in the hex tracing event system within the Firebird tracing mechanism."/>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="{TemplateBinding HexTraceId}"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2"
+                                            Spacing="4">
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="STATEMENT ID"
+                                                   FontSize="11"
+                                                   Foreground="#777" />
+                                        <controls:InfoTip
+                                            Text="Identifies a single SQL statement execution inside a transaction. Multiple statements can belong to one transaction."/>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="{TemplateBinding StatementId}"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas" />
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="3"
+                                            Spacing="4">
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="TRANSACTION ID"
+                                                   FontSize="11"
+                                                   Foreground="#777" />
+                                        <controls:InfoTip
+                                            Text="Identifies a database transaction that groups multiple SQL statements into a single unit of work."/>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="{TemplateBinding TransactionId}"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas" />
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="4"
+                                            Spacing="4">
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <TextBlock Text="ATTACHMENT ID"
+                                                   FontSize="11"
+                                                   Foreground="#777" />
+                                        <controls:InfoTip
+                                            Text="Identifies a client connection/session to the database. One attachment can contain multiple transactions and statements."/>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="{TemplateBinding AttachmentId}"
+                                               Cursor="Hand"
+                                               FontFamily="Consolas" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <TextBlock Margin="0 5 0 0"
+                                   Text="{Binding RestartCount, RelativeSource={RelativeSource TemplatedParent}, StringFormat='Restarted: {0} time(s)'}"
+                                   Cursor="Hand"
+                                   FontWeight="Bold"
+                                   FontFamily="Consolas" />
+                        
+                        <WrapPanel Orientation="Horizontal"
+                                   ItemSpacing="25" Margin="0 5 0 0">
+                            
+                            <TextBlock Text="{TemplateBinding IsolationLevel}"
+                                       Cursor="Hand"
+                                       FontWeight="Bold"
+                                       FontFamily="Consolas" />
+                            
+                            <TextBlock Text="{TemplateBinding ConsistencyMode}"
+                                       Cursor="Hand"
+                                       FontWeight="Bold"
+                                       FontFamily="Consolas" />
+                            
+                            <TextBlock Text="{TemplateBinding LockMode}"
+                                       Cursor="Hand"
+                                       FontWeight="Bold"
+                                       FontFamily="Consolas" />
+                            
+                            <TextBlock Text="{TemplateBinding AccessMode}"
+                                       Cursor="Hand"
+                                       FontWeight="Bold"
+                                       FontFamily="Consolas" />
+                        </WrapPanel>
+                        
+                        <Border BorderBrush="Gray" BorderThickness="1" Padding="10">
+                            <Grid RowDefinitions="Auto" ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0" Grid.ColumnSpan="2"
+                                           Cursor="Hand" FontWeight="Bold"
+                                           FontFamily="Consolas"
+                                           Text="{TemplateBinding Sql}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <Button x:Name="PART_CopySqlButton"
+                                        Background="Transparent"
+                                        VerticalAlignment="Top"
+                                        Height="24" Width="24"
+                                        Padding="0"
+                                        
+                                        Grid.Column="1">
+                                    <Button.Content>
+                                        <Grid>
+                                            <Svg Path="{DynamicResource CopyIcon}"
+                                                 Css="{DynamicResource ThemeIconFill}" />
+                                            <Border Background="{DynamicResource Primary}"
+                                                    Opacity="0.8"
+                                                    CornerRadius="8"
+                                                    Padding="4,2"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0,-1,-1,0">
+                                                <TextBlock
+                                                    Text="+"
+                                                    Foreground="White"
+                                                    FontSize="8"
+                                                    FontWeight="Bold" />
+                                            </Border>
+                                        </Grid>
+                                    </Button.Content>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <ItemsControl ItemsSource="{Binding Params, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:SqlParameters">
+                                    <Grid ColumnDefinitions="200,*">
+
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Value}"
+                                                   TextWrapping="Wrap"/>
+
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                    </StackPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

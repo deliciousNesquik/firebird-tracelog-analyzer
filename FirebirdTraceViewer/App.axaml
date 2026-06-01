@@ -87,6 +87,32 @@
                 AccessMode="{Binding Transaction.AccessMode}"
                 Params="{Binding Parameters}" />
         </DataTemplate>
+        
+        <DataTemplate DataType="core:StatementRestartEvent">
+            <events:StatementRestartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                RestartCount="{Binding RestartCount}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}" />
+        </DataTemplate>
 
         <DataTemplate DataType="core:StatementFinishEvent">
             <events:StatementFinishEventCard
@@ -376,6 +402,7 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/AttachDatabaseEventCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/DetachDatabaseEventCard.axaml" />
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementRestartEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/StatementFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/FailedStatementFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ProcedureStartEventCard.axaml"/>
