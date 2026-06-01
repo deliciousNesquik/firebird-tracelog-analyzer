@@ -120,7 +120,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new TraceInitEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.TraceInit,
             Session = session
@@ -136,7 +136,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new TraceFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.TraceFinish,
             Session = session
@@ -152,7 +152,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new AttachDatabaseEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.AttachDatabase,
             Attachment = attachment
@@ -168,7 +168,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new DetachDatabaseEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.DetachDatabase,
             Attachment = attachment
@@ -185,7 +185,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new StatementStartEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteStatementStart,
             Attachment = data.Attachment,
@@ -206,7 +206,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new StatementFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteStatementFinish,
             Attachment = data.Attachment,
@@ -236,7 +236,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new FailedStatementFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteStatementFinish,
             Attachment = data.Attachment,
@@ -266,7 +266,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new ProcedureStartEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteProcedureStart,
             Attachment = data.Attachment,
@@ -286,7 +286,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new ProcedureFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteProcedureFinish,
             Attachment = data.Attachment,
@@ -315,7 +315,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new FailedProcedureFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteProcedureFinish,
             Attachment = data.Attachment,
@@ -345,7 +345,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new TriggerStartEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteTriggerStart,
             Attachment = data.Attachment,
@@ -368,7 +368,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new TriggerFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.ExecuteTriggerFinish,
             Attachment = data.Attachment,
@@ -400,7 +400,7 @@ public sealed class DefaultEventHandler : IEventHandler
         return new FailedTriggerFinishEvent
         {
             Timestamp = ParseTimestamp(header.Groups["ts"].Value),
-            TraceId = int.Parse(header.Groups["trace_id"].Value),
+            TraceId = int.Parse(header.Groups["trace_id"].ValueSpan),
             HexTraceId = StringPool.Intern(header.Groups["hex_trace_id"].Value),
             EventType = EventType.FailedExecuteTriggerFinish,
             Attachment = data.Attachment,
@@ -432,7 +432,7 @@ public sealed class DefaultEventHandler : IEventHandler
             if (m.Success)
             {
                 // Берем ID сессии
-                int sessionId = int.Parse(m.Groups["session_id"].Value);
+                int sessionId = int.Parse(m.Groups["session_id"].ValueSpan);
             
                 // Получаем объект из пула вместо создания через new
                 return TraceSessionInfoPool.Intern(sessionId);
@@ -468,7 +468,7 @@ public sealed class DefaultEventHandler : IEventHandler
         if (am is null) return null;
 
         // Получаем ID и проверяем ПУЛ
-        var attachmentId = int.Parse(am.Groups["attachment_id"].Value);
+        var attachmentId = int.Parse(am.Groups["attachment_id"].ValueSpan);
     
         if (AttachmentInfoPool.TryGet(attachmentId, out var cachedInfo))
             return cachedInfo; // Никаких новых объектов (аллокаций) не создаем.
@@ -483,9 +483,9 @@ public sealed class DefaultEventHandler : IEventHandler
             Charset = StringPool.Intern(am.Groups["charset"].Value),
             Protocol = StringPool.Intern(am.Groups["protocol"].Value.Trim()),
             Address = am.Groups["address"].Success ? StringPool.Intern(am.Groups["address"].Value) : StringPool.Intern("<internal>"),
-            Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
+            Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].ValueSpan) : 0,
             ProcessPath = pm is not null ? StringPool.Intern(pm.Groups["process_path"].Value) : null,
-            ProcessId = pm is not null ? int.Parse(pm.Groups["process_id"].Value) : null
+            ProcessId = pm is not null ? int.Parse(pm.Groups["process_id"].ValueSpan) : null
         };
 
         // Добавляем в пул и возвращаем
@@ -502,7 +502,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var m = rules["transaction"].Match(line);
             if (!m.Success) continue;
 
-            var tid = int.Parse(m.Groups[1].Value);
+            var tid = int.Parse(m.Groups[1].ValueSpan);
             var rawParams = m.Groups[2].Value;
 
             // Парсим параметры изоляции (аналог Python logic)
@@ -590,7 +590,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var sm = rules["statement"].Match(line);
             if (sm.Success)
             {
-                statementId = int.Parse(sm.Groups["statement_id"].Value);
+                statementId = int.Parse(sm.Groups["statement_id"].ValueSpan);
                 continue;
             }
 
@@ -766,18 +766,18 @@ public sealed class DefaultEventHandler : IEventHandler
             // Fetch count
             var mFetched = rules["fetched"].Match(line);
             if (mFetched.Success)
-                fetchCount = int.Parse(mFetched.Groups["fetch_count"].Value);
+                fetchCount = int.Parse(mFetched.Groups["fetch_count"].ValueSpan);
 
             // Metrics
             var mPerf = rules["performance"].Match(line);
             if (mPerf.Success)
                 return new PerformanceInfo
                 {
-                    ExecuteMs = int.Parse(mPerf.Groups["execute_ms"].Value),
+                    ExecuteMs = int.Parse(mPerf.Groups["execute_ms"].ValueSpan),
                     FetchCount = fetchCount,
-                    ReadCount = mPerf.Groups["read"].Success ? int.Parse(mPerf.Groups["read"].Value) : 0,
-                    WriteCount = mPerf.Groups["write"].Success ? int.Parse(mPerf.Groups["write"].Value) : 0,
-                    MarkCount = mPerf.Groups["mark"].Success ? int.Parse(mPerf.Groups["mark"].Value) : 0
+                    ReadCount = mPerf.Groups["read"].Success ? int.Parse(mPerf.Groups["read"].ValueSpan) : 0,
+                    WriteCount = mPerf.Groups["write"].Success ? int.Parse(mPerf.Groups["write"].ValueSpan) : 0,
+                    MarkCount = mPerf.Groups["mark"].Success ? int.Parse(mPerf.Groups["mark"].ValueSpan) : 0
                 };
         }
 
