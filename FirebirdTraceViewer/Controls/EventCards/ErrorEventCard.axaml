@@ -1,0 +1,201 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:events="using:FirebirdTraceViewer.Controls.EventCards"
+        xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core">
+
+    <Design.PreviewWith>
+
+        <Border Padding="20">
+
+            <events:ErrorEventCard
+                Width="900"
+                Timestamp="2026 05 18 11:30:00"
+                TraceId="437236"
+                HexTraceId="0x7f3133ba1dc0"
+                AttachmentId="11335646"
+                Component="JResultSet::fetchNext" />
+
+        </Border>
+
+    </Design.PreviewWith>
+
+    <Style Selector="events|ErrorEventCard">
+
+        <Setter Property="Template">
+
+            <ControlTemplate>
+
+                <Border BorderThickness="1"
+                        Padding="10"
+                        BorderBrush="Black">
+
+                    <StackPanel Spacing="10">
+
+                        <!-- HEADER -->
+
+                        <Grid ColumnDefinitions="Auto,*">
+
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource ErrorEventColor}"
+                                    CornerRadius="5"
+                                    Padding="16,8,16,12">
+
+                                <TextBlock Text="ERROR"
+                                           Foreground="White"
+                                           FontWeight="Bold"
+                                           FontSize="16"/>
+
+                            </Border>
+
+                            <TextBlock Grid.Column="1"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Timestamp,
+                                              RelativeSource={RelativeSource TemplatedParent},
+                                              StringFormat='{}{0:yyyy-MM-ddTHH:mm:ss.ffff}'}"
+                                       FontFamily="Consolas"
+                                       FontSize="16"
+                                       FontWeight="DemiBold"/>
+
+                        </Grid>
+
+                        <!-- IDS -->
+
+                        <Border>
+
+                            <Grid ColumnDefinitions="Auto,Auto,Auto"
+                                  ColumnSpacing="30">
+
+                                <StackPanel Grid.Column="0"
+                                            Spacing="4">
+
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="5">
+
+                                        <TextBlock Text="TRACE ID"
+                                                   FontSize="11"
+                                                   Foreground="#777"/>
+
+                                    </StackPanel>
+
+                                    <TextBlock Text="{TemplateBinding TraceId}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"/>
+
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1"
+                                            Spacing="4">
+
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="5">
+
+                                        <TextBlock Text="HEX"
+                                                   FontSize="11"
+                                                   Foreground="#777"/>
+
+                                    </StackPanel>
+
+                                    <TextBlock Text="{TemplateBinding HexTraceId}"
+                                               FontFamily="Consolas"/>
+
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2"
+                                            Spacing="4">
+
+                                    <StackPanel Orientation="Horizontal"
+                                                Spacing="5">
+
+                                        <TextBlock Text="ATTACHMENT ID"
+                                                   FontSize="11"
+                                                   Foreground="#777"/>
+
+                                    </StackPanel>
+
+                                    <TextBlock Text="{TemplateBinding AttachmentId}"
+                                               FontFamily="Consolas"/>
+
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- COMPONENT -->
+
+                        <Border BorderBrush="Gray"
+                                BorderThickness="1"
+                                Padding="10">
+
+                            <Grid ColumnDefinitions="*,Auto">
+
+                                <TextBlock Grid.Column="0"
+                                           FontFamily="Consolas"
+                                           FontWeight="Bold"
+                                           Text="{Binding Component,
+                                                  RelativeSource={RelativeSource TemplatedParent},
+                                                  StringFormat='{}Error at: {0}'}"
+                                           TextWrapping="Wrap"/>
+
+                                <Button x:Name="PART_CopyErrorButton"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        Width="24"
+                                        Height="24"
+                                        Padding="0">
+
+                                    <Svg Path="{DynamicResource CopyIcon}"
+                                         Css="{DynamicResource ThemeIconFill}" />
+
+                                </Button>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!-- ERRORS -->
+
+                        <ItemsControl ItemsSource="{Binding Errors,
+                                                    RelativeSource={RelativeSource TemplatedParent}}">
+
+                            <ItemsControl.ItemTemplate>
+
+                                <DataTemplate x:DataType="models:ErrorInfo">
+
+                                    <Border BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource SurfaceElevated}"
+                                            Padding="0,4">
+
+                                        <Grid ColumnDefinitions="140,*">
+
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding ErrorCode}"
+                                                       FontFamily="Consolas"
+                                                       FontWeight="Bold"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Message}"
+                                                       TextWrapping="Wrap"/>
+
+                                        </Grid>
+
+                                    </Border>
+
+                                </DataTemplate>
+
+                            </ItemsControl.ItemTemplate>
+
+                        </ItemsControl>
+
+                    </StackPanel>
+
+                </Border>
+
+            </ControlTemplate>
+
+        </Setter>
+
+    </Style>
+
+</Styles>

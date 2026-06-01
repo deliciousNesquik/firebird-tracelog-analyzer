@@ -344,6 +344,17 @@
                 FetchCount="{Binding Performance.FetchCount}"
                 MarkCount="{Binding Performance.MarkCount}" />
         </DataTemplate>
+        
+        <DataTemplate DataType="core:ErrorEvent">
+
+            <events:ErrorEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Component="{Binding Component}"
+                Errors="{Binding Errors}"/>
+        </DataTemplate>
     </Application.DataTemplates>
     
     <Application.Resources>
@@ -411,6 +422,7 @@
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerStartEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/TriggerFinishEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/FailedTriggerFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceViewer/Controls/EventCards/ErrorEventCard.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Controls/InfoTip.axaml"/>
         <StyleInclude Source="avares://FirebirdTraceViewer/Styles/Menu.axaml"/>
         

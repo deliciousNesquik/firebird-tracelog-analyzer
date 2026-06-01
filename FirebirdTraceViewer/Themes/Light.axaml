@@ -62,8 +62,7 @@
     <Color x:Key="FailedTriggerFinishEventColor">#AD1457</Color> <!-- Темно-розовый/Малиновый (Ошибка) -->
 
     <!-- КРИТИЧЕСКИЕ ОШИБКИ (Красные/Бордовые оттенки) -->
-    <Color x:Key="ErrorAtJResultSetEventColor">#B71C1C</Color>
-    <Color x:Key="ErrorAtJStatementEventColor">#B71C1C</Color>
+    <Color x:Key="ErrorEventColor">#B71C1C</Color>
     
     <!-- SVG -->
     <x:String x:Key="ThemeIconFill">

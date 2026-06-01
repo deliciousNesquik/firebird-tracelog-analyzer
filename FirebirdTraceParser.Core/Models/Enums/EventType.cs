@@ -67,11 +67,7 @@ public enum EventType
     [Description("FAILED EXECUTE_TRIGGER_FINISH")]
     FailedExecuteTriggerFinish,
     
-    /// <summary>Ошибка ERROR AT JResultSet::fetchNext</summary>
-    [Description("ERROR AT JR")]
-    ErrorAtJr,
-    
-    /// <summary>Ошибка ERROR AT JStatement::execute/openCursor</summary>
-    [Description("ERROR AT JS")]
-    ErrorAtJs
+    /// <summary>Любая ошибка возникшая в определенном модуле</summary>
+    [Description("ERROR")]
+    Error,
 }

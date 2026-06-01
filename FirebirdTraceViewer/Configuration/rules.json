@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "rules": {
     "block_header": {
-      "pattern": "^(?<ts>\\d{4}-\\d{2}-\\d{2}T[\\d:.]+)\\s+\\((?<trace_id>\\d+):(?<hex_trace_id>0x[0-9a-f]+)\\)\\s+(?<event_type>[A-Z_ ]+)$",
-      "flags": ["IgnorePatternWhitespace"],
-      "description": "Регулярное выражение для парсинга заголовка блока события трассировки.",
+      "pattern": "^(?<ts>\\d{4}-\\d{2}-\\d{2}T[\\d:.]+)\\s+\\((?<trace_id>\\d+):(?<hex_trace_id>0x[0-9a-f]+)\\)\\s+(?<event_type>TRACE_(?:INIT|FINI)|(?:ATTACH|DETACH)_DATABASE|EXECUTE_(?:STATEMENT|PROCEDURE|TRIGGER)_(?:START|RESTART|FINISH)|FAILED\\s+EXECUTE_(?:STATEMENT|PROCEDURE|TRIGGER)_FINISH|ERROR\\s+AT\\s+\\S+)\\s*$",
+      "flags": [],
+      "description": "Заголовок события трассировки Firebird",
       "requiredGroups": ["ts", "trace_id", "hex_trace_id", "event_type"],
-      "sample": "2026-04-14T10:20:01.1620 (437236:0x7f3133ba1dc0) TRACE_INIT"
+      "sample": "2026-06-01T11:19:04.1720 (607408:0x7f2cbe321dc0) ERROR AT JResultSet::fetchNext"
     },
     "session": {
       "pattern": "^\\s+SESSION_(?<session_id>\\d+)\\s*$",

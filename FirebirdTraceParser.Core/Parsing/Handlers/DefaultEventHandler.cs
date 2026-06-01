@@ -32,9 +32,7 @@ public sealed class DefaultEventHandler : IEventHandler
         ["EXECUTE_TRIGGER_FINISH"] = EventType.ExecuteTriggerFinish,
         ["FAILED EXECUTE_STATEMENT_FINISH"] = EventType.FailedExecuteStatementFinish,
         ["FAILED EXECUTE_PROCEDURE_FINISH"] = EventType.FailedExecuteProcedureFinish,
-        ["FAILED EXECUTE_TRIGGER_FINISH"] = EventType.FailedExecuteTriggerFinish,
-        ["ERROR AT JR"] = EventType.ErrorAtJr,
-        ["ERROR AT JS"] = EventType.ErrorAtJs
+        ["FAILED EXECUTE_TRIGGER_FINISH"] = EventType.FailedExecuteTriggerFinish
     };
 
     private readonly
@@ -74,6 +72,11 @@ public sealed class DefaultEventHandler : IEventHandler
 
         _logger.Debug("Handling event: {EventType}, body lines: {LineCount}", eventTypeStr, bodyLines.Count);
 
+        if (eventTypeStr.StartsWith("ERROR AT ", StringComparison.OrdinalIgnoreCase))
+        {
+            return HandleError(blockHeader, bodyLines, rules);
+        }
+        
         if (!EventTypeMapping.TryGetValue(eventTypeStr, out var eventType))
         {
             _logger.Warn("Unknown event type: '{EventType}'", eventTypeStr);
@@ -444,6 +447,32 @@ public sealed class DefaultEventHandler : IEventHandler
             PerformanceTable = _options.ParsePerformanceTables ? data.PerformanceTable : null
         };
     }
+    
+    private ErrorEvent? HandleError(Match header, IReadOnlyList<string> bodyLines, IReadOnlyDictionary<string, Regex> rules)
+    {
+        var attachment = ParseAttachmentInfo(bodyLines, rules);
+        if (attachment is null) return null;
+
+        // Извлекаем компонент из "ERROR AT <компонент>"
+        var eventTypeStr = header.Groups["event_type"].Value;
+        var component = eventTypeStr["ERROR AT ".Length..].Trim();
+
+        // Парсим цепочку ошибок
+        var errors = ParseErrorChain(bodyLines);
+
+        var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
+
+        return new ErrorEvent
+        {
+            Timestamp = timestamp,
+            TraceId = traceId,
+            HexTraceId = hexTraceId,
+            EventType = EventType.Error,
+            Attachment = attachment,
+            Component = StringPool.Intern(component),
+            Errors = errors
+        };
+    }
 
     // ==================== Parsing helpers ====================
 
@@ -542,6 +571,27 @@ public sealed class DefaultEventHandler : IEventHandler
         }
 
         return null;
+    }
+    
+    private static IReadOnlyList<ErrorInfo> ParseErrorChain(IReadOnlyList<string> lines)
+    {
+        var errors = new List<ErrorInfo>();
+        var errorRegex = new Regex(@"^(\d+)\s*:\s*(.*)$", RegexOptions.Compiled);
+
+        foreach (var line in lines)
+        {
+            var match = errorRegex.Match(line.Trim());
+            if (match.Success)
+            {
+                errors.Add(new ErrorInfo
+                {
+                    ErrorCode = int.Parse(match.Groups[1].Value),
+                    Message = StringPool.Intern(match.Groups[2].Value.Trim())
+                });
+            }
+        }
+
+        return errors;
     }
 
 // ==================== Вспомогательные методы для классификации ====================

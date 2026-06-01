@@ -9,7 +9,7 @@
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/app-logo.ico"
-        Title="TraceWing"
+        Title="Flytic"
         MinWidth="1000"
         MinHeight="500">
 
