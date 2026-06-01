@@ -370,7 +370,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, false);
-        
+
         if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
@@ -395,7 +395,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, true);
-        
+
         if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
@@ -422,7 +422,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseTriggerData(bodyLines, rules, true);
-        
+
         if (data.Attachment is null || data.Transaction is null || data.TriggerName is null || data.Event is null)
             return null;
 
@@ -522,28 +522,68 @@ public sealed class DefaultEventHandler : IEventHandler
             var m = rules["transaction"].Match(line);
             if (!m.Success) continue;
 
-            var tid = int.Parse(m.Groups[1].ValueSpan);
-            var rawParams = m.Groups[2].Value;
+            var tid = int.Parse(m.Groups["transaction_id"].ValueSpan);
+            var rawParams = m.Groups["params"].Value;
 
+            // Разбиваем параметры и очищаем
             var parts = rawParams.Split('|')
                 .Select(p => p.Trim().ToUpperInvariant())
                 .Where(p => !string.IsNullOrEmpty(p) && p != "NONE" && p != "(NONE)")
-                .ToList();
-
-            while (parts.Count < 4)
-                parts.Add("NONE");
+                .ToHashSet(); // ← Используем HashSet для быстрого поиска
 
             return new TransactionInfo
             {
                 TransactionId = tid,
-                IsolationLevel = StringPool.Intern(parts[0]),
-                ConsistencyMode = StringPool.Intern(parts[1]),
-                LockMode = StringPool.Intern(parts[2]),
-                AccessMode = StringPool.Intern(parts[3])
+                IsolationLevel = ExtractIsolationLevel(parts),
+                ConsistencyMode = ExtractConsistencyMode(parts),
+                LockMode = ExtractLockMode(parts),
+                AccessMode = ExtractAccessMode(parts)
             };
         }
 
         return null;
+    }
+
+// ==================== Вспомогательные методы для классификации ====================
+
+    private static string ExtractIsolationLevel(HashSet<string> parts)
+    {
+        // Уровни изоляции в Firebird (только один может быть активным)
+        if (parts.Contains("READ_COMMITTED")) return StringPool.Intern("READ_COMMITTED");
+        if (parts.Contains("CONCURRENCY")) return StringPool.Intern("CONCURRENCY");
+        if (parts.Contains("SNAPSHOT")) return StringPool.Intern("SNAPSHOT");
+        if (parts.Contains("SNAPSHOT_TABLE_STABILITY")) return StringPool.Intern("SNAPSHOT_TABLE_STABILITY");
+
+        return StringPool.Intern("NONE");
+    }
+
+    private static string ExtractConsistencyMode(HashSet<string> parts)
+    {
+        // Режимы консистентности (только для READ_COMMITTED в FB 4.0+)
+        if (parts.Contains("READ_CONSISTENCY")) return StringPool.Intern("READ_CONSISTENCY");
+        if (parts.Contains("NO_RECORD_VERSION")) return StringPool.Intern("NO_RECORD_VERSION");
+        if (parts.Contains("RECORD_VERSION")) return StringPool.Intern("RECORD_VERSION");
+
+        return StringPool.Intern("NONE");
+    }
+
+    private static string ExtractLockMode(HashSet<string> parts)
+    {
+        // Режимы блокировки
+        if (parts.Contains("NOWAIT")) return StringPool.Intern("NOWAIT");
+        if (parts.Contains("WAIT")) return StringPool.Intern("WAIT");
+        if (parts.Contains("LOCK_TIMEOUT")) return StringPool.Intern("LOCK_TIMEOUT");
+
+        return StringPool.Intern("NONE");
+    }
+
+    private static string ExtractAccessMode(HashSet<string> parts)
+    {
+        // Режимы доступа
+        if (parts.Contains("READ_WRITE")) return StringPool.Intern("READ_WRITE");
+        if (parts.Contains("READ_ONLY")) return StringPool.Intern("READ_ONLY");
+
+        return StringPool.Intern("NONE");
     }
 
     /// <summary>
@@ -627,7 +667,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 statementId = int.Parse(sm.Groups["statement_id"].ValueSpan);
                 continue;
             }
-            
+
             if (isRestarted && restartCount is null)
             {
                 var rm = rules["restarted"].Match(line);
@@ -646,7 +686,7 @@ public sealed class DefaultEventHandler : IEventHandler
                 while (i < lines.Count)
                 {
                     var l = lines[i];
-                    
+
                     if (isRestarted && rules["restarted"].IsMatch(l))
                     {
                         // Не добавляем эту строку в SQL, она будет обработана на следующей итерации основного цикла
@@ -732,7 +772,8 @@ public sealed class DefaultEventHandler : IEventHandler
         return new ProcedureData(attachment, transaction, procedureName, paramsList, performance, performanceTable);
     }
 
-    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules, bool includePerformance)
+    private static TriggerData ParseTriggerData(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules,
+        bool includePerformance)
     {
         var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
@@ -757,7 +798,7 @@ public sealed class DefaultEventHandler : IEventHandler
             if (tm.Success)
             {
                 triggerName = StringPool.Intern(tm.Groups["trigger_name"].Value);
-            
+
                 // проверяем тип триггера (DML или DDL)
                 if (tm.Groups["table"].Success) // DML триггер (FOR table)
                 {
@@ -771,7 +812,7 @@ public sealed class DefaultEventHandler : IEventHandler
                     timing = null;
                     eventType = StringPool.Intern(tm.Groups["ddl_event"].Value); // "ON CONNECT", "ON DISCONNECT", etc.
                 }
-            
+
                 continue;
             }
 
@@ -779,7 +820,8 @@ public sealed class DefaultEventHandler : IEventHandler
                 performance = ParsePerformance(new[] { line }, rules);
         }
 
-        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance, performanceTable);
+        return new TriggerData(attachment, transaction, triggerName, table, timing, eventType, performance,
+            performanceTable);
     }
 
     private static PerformanceInfo? ParsePerformance(IReadOnlyList<string> lines,

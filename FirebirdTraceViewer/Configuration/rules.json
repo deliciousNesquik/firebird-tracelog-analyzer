@@ -37,11 +37,11 @@
       "sample": "Statement 556761380:"
     },
     "transaction": {
-      "pattern": "^\\s*\\(TRA_(\\d+),\\s*(.*?)\\)",
+      "pattern": "^\\s*\\(TRA_(?<transaction_id>\\d+)(?:,\\s*INIT_(?<init_id>\\d+))?\\s*,\\s*(?<params>.*?)\\)",
       "flags": [],
       "description": "Регулярное выражение для извлечения информации о транзакции.",
-      "requiredGroups": [],
-      "sample": "(TRA_123, READ_COMMITTED | READ_CONSISTENCY | NOWAIT | READ_WRITE)"
+      "requiredGroups": ["transaction_id", "params"],
+      "sample": "(TRA_48170828, INIT_48170682, READ_COMMITTED | READ_CONSISTENCY | NOWAIT | READ_WRITE)"
     },
     "restarted": {
       "pattern": "Restarted\\s+(?<count>\\d+)\\s+time\\(s\\)",
