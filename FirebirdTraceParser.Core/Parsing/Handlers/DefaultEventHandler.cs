@@ -146,7 +146,7 @@ public sealed class DefaultEventHandler : IEventHandler
     private AttachDatabaseEvent? HandleAttach(Match header, IReadOnlyList<string> bodyLines,
         IReadOnlyDictionary<string, Regex> rules)
     {
-        var attachment = ParseAttachmentInfoWithProcess(bodyLines, rules);
+        var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
 
         return new AttachDatabaseEvent
@@ -162,7 +162,7 @@ public sealed class DefaultEventHandler : IEventHandler
     private DetachDatabaseEvent? HandleDetach(Match header, IReadOnlyList<string> bodyLines,
         IReadOnlyDictionary<string, Regex> rules)
     {
-        var attachment = ParseAttachmentInfoWithProcess(bodyLines, rules);
+        var attachment = ParseAttachmentInfo(bodyLines, rules);
         if (attachment is null) return null;
 
         return new DetachDatabaseEvent
@@ -422,25 +422,6 @@ public sealed class DefaultEventHandler : IEventHandler
     }
 
     // ==================== Parsing helpers (nested) ====================
-
-    /*private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules)
-    {
-        foreach (var line in lines)
-        {
-            var m = rules["session"].Match(line);
-            if (m.Success)
-            {
-                return new TraceSessionInfo
-                {
-                    SessionId = int.Parse(m.Groups["session_id"].Value)
-                };    
-            }
-            
-        }
-
-        return null;
-    }*/
     
     private static TraceSessionInfo? ParseSessionInfo(IReadOnlyList<string> lines,
         IReadOnlyDictionary<string, Regex> rules)
@@ -454,55 +435,61 @@ public sealed class DefaultEventHandler : IEventHandler
                 int sessionId = int.Parse(m.Groups["session_id"].Value);
             
                 // Получаем объект из пула вместо создания через new
-                return TraceSessionInfoPool.Get(sessionId);
+                return TraceSessionInfoPool.Intern(sessionId);
             }
         }
 
         return null;
     }
 
-    private static AttachmentInfo? ParseAttachmentInfoWithProcess(IReadOnlyList<string> lines,
-        IReadOnlyDictionary<string, Regex> rules)
+    private static AttachmentInfo? ParseAttachmentInfo(IReadOnlyList<string> lines, IReadOnlyDictionary<string, Regex> rules)
     {
-        AttachmentInfo? attachment = null;
-        string? procPath = null;
-        int? procId = null;
+        Match? am = null;
+        Match? pm = null;
 
+        // Ищем нужные строки
         foreach (var line in lines)
         {
-            // attachment
-            var am = rules["attachment"].Match(line);
-            if (am.Success && attachment is null)
-                attachment = new AttachmentInfo
-                {
-                    DatabasePath = StringPool.Intern(am.Groups["database_path"].Value),
-                    AttachmentId = int.Parse(am.Groups["attachment_id"].Value),
-                    User = StringPool.Intern(am.Groups["user"].Value),
-                    Role = StringPool.Intern(am.Groups["role"].Value),
-                    Charset = StringPool.Intern(am.Groups["charset"].Value),
-                    Protocol = StringPool.Intern(am.Groups["protocol"].Value.Trim()),
-                    Address = am.Groups["address"].Success ? StringPool.Intern(am.Groups["address"].Value) : 
-                        StringPool.Intern("<internal>"),
-                    Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
-                    ProcessPath = null,
-                    ProcessId = null
-                };
-
-            // process
-            var pm = rules["process"].Match(line);
-            if (pm.Success)
+            if (am is null)
             {
-                procPath = StringPool.Intern(pm.Groups["process_path"].Value);
-                procId = int.Parse(pm.Groups["process_id"].Value);
+                var match = rules["attachment"].Match(line);
+                if (match.Success) am = match;
             }
+
+            if (pm is null)
+            {
+                var match = rules["process"].Match(line);
+                if (match.Success) pm = match;
+            }
+
+            if (am is not null && pm is not null) break;
         }
 
-        if (attachment is null) return null;
+        if (am is null) return null;
 
-        if (procPath is not null || procId is not null)
-            attachment = attachment with { ProcessPath = procPath, ProcessId = procId };
+        // Получаем ID и проверяем ПУЛ
+        var attachmentId = int.Parse(am.Groups["attachment_id"].Value);
+    
+        if (AttachmentInfoPool.TryGet(attachmentId, out var cachedInfo))
+            return cachedInfo; // Никаких новых объектов (аллокаций) не создаем.
 
-        return attachment;
+        // Если в пуле нет - создаем
+        var newInfo = new AttachmentInfo
+        {
+            AttachmentId = attachmentId,
+            DatabasePath = StringPool.Intern(am.Groups["database_path"].Value),
+            User = StringPool.Intern(am.Groups["user"].Value),
+            Role = StringPool.Intern(am.Groups["role"].Value),
+            Charset = StringPool.Intern(am.Groups["charset"].Value),
+            Protocol = StringPool.Intern(am.Groups["protocol"].Value.Trim()),
+            Address = am.Groups["address"].Success ? StringPool.Intern(am.Groups["address"].Value) : StringPool.Intern("<internal>"),
+            Port = am.Groups["port"].Success ? int.Parse(am.Groups["port"].Value) : 0,
+            ProcessPath = pm is not null ? StringPool.Intern(pm.Groups["process_path"].Value) : null,
+            ProcessId = pm is not null ? int.Parse(pm.Groups["process_id"].Value) : null
+        };
+
+        // Добавляем в пул и возвращаем
+        return AttachmentInfoPool.Add(newInfo);
     }
 
     private static TransactionInfo? ParseTransactionInfo(IReadOnlyList<string> lines,
@@ -590,43 +577,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var line = lines[i];
 
             // attachment
-            if (attachment is null)
-            {
-                var m = rules["attachment"].Match(line);
-                if (m.Success)
-                {
-                    attachment = new AttachmentInfo
-                    {
-                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
-                        AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = StringPool.Intern(m.Groups["user"].Value),
-                        Role = StringPool.Intern(m.Groups["role"].Value),
-                        Charset = StringPool.Intern(m.Groups["charset"].Value),
-                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
-                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
-                            StringPool.Intern("<internal>"),
-                        Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
-                        ProcessPath = null,
-                        ProcessId = null
-                    };
-                    continue;
-                }
-            }
-
-            // process
-            if (attachment is not null)
-            {
-                var pm = rules["process"].Match(line);
-                if (pm.Success)
-                {
-                    attachment = attachment with
-                    {
-                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
-                        ProcessId = int.Parse(pm.Groups["process_id"].Value)
-                    };
-                    continue;
-                }
-            }
+            attachment = ParseAttachmentInfo(lines, rules);
 
             // transaction
             if (transaction is null)
@@ -725,42 +676,8 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             var line = lines[i];
 
-            if (attachment is null)
-            {
-                var m = rules["attachment"].Match(line);
-                if (m.Success)
-                {
-                    attachment = new AttachmentInfo
-                    {
-                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
-                        AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = StringPool.Intern(m.Groups["user"].Value),
-                        Role = StringPool.Intern(m.Groups["role"].Value),
-                        Charset = StringPool.Intern(m.Groups["charset"].Value),
-                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
-                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
-                            StringPool.Intern("<internal>"),
-                        Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
-                        ProcessPath = null,
-                        ProcessId = null
-                    };
-                    continue;
-                }
-            }
-
-            if (attachment is not null)
-            {
-                var pm = rules["process"].Match(line);
-                if (pm.Success)
-                {
-                    attachment = attachment with
-                    {
-                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
-                        ProcessId = int.Parse(pm.Groups["process_id"].Value)
-                    };
-                    continue;
-                }
-            }
+            // attachment
+            attachment = ParseAttachmentInfo(lines, rules);
 
             if (transaction is null)
             {
@@ -815,42 +732,8 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             var line = lines[i];
 
-            if (attachment is null)
-            {
-                var m = rules["attachment"].Match(line);
-                if (m.Success)
-                {
-                    attachment = new AttachmentInfo
-                    {
-                        DatabasePath = StringPool.Intern(m.Groups["database_path"].Value),
-                        AttachmentId = int.Parse(m.Groups["attachment_id"].Value),
-                        User = StringPool.Intern(m.Groups["user"].Value),
-                        Role = StringPool.Intern(m.Groups["role"].Value),
-                        Charset = StringPool.Intern(m.Groups["charset"].Value),
-                        Protocol = StringPool.Intern(m.Groups["protocol"].Value.Trim()),
-                        Address = m.Groups["address"].Success ? StringPool.Intern(m.Groups["address"].Value) : 
-                            StringPool.Intern("<internal>"),
-                        Port = m.Groups["port"].Success ? int.Parse(m.Groups["port"].Value) : 0,
-                        ProcessPath = null,
-                        ProcessId = null
-                    };
-                    continue;
-                }
-            }
-
-            if (attachment is not null)
-            {
-                var pm = rules["process"].Match(line);
-                if (pm.Success)
-                {
-                    attachment = attachment with
-                    {
-                        ProcessPath = StringPool.Intern(pm.Groups["process_path"].Value),
-                        ProcessId = int.Parse(pm.Groups["process_id"].Value)
-                    };
-                    continue;
-                }
-            }
+            // attachment
+            attachment = ParseAttachmentInfo(lines, rules);
 
             if (transaction is null)
             {

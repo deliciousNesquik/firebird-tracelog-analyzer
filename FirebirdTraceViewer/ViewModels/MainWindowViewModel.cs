@@ -147,6 +147,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IOptions<UiSectionSettings> uiSettings)
     {
         StringPool.Reset();
+        TraceSessionInfoPool.Reset();
+        
         VisibleEvents.Clear();
         AllEvents.Clear();
         

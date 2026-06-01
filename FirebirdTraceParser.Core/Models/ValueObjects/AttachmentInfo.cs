@@ -6,7 +6,7 @@ namespace FirebirdTraceParser.Core.Models.ValueObjects;
 /// <summary>
 /// Информация о подключении к базе данных Firebird.
 /// </summary>
-public sealed record AttachmentInfo
+public sealed class AttachmentInfo
 {
     [FilterableField("Database path", Category = "Attachment", FilterType =  FilterType.StringMultiSelect)]
     public required string DatabasePath { get; init; }

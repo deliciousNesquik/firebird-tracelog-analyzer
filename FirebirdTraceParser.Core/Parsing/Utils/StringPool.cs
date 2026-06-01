@@ -14,8 +14,5 @@ public static class StringPool
         return Pool.GetOrAdd(value, s => s);
     }
 
-    public static void Reset()
-    {
-        Pool.Clear();
-    }
+    public static void Reset() => Pool.Clear();
 }
