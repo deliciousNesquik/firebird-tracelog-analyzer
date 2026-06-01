@@ -203,7 +203,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseStatementData(bodyLines, rules, false, false);
-        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+        if (data.Attachment is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -216,7 +216,7 @@ public sealed class DefaultEventHandler : IEventHandler
             EventType = EventType.ExecuteStatementStart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
-            StatementId = data.StatementId.Value,
+            StatementId = data.StatementId,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params
         };
@@ -226,7 +226,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseStatementData(bodyLines, rules, false, true);
-        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+        if (data.Attachment is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -239,7 +239,7 @@ public sealed class DefaultEventHandler : IEventHandler
             EventType = EventType.ExecuteStatementRestart,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
-            StatementId = data.StatementId.Value,
+            StatementId = data.StatementId,
             RestartCount = data.RestartCount,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params
@@ -250,7 +250,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseStatementData(bodyLines, rules, true, true);
-        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+        if (data.Attachment is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -263,7 +263,7 @@ public sealed class DefaultEventHandler : IEventHandler
             EventType = EventType.ExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
-            StatementId = data.StatementId.Value,
+            StatementId = data.StatementId,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params,
             Performance = data.Performance ?? CreateDefaultPerformance(),
@@ -275,7 +275,7 @@ public sealed class DefaultEventHandler : IEventHandler
         IReadOnlyDictionary<string, Regex> rules)
     {
         var data = ParseStatementData(bodyLines, rules, true, true);
-        if (data.Attachment is null || data.Transaction is null || data.StatementId is null)
+        if (data.Attachment is null || data.Transaction is null)
             return null;
 
         var (timestamp, traceId, hexTraceId) = ParseEventMetadata(header);
@@ -288,7 +288,7 @@ public sealed class DefaultEventHandler : IEventHandler
             EventType = EventType.FailedExecuteStatementFinish,
             Attachment = data.Attachment,
             Transaction = data.Transaction,
-            StatementId = data.StatementId.Value,
+            StatementId = data.StatementId,
             Sql = data.Sql ?? string.Empty,
             Parameters = data.Params,
             Performance = data.Performance ?? CreateDefaultPerformance(),

@@ -142,6 +142,12 @@ public sealed class TraceLogParser : ITraceLogParser
         if (currentBlock.HasData)
             FlushBlock(currentBlock, buffer, warnings, options);
 
+        foreach (var warning in warnings)
+        {
+            Console.WriteLine(warning.Message);
+            Console.WriteLine(warning.LineNumber);
+        }
+        
         // Остаток батча
         foreach (var evt in buffer)
             yield return evt;
