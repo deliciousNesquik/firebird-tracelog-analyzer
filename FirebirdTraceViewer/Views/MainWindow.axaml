@@ -23,19 +23,19 @@
 
             <MenuItem Header="_Open [O]">
                 <MenuItem
-                    Header="_Local File"
+                    Header="_Local File [L]"
                     InputGesture="Ctrl+O"
                     HotKey="Ctrl+O"
                     Command="{Binding OpenLocalFileCommand}" />
 
                 <MenuItem
-                    Header="_Remote File"
+                    Header="_Remote File [R]"
                     InputGesture="Ctrl+Alt+O"
                     HotKey="Ctrl+Alt+O"
                     IsEnabled="False" />
 
                 <MenuItem
-                    Header="_Cancel Loading"
+                    Header="_Cancel Loading [C]"
                     InputGesture="Ctrl+C"
                     HotKey="Ctrl+C"
                     Command="{Binding CancelLoadingCommand}" />
@@ -230,7 +230,7 @@
                         BorderThickness="1">
 
                     <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedRight">
+                        <Flyout Placement="BottomEdgeAlignedRight" ShowMode="Standard">
                             <Border Padding="8" MinWidth="280" MaxHeight="400">
                                 <ScrollViewer MaxHeight="450">
                                     <StackPanel Spacing="8">
