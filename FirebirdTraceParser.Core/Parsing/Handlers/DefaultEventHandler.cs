@@ -10,7 +10,7 @@ using NLog;
 namespace FirebirdTraceParser.Core.Parsing.Handlers;
 
 /// <summary>
-///     Обработчик событий по умолчанию. Соответствует логике Python EventHandler.
+///     Обработчик событий по умолчанию.
 /// </summary>
 public sealed class DefaultEventHandler : IEventHandler
 {
@@ -572,12 +572,12 @@ public sealed class DefaultEventHandler : IEventHandler
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
+        // attachment
+        attachment = ParseAttachmentInfo(lines, rules);
+        
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-
-            // attachment
-            attachment = ParseAttachmentInfo(lines, rules);
 
             // transaction
             if (transaction is null)
@@ -676,9 +676,6 @@ public sealed class DefaultEventHandler : IEventHandler
         {
             var line = lines[i];
 
-            // attachment
-            attachment = ParseAttachmentInfo(lines, rules);
-
             if (transaction is null)
             {
                 transaction = ParseTransactionInfo(new[] { line }, rules);
@@ -728,12 +725,12 @@ public sealed class DefaultEventHandler : IEventHandler
         PerformanceInfo? performance = null;
         PerformanceTable? performanceTable = null;
 
+        // attachment
+        attachment = ParseAttachmentInfo(lines, rules);
+        
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-
-            // attachment
-            attachment = ParseAttachmentInfo(lines, rules);
 
             if (transaction is null)
             {
