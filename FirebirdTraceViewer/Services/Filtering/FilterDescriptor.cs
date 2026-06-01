@@ -1,66 +1,44 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.Enums;
 using FirebirdTraceParser.Core.Models.Events;
 using FirebirdTraceViewer.ViewModels;
 
 namespace FirebirdTraceViewer.Services.Filtering;
 
-/// <summary>
-/// Описывает один фильтр со всеми его настройками.
-/// </summary>
 public partial class FilterDescriptor : ViewModelBase
 {
-
-    /// <summary>Уникальный ID фильтра</summary>
     public string Id { get; }
-
-    /// <summary>Отображаемое имя</summary>
     public string DisplayName { get; }
-
-    /// <summary>Категория</summary>
     public string Category { get; }
-
-    /// <summary>Приоритет отображения</summary>
     public int Priority { get; }
-
-    /// <summary>Тип фильтра (для UI)</summary>
     public FilterType FilterType { get; }
-
-    /// <summary>Путь к свойству</summary>
     public string PropertyPath { get; }
 
-    /// <summary>Доступные значения для выбора (для Enum/String фильтров)</summary>
     public ObservableCollection<FilterValueItem> AvailableValues { get; } = [];
+    public ObservableCollection<FilterValueItem> FilteredValues { get; } = [];
 
-    /// <summary>Минимальное значение (для Range фильтров)</summary>
     public object? MinValue { get; set; }
-
-    /// <summary>Максимальное значение (для Range фильтров)</summary>
     public object? MaxValue { get; set; }
 
-    /// <summary>Текущее минимальное значение фильтра</summary>
     [ObservableProperty]
-    public partial object? CurrentMinValue { get; set; }
+    private object? _currentMinValue;
 
-    /// <summary>Текущее максимальное значение фильтра</summary>
     [ObservableProperty]
-    public partial object? CurrentMaxValue { get; set; }
+    private object? _currentMaxValue;
 
-    /// <summary>Текст для поиска (для TextSearch)</summary>
     [ObservableProperty]
-    public partial string? SearchText { get; set; }
+    private string? _searchText;
 
-    /// <summary>Активен ли фильтр</summary>
     [ObservableProperty]
-    public partial bool IsActive { get; set; }
+    private bool _isActive;
 
-    /// <summary>Функция проверки события</summary>
     [ObservableProperty]
-    public partial Func<EventBase, bool> FilterPredicate { get; set; }
+    private Func<EventBase, bool> _filterPredicate;
+
+    /// Поиск внутри значений фильтра
+    [ObservableProperty]
+    private string _valueSearchText = string.Empty;
 
     public FilterDescriptor(
         string id,
@@ -80,25 +58,55 @@ public partial class FilterDescriptor : ViewModelBase
         Priority = priority;
     }
 
-    /// <summary>
-    /// Обновляет предикат фильтра (для Range-фильтров).
-    /// </summary>
     public void UpdatePredicate(Func<EventBase, bool> newPredicate)
     {
         FilterPredicate = newPredicate ?? throw new ArgumentNullException(nameof(newPredicate));
     }
 
-    /// <summary>
-    /// Сбрасывает фильтр к начальному состоянию
-    /// </summary>
     public void Reset()
     {
         IsActive = false;
         CurrentMinValue = MinValue;
         CurrentMaxValue = MaxValue;
         SearchText = null;
+        ValueSearchText = string.Empty;
 
         foreach (var value in AvailableValues)
             value.IsSelected = false;
+
+        UpdateFilteredValues();
+    }
+
+    /// Инициализация FilteredValues (вызывать после заполнения AvailableValues)
+    public void InitializeFilteredValues()
+    {
+        UpdateFilteredValues();
+    }
+
+    /// Обновление отфильтрованного списка при поиске
+    partial void OnValueSearchTextChanged(string value)
+    {
+        UpdateFilteredValues();
+    }
+
+    private void UpdateFilteredValues()
+    {
+        FilteredValues.Clear();
+
+        var query = AvailableValues.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(ValueSearchText))
+        {
+            query = query.Where(v =>
+                v.DisplayName.Contains(ValueSearchText, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Сортируем: сначала выбранные, потом по количеству
+        foreach (var item in query
+                     .OrderByDescending(v => v.IsSelected)
+                     .ThenByDescending(v => v.Count))
+        {
+            FilteredValues.Add(item);
+        }
     }
 }

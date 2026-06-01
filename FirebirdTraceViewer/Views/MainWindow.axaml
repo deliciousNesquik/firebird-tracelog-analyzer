@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:FirebirdTraceViewer.Controls"
         xmlns:usercontrols="clr-namespace:FirebirdTraceViewer.UserControls"
+        xmlns:converters="clr-namespace:FirebirdTraceViewer.Converters"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
         x:Class="FirebirdTraceViewer.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -16,6 +17,10 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
+    
+    <Window.Resources>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+    </Window.Resources>
 
     <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
 
@@ -322,20 +327,23 @@
                     </Grid>
                 </Button>
 
-                <Button Grid.Row="0"
-                        Grid.Column="3"
+                <Button Grid.Row="0" Grid.Column="3"
                         Background="Transparent"
                         Height="40" Width="40"
                         BorderThickness="1">
 
                     <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedRight">
-                            <Border Padding="12" MinWidth="400" MaxWidth="600" MaxHeight="500">
-                                <ScrollViewer>
+                        <Flyout Placement="BottomEdgeAlignedRight"
+                                ShowMode="Standard">  <!-- ← Не закрывается при клике -->
 
-                                    <StackPanel Spacing="12" VerticalAlignment="Center">
+                            <Border Padding="12" MinWidth="400" MaxWidth="600">
 
-                                        <!-- Заголовок -->
+                                <!-- ✅ ОДИН ScrollViewer для ВСЕГО содержимого -->
+                                <ScrollViewer MaxHeight="500">
+
+                                    <StackPanel Spacing="12" VerticalAlignment="Top">
+
+                                        <!-- Заголовок с кнопками -->
                                         <Grid ColumnDefinitions="* Auto">
                                             <TextBlock Text="Filtering events"
                                                        FontWeight="SemiBold"
@@ -344,7 +352,8 @@
 
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center"
                                                         Orientation="Horizontal" Spacing="8">
-                                                <!-- Badge с количеством активных фильтров -->
+
+                                                <!-- Badge активных фильтров -->
                                                 <Border Background="{DynamicResource Secondary}"
                                                         CornerRadius="10"
                                                         Padding="8,2"
@@ -359,7 +368,7 @@
 
                                                 <!-- Кнопка сброса -->
                                                 <Button Content="Reset All"
-                                                        Background="{DynamicResource  Secondary}"
+                                                        Background="{DynamicResource Secondary}"
                                                         Foreground="White"
                                                         Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.ResetAllFiltersCommand}"
                                                         FontSize="14"
@@ -369,6 +378,7 @@
 
                                         <Separator />
 
+                                        <!-- Кнопка применения -->
                                         <Button
                                             Content="Apply Filter"
                                             HorizontalContentAlignment="Center"
@@ -380,7 +390,7 @@
                                             Padding="12,8"
                                             IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.HasUnappliedChanges}" />
 
-                                        <!-- Список фильтров по категориям -->
+                                        <!-- ✅ Список фильтров БЕЗ внутреннего ScrollViewer -->
                                         <ItemsControl
                                             ItemsSource="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).FiltersPanelViewModel.FiltersByCategory}">
                                             <ItemsControl.ItemTemplate>
@@ -400,28 +410,47 @@
                                                                 <DataTemplate>
                                                                     <Border BorderBrush="{DynamicResource BorderBrush}"
                                                                             BorderThickness="1"
-                                                                            CornerRadius="4">
+                                                                            CornerRadius="4"
+                                                                            Padding="8"
+                                                                            Margin="0,4">
 
                                                                         <StackPanel Spacing="6">
 
-                                                                            <!-- Заголовок фильтра с чекбоксом активации -->
+                                                                            <!-- Заголовок фильтра -->
                                                                             <CheckBox Content="{Binding DisplayName}"
                                                                                     IsChecked="{Binding IsActive}"
                                                                                     FontWeight="Medium"
                                                                                     FontSize="12" />
 
-                                                                            <!-- Содержимое фильтра (показываем только если активен) -->
+                                                                            <!-- Содержимое фильтра -->
                                                                             <StackPanel Spacing="4"
                                                                                     IsVisible="{Binding IsActive}"
                                                                                     Margin="20,0,0,0">
 
-                                                                                <!-- Enum/String MultiSelect -->
+                                                                                <!-- ✅ ПОИСК (показываем только если > 10 элементов) -->
+                                                                                <TextBox
+                                                                                    PlaceholderText="🔍 Search..."
+                                                                                    Text="{Binding ValueSearchText, Mode=TwoWay}"
+                                                                                    IsVisible="{Binding AvailableValues.Count, Converter={StaticResource CountToVisibilityConverter}}"
+                                                                                    Margin="0,4,0,8"
+                                                                                    Watermark="Type to filter..." />
+
+                                                                                <!-- ✅ Список значений БЕЗ ScrollViewer -->
                                                                                 <ItemsControl
-                                                                                    ItemsSource="{Binding AvailableValues}"
-                                                                                    IsVisible="{Binding AvailableValues.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                                                    ItemsSource="{Binding FilteredValues}"
+                                                                                    MaxHeight="250"
+                                                                                    IsVisible="{Binding FilteredValues.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                                                                                    <!-- ✅ Виртуализация для производительности -->
+                                                                                    <ItemsControl.ItemsPanel>
+                                                                                        <ItemsPanelTemplate>
+                                                                                            <VirtualizingStackPanel />
+                                                                                        </ItemsPanelTemplate>
+                                                                                    </ItemsControl.ItemsPanel>
+
                                                                                     <ItemsControl.ItemTemplate>
                                                                                         <DataTemplate>
-                                                                                            <CheckBox>
+                                                                                            <CheckBox Margin="0,2">
                                                                                                 <CheckBox.Content>
                                                                                                     <StackPanel
                                                                                                         Orientation="Horizontal"
@@ -444,7 +473,7 @@
                                                                                     </ItemsControl.ItemTemplate>
                                                                                 </ItemsControl>
 
-                                                                                <!-- Numeric/DateTime Range -->
+                                                                                <!-- Range фильтры (Numeric/DateTime) -->
                                                                                 <StackPanel Spacing="4"
                                                                                     IsVisible="{Binding MinValue, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                                                     <TextBlock Text="Range:"
@@ -502,7 +531,7 @@
                         </Flyout>
                     </Button.Flyout>
 
-                    <!-- Иконка с badge -->
+                    <!-- Иконка фильтра с badge -->
                     <Grid>
                         <Svg Path="{DynamicResource FilterIcon}" Css="{DynamicResource ThemeIconStroke}" />
 
@@ -538,7 +567,7 @@
 
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <VirtualizingStackPanel/>
+                    <VirtualizingStackPanel />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
 

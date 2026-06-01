@@ -356,6 +356,9 @@ public sealed class FilteringService : IFilteringService
         foreach (var item in availableValues)
             descriptor.AvailableValues.Add(item);
 
+        // Инициализация FilteredValues
+        descriptor.InitializeFilteredValues();
+
         return descriptor;
     }
 
@@ -391,6 +394,9 @@ public sealed class FilteringService : IFilteringService
         foreach (var item in availableValues)
             descriptor.AvailableValues.Add(item);
 
+        // Инициализация FilteredValues
+        descriptor.InitializeFilteredValues();
+        
         return descriptor;
     }
 
