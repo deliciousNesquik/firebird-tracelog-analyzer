@@ -926,6 +926,90 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #endregion
 
+    #region Close File Operations
+
+    /// <summary>Закрывает все файлы</summary>
+    [RelayCommand(CanExecute = nameof(CanCloseAllFiles))]
+    private void CloseAllFiles()
+    {
+        if (FileCards.Count == 0)
+        {
+            StatusMessage = "No files to close.";
+            return;
+        }
+
+        try
+        {
+            _isBatchUpdate = true;
+
+            var count = FileCards.Count;
+            
+            // Очищаем все коллекции
+            FileCards.Clear();
+            AllEvents.Clear();
+            VisibleEvents.Clear();
+            _eventsByFileHash.Clear();
+
+            StatusMessage = $"Closed all files: {count} file(s).";
+            Logger.Info("All files closed: {Count}", count);
+        }
+        finally
+        {
+            _isBatchUpdate = false;
+        }
+
+        // Обновляем UI после очистки
+        UpdateAvailableFilters();
+        UpdateAvailableSorts();
+        UpdateStatistics();
+    }
+
+    /// <summary>Закрывает выбранные файлы</summary>
+    [RelayCommand(CanExecute = nameof(CanCloseSelectedFiles))]
+    private void CloseSelectedFiles()
+    {
+        if (SelectedFileCards.Count == 0)
+        {
+            StatusMessage = "No files selected to close.";
+            return;
+        }
+
+        try
+        {
+            _isBatchUpdate = true;
+
+            var selectedCards = SelectedFileCards.ToList();
+            
+            foreach (var card in selectedCards)
+            {
+                RemoveFileEvents(card.FileInfo.FileHash);
+                FileCards.Remove(card);
+            }
+
+            StatusMessage = $"Closed selected files: {selectedCards.Count} file(s).";
+            Logger.Info("Selected files closed: {Count}", selectedCards.Count);
+        }
+        finally
+        {
+            _isBatchUpdate = false;
+        }
+
+        // Обновляем UI после удаления
+        ApplyAllFilters();
+    }
+
+    private bool CanCloseAllFiles()
+    {
+        return !IsFileLoading && FileCards.Count > 0;
+    }
+
+    private bool CanCloseSelectedFiles()
+    {
+        return !IsFileLoading && SelectedFileCards.Count > 0;
+    }
+
+    #endregion
+
     #region UI Commands
 
     [RelayCommand]
@@ -999,6 +1083,8 @@ public partial class MainWindowViewModel : ViewModelBase
         CancelLoadingCommand.NotifyCanExecuteChanged();
         ReparseAllFilesCommand.NotifyCanExecuteChanged();
         ReparseSelectedFilesCommand.NotifyCanExecuteChanged();
+        CloseAllFilesCommand.NotifyCanExecuteChanged();
+        CloseSelectedFilesCommand.NotifyCanExecuteChanged();
     }
 
     private void UpdateStatistics()

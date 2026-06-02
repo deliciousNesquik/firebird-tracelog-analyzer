@@ -24,109 +24,6 @@
     </Window.Resources>
 
     <Grid Background="{DynamicResource Background}" RowDefinitions="30 Auto Auto * Auto, Auto">
-        
-        <Border Grid.Row="0" Grid.RowSpan="6"
-                IsVisible="{Binding IsFileLoading}"
-                ClipToBounds="False"
-                ZIndex="1000">
-
-            <Grid>
-                <!-- ✅ Затемнённый полупрозрачный фон (вместо blur) -->
-                <Border Background="#D0000000" />  <!-- ← Более тёмный фон -->
-
-                <!-- ✅ Контент индикатора (НЕ размывается) -->
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="24">
-
-                    <!-- ✅ Карточка с информацией -->
-                    <Border
-                        Background="White"
-                        CornerRadius="12"
-                        Padding="32,24"
-                        MaxWidth="450"
-                        BoxShadow="0 8 32 0 #60000000">
-
-                        <StackPanel Spacing="12">
-
-                            <!-- Заголовок -->
-                            <TextBlock
-                                Text="Processing trace files..."
-                                FontSize="18"
-                                FontWeight="Bold"
-                                HorizontalAlignment="Center"
-                                Foreground="#1a1a1a" />
-
-                            <!-- Статус -->
-                            <TextBlock
-                                Text="{Binding StatusMessage}"
-                                FontSize="14"
-                                HorizontalAlignment="Center"
-                                Foreground="#666666"
-                                TextAlignment="Center"
-                                TextWrapping="Wrap"
-                                MaxWidth="380" />
-
-                            <!-- Прогресс бар -->
-                            <StackPanel Spacing="8" Margin="0,8,0,0">
-                                <Border
-                                    Height="8"
-                                    Background="#E0E0E0"
-                                    CornerRadius="4">
-                                    <Border
-                                        HorizontalAlignment="Left"
-                                        Background="{DynamicResource Primary}"
-                                        CornerRadius="4"
-                                        Width="{Binding LoadProgress, Converter={StaticResource ProgressToWidthConverter}}" />
-                                </Border>
-
-                                <!-- Процент -->
-                                <TextBlock
-                                    Text="{Binding LoadProgress, StringFormat='{}{0:F0}%'}"
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    HorizontalAlignment="Center"
-                                    Foreground="#333333" />
-                            </StackPanel>
-
-                            <!-- Кнопка отмены -->
-                            <Button
-                                Content="Cancel Loading"
-                                Command="{Binding CancelLoadingCommand}"
-                                Background="Transparent"
-                                BorderBrush="{DynamicResource Primary}"
-                                BorderThickness="2"
-                                Foreground="{DynamicResource Primary}"
-                                Padding="24,10"
-                                CornerRadius="8"
-                                FontSize="14"
-                                FontWeight="Medium"
-                                Margin="0,8,0,0"
-                                HorizontalAlignment="Center"
-                                Cursor="Hand">
-                                <Button.Styles>
-                                    <Style Selector="Button">
-                                        <Setter Property="Transitions">
-                                            <Transitions>
-                                                <BrushTransition Property="Background" Duration="0:0:0.2" />
-                                            </Transitions>
-                                        </Setter>
-                                    </Style>
-                                    <Style Selector="Button:pointerover">
-                                        <Setter Property="Background" Value="{DynamicResource Primary}" />
-                                        <Setter Property="Foreground" Value="White" />
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-
-                        </StackPanel>
-                    </Border>
-
-                </StackPanel>
-            </Grid>
-        </Border>
-
         <Menu Grid.Row="0">
 
             <MenuItem Header="_Open [O]">
@@ -151,17 +48,34 @@
             </MenuItem>
 
             <MenuItem Header="_Edit [E]">
-                <MenuItem
-                    Header="Reprocess _All Files [A]"
-                    InputGesture="Ctrl+R"
-                    HotKey="Ctrl+R"
-                    Command="{Binding ReparseAllFilesCommand}" />
+                
+                <MenuItem Header="_Reparse [R]">
+                    <MenuItem
+                        Header="_All Files [A]"
+                        InputGesture="Ctrl+R"
+                        HotKey="Ctrl+R"
+                        Command="{Binding ReparseAllFilesCommand}" />
 
-                <MenuItem
-                    Header="Reprocess _Selected Files [S]"
-                    InputGesture="Ctrl+Alt+R"
-                    HotKey="Ctrl+Alt+R"
-                    Command="{Binding ReparseSelectedFilesCommand}" />
+                    <MenuItem
+                        Header="_Selected Files [S]"
+                        InputGesture="Ctrl+Alt+R"
+                        HotKey="Ctrl+Alt+R"
+                        Command="{Binding ReparseSelectedFilesCommand}" />
+                </MenuItem>
+                
+                <MenuItem Header="_Close [C]">
+                    <MenuItem
+                        Header="_All Files [A]"
+                        InputGesture="Ctrl+W"
+                        HotKey="Ctrl+W"
+                        Command="{Binding CloseAllFilesCommand}" />
+
+                    <MenuItem
+                        Header="_Selected Files [S]"
+                        InputGesture="Ctrl+Alt+W"
+                        HotKey="Ctrl+Alt+W"
+                        Command="{Binding CloseSelectedFilesCommand}" />
+                </MenuItem>
 
             </MenuItem>
 
