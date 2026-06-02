@@ -1,6 +1,6 @@
-﻿using FirebirdTraceParser.Core.Models.ValueObjects;
+﻿using FirebirdTraceParser.Models.ValueObjects;
 
-namespace FirebirdTraceParser.Core.Models.Events;
+namespace FirebirdTraceParser.Models.Events;
 
 /// <summary>
 /// Событие начала trace‑сессии.

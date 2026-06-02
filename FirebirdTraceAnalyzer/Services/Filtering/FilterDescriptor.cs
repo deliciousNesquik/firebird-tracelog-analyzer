@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.Events;
 using FirebirdTraceAnalyzer.ViewModels;
 
 namespace FirebirdTraceAnalyzer.Services.Filtering;

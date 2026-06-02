@@ -1,4 +1,4 @@
-﻿using FirebirdTraceParser.Core.Models.Events;
+﻿using FirebirdTraceParser.Models.Events;
 
 namespace FirebirdTraceAnalyzer.Services.Filtering;
 

@@ -1,4 +1,4 @@
-﻿namespace FirebirdTraceParser.Core.Models.ValueObjects;
+﻿namespace FirebirdTraceParser.Models.ValueObjects;
 
 /// <summary>
 /// Статистика по одной таблице.

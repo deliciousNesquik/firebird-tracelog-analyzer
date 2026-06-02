@@ -1,7 +1,7 @@
-﻿using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceParser.Core.Models.Results;
+﻿using FirebirdTraceParser.Models.Events;
+using FirebirdTraceParser.Models.Results;
 
-namespace FirebirdTraceParser.Core.Parsing.Engine;
+namespace FirebirdTraceParser.Parsing.Engine;
 
 public interface ITraceLogParser
 {

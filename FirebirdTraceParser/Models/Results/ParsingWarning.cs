@@ -1,6 +1,6 @@
-﻿using FirebirdTraceParser.Core.Models.Enums;
+﻿using FirebirdTraceParser.Models.Enums;
 
-namespace FirebirdTraceParser.Core.Models.Results;
+namespace FirebirdTraceParser.Models.Results;
 
 /// <summary>
 /// Предупреждение о проблеме парсинга.

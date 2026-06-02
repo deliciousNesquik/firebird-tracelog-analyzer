@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
-using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.Events;
 using NLog;
 
 namespace FirebirdTraceAnalyzer.Services.Filtering;
@@ -205,7 +205,7 @@ public sealed class FilteringService : IFilteringService
             .OrderBy(f => f.Priority)
             .ToList();
 
-        Logger.Info("Find {Count} common field(s) from {TypeCount} type(s)",
+        Logger.Info("Find {Count} common field(s) for filtering from {TypeCount} type(s)",
             commonFields.Count, eventTypes.Count);
 
         return commonFields;
@@ -238,9 +238,6 @@ public sealed class FilteringService : IFilteringService
                 ? prop.Name
                 : $"{pathPrefix}.{prop.Name}";
 
-            Logger.Debug("Property: {Name}, Attribute: {HasAttr}, Type: {Type}", 
-                prop.Name, filterAttr != null, prop.PropertyType.Name);
-
             if (filterAttr != null)
             {
                 results.Add(new FilterFieldInfo(
@@ -250,15 +247,10 @@ public sealed class FilteringService : IFilteringService
                     filterAttr.Category ?? "General",
                     filterAttr.Priority,
                     filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
-            
-                Logger.Info("Added field: {Path}", path);
             }
 
             if (ShouldScanNestedType(prop.PropertyType))
-            {
-                Logger.Debug("Recursive scanning: {Type}", prop.PropertyType.Name);
                 ScanProperties(prop.PropertyType, path, results, depth + 1);
-            }
         }
     }
 
@@ -304,7 +296,7 @@ public sealed class FilteringService : IFilteringService
             return false;
 
         return type.IsClass &&
-               type.Namespace?.StartsWith("FirebirdTraceParser.Core") == true;
+               type.Namespace?.StartsWith("FirebirdTraceParser") == true;
     }
 
     private FilterDescriptor? CreateFieldFilter(FilterFieldInfo field, List<EventBase> events)

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Models.Events;
 using FirebirdTraceAnalyzer.Enums;
 using NLog;
 

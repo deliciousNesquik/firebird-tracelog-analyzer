@@ -1,4 +1,4 @@
-﻿namespace FirebirdTraceParser.Core.Attributes;
+﻿namespace FirebirdTraceParser.Attributes;
 
 /// <summary>
 /// Маркирует свойство как доступное для сортировки.

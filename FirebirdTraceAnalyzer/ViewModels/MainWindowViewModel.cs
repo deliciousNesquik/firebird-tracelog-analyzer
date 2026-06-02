@@ -4,9 +4,9 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceParser.Core.Parsing.Engine;
-using FirebirdTraceParser.Core.Parsing.Utils;
+using FirebirdTraceParser.Models.Events;
+using FirebirdTraceParser.Parsing.Engine;
+using FirebirdTraceParser.Parsing.Utils;
 using FirebirdTraceAnalyzer.Core;
 using FirebirdTraceAnalyzer.Enums;
 using FirebirdTraceAnalyzer.Interfaces;
@@ -143,11 +143,19 @@ public partial class MainWindowViewModel : ViewModelBase
         IOptions<AppSettings> appSettings,
         IOptions<UiSectionSettings> uiSettings)
     {
+        
+        
+        Logger.Info("Object(s) pool have been reset(s).");
         StringPool.Reset();
         TraceSessionInfoPool.Reset();
+        AttachmentInfoPool.Reset();
         
+        Logger.Info("Event(s) list(s) are clear");
         VisibleEvents.Clear();
         AllEvents.Clear();
+        Logger.Debug($"VisibleEvents count: {VisibleEvents.Count}");
+        Logger.Debug($"AllEvents count: {AllEvents.Count}");
+        
         
         // Dependency Injection
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
@@ -155,8 +163,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _sortingService = sortingService ?? throw new ArgumentNullException(nameof(sortingService));
         _filteringService = filteringService ?? throw new ArgumentNullException(nameof(filteringService));
         _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
-        _appSettings = appSettings?.Value ?? throw new ArgumentNullException(nameof(appSettings));
-        _uiSettings = uiSettings?.Value ?? throw new ArgumentNullException(nameof(uiSettings));
+        _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
+        _uiSettings = uiSettings.Value ?? throw new ArgumentNullException(nameof(uiSettings));
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
@@ -227,7 +235,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         AvailableSortsByCategory.Clear();
 
-        // ✅ Передаём ВИДИМЫЕ события (после фильтрации)
+        // Передаём ВИДИМЫЕ события (после фильтрации)
         var sorts = _sortingService.GetAvailableSorts(VisibleEvents);
 
         var grouped = sorts
@@ -369,7 +377,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Filtering
 
     /// <summary>
-    ///     ✅ Обновляет доступные фильтры на основе ТЕКУЩИХ (отфильтрованных) событий
+    /// Обновляет доступные фильтры на основе ТЕКУЩИХ (отфильтрованных) событий
     /// </summary>
     private void UpdateAvailableFilters()
     {
@@ -384,7 +392,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    ///     ✅ ГЛАВНЫЙ МЕТОД: Применяет все активные фильтры и обновляет UI
+    /// Применяет все активные фильтры и обновляет UI
     /// </summary>
     private void ApplyAllFilters()
     {
@@ -392,35 +400,35 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _isBatchUpdate = true;
             
-            Logger.Info("Начинаю применение фильтров и поиска...");
+            Logger.Info("Starting to use filters and search...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
             IEnumerable<EventBase> query = AllEvents;
 
-            // 0️⃣ ✅ СНАЧАЛА поиск (если активен)
+            // СНАЧАЛА поиск (если активен)
             if (IsSearchActive && !string.IsNullOrWhiteSpace(SearchText))
             {
                 var searchMode = IsClassicSearch ? SearchType.Classic : SearchType.Regex;
                 query = _searchService.Search(query, SearchText, searchMode);
                 
                 var searchResults = query.ToList();
-                Logger.Info("Поиск завершён за {Elapsed}ms, найдено: {Count}",
+                Logger.Info("Search completed in {Elapsed}ms, found: {Count}",
                     sw.ElapsedMilliseconds, searchResults.Count);
                 query = searchResults;
                 sw.Restart();
             }
 
-            // 1️⃣ Применяем фильтры
+            // Применяем фильтры
             query = _filteringService.ApplyFilters(
                 query,
                 FiltersPanelViewModel.AvailableFilters);
 
             var filteredList = query.ToList();
 
-            Logger.Info("Фильтрация завершена за {Elapsed}ms, результат: {Count} событий",
+            Logger.Info("Filtering completed in {Elapsed}ms, resulting in: {Count} events",
                 sw.ElapsedMilliseconds, filteredList.Count);
 
-            // 2️⃣ Применяем сортировку (если есть)
+            // Применяем сортировку (если есть)
             if (SelectedSort != null)
             {
                 sw.Restart();
@@ -429,47 +437,45 @@ public partial class MainWindowViewModel : ViewModelBase
                     SelectedSort.Id,
                     IsSortDescending).ToList();
 
-                Logger.Info("Сортировка завершена за {Elapsed}ms", sw.ElapsedMilliseconds);
+                Logger.Info("Sorting completed in {Elapsed}ms", sw.ElapsedMilliseconds);
             }
 
-            // 3️⃣ Обновляем UI (одним батчем)
+            // Обновляем UI (одним батчем)
             sw.Restart();
             VisibleEvents.ReplaceRange(filteredList);
-            Logger.Info("UI обновлён за {Elapsed}ms", sw.ElapsedMilliseconds);
+            Logger.Info("UI updated in {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 4️⃣ ✅ СНАЧАЛА обновляем сортировки (для видимых типов)
+            // СНАЧАЛА обновляем сортировки (для видимых типов)
             sw.Restart();
             UpdateAvailableSorts();
-            Logger.Info("Сортировки обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
+            Logger.Info("Sortings updated in {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 5️⃣ ✅ ПОТОМ обновляем фильтры (для видимых типов)
+            // ПОТОМ обновляем фильтры (для видимых типов)
             sw.Restart();
             UpdateAvailableFilters();
-            Logger.Info("Фильтры обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
+            Logger.Info("Filters updated in {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 6️⃣ Обновляем счётчики фильтров
+            // Обновляем счётчики фильтров
             sw.Restart();
             FiltersPanelViewModel.UpdateFilterCounts(filteredList);
-            Logger.Info("Счётчики фильтров обновлены за {Elapsed}ms", sw.ElapsedMilliseconds);
+            Logger.Info("Filter counters updated in {Elapsed}ms", sw.ElapsedMilliseconds);
 
-            // 7️⃣ Обновляем статистику
+            // Обновляем статистику
             UpdateStatistics();
 
             var statusParts = new List<string>();
             
             if (IsSearchActive)
-                statusParts.Add($"Поиск: '{SearchText}'");
+                statusParts.Add($"Search: '{SearchText}'");
             
-            statusParts.Add($"{filteredList.Count:N0} из {AllEvents.Count:N0}");
+            statusParts.Add($"{filteredList.Count:N0} of {AllEvents.Count:N0}");
 
             StatusMessage = string.Join(" • ", statusParts);
-            
-            //StatusMessage = $"Показано событий: {filteredList.Count:N0} из {AllEvents.Count:N0}";
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Ошибка при применении фильтров");
-            StatusMessage = $"Ошибка фильтрации: {ex.Message}";
+            Logger.Error(ex, "Error applying filters");
+            StatusMessage = $"Filtering error: {ex.Message}";
         }
         finally
         {
@@ -482,7 +488,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Search
 
     /// <summary>
-    /// ✅ Выполняет поиск (вызывается кнопкой)
+    /// Выполняет поиск (вызывается кнопкой)
     /// </summary>
     [RelayCommand]
     private void ExecuteSearch()
@@ -491,16 +497,16 @@ public partial class MainWindowViewModel : ViewModelBase
         
         if (!IsSearchActive)
         {
-            StatusMessage = "Поисковый запрос пуст";
-            Logger.Warn("Попытка поиска с пустым запросом");
+            StatusMessage = "Search query is empty";
+            Logger.Warn("Attempted search with empty query");
         }
         
-        // ✅ Применяем фильтры + поиск
+        // Применяем фильтры + поиск
         ApplyAllFilters();
     }
 
     /// <summary>
-    /// ✅ Сбрасывает поиск
+    /// Сбрасывает поиск
     /// </summary>
     [RelayCommand]
     private void ClearSearch()
@@ -509,8 +515,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IsSearchActive = false;
         ApplyAllFilters();
         
-        StatusMessage = "Поиск сброшен";
-        Logger.Info("Поиск сброшен");
+        StatusMessage = "Search reset";
+        Logger.Info("Search reset");
     }
 
     #endregion
@@ -635,7 +641,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _isBatchUpdate = false;
         }
 
-        // ✅ После загрузки всех файлов — ОДНО обновление
+        // После загрузки всех файлов — ОДНО обновление
         if (addedCount > 0)
         {
             ApplyAllFilters(); // ← Применяет фильтры + обновляет сортировки + статистику
@@ -681,9 +687,11 @@ public partial class MainWindowViewModel : ViewModelBase
             endTrace = evt.Timestamp;
 
             events.Add(evt);
+            
+            //TODO: пересмотреть данный участок
             batch.Add(evt);
 
-            // ✅ НЕ обновляем VisibleEvents во время парсинга (будет обновлено после)
+            // НЕ обновляем VisibleEvents во время парсинга (будет обновлено после)
             if (batch.Count >= 1000) batch.Clear();
         }
 

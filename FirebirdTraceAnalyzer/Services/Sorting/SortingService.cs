@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.Events;
 using NLog;
 
 namespace FirebirdTraceAnalyzer.Services.Sorting;
@@ -112,7 +112,7 @@ public sealed class SortingService : ISortingService
             .OrderBy(f => f.Priority)
             .ToList();
 
-        Logger.Info("Find {Count} common fields for sorting from {TypeCount} types",
+        Logger.Info("Find {Count} common field(s) for filtering from {TypeCount} type(s)",
             commonFields.Count, eventTypes.Count);
 
         return commonFields;
@@ -155,9 +155,7 @@ public sealed class SortingService : ISortingService
             }
 
             if (ShouldScanNestedType(prop.PropertyType))
-            {
                 ScanProperties(prop.PropertyType, path, results, depth + 1);
-            }
         }
     }
 
@@ -173,7 +171,7 @@ public sealed class SortingService : ISortingService
             return false;
         
         return type.IsClass &&
-               type.Namespace?.StartsWith("FirebirdTraceParser.Core") == true;
+               type.Namespace?.StartsWith("FirebirdTraceParser") == true;
     }
 
     private SortDescriptor CreateFieldSort(SortFieldInfo field)

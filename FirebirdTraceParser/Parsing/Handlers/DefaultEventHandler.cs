@@ -1,13 +1,13 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Models.Enums;
-using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceParser.Core.Models.ValueObjects;
-using FirebirdTraceParser.Core.Parsing.Engine;
-using FirebirdTraceParser.Core.Parsing.Utils;
+using FirebirdTraceParser.Models.Enums;
+using FirebirdTraceParser.Models.Events;
+using FirebirdTraceParser.Models.ValueObjects;
+using FirebirdTraceParser.Parsing.Engine;
+using FirebirdTraceParser.Parsing.Utils;
 using NLog;
 
-namespace FirebirdTraceParser.Core.Parsing.Handlers;
+namespace FirebirdTraceParser.Parsing.Handlers;
 
 /// <summary>
 ///     Обработчик событий по умолчанию.
@@ -70,16 +70,12 @@ public sealed class DefaultEventHandler : IEventHandler
     {
         var eventTypeStr = blockHeader.Groups["event_type"].Value;
 
-        _logger.Debug("Handling event: {EventType}, body lines: {LineCount}", eventTypeStr, bodyLines.Count);
-
         if (eventTypeStr.StartsWith("ERROR AT ", StringComparison.OrdinalIgnoreCase))
-        {
             return HandleError(blockHeader, bodyLines, rules);
-        }
         
         if (!EventTypeMapping.TryGetValue(eventTypeStr, out var eventType))
         {
-            _logger.Warn("Unknown event type: '{EventType}'", eventTypeStr);
+            _logger.Warn("Unknown event type for parser: '{EventType}'", eventTypeStr);
             return null;
         }
 
@@ -93,8 +89,6 @@ public sealed class DefaultEventHandler : IEventHandler
 
         if (result == null)
             _logger.Warn("Handler returned null for {EventType}", eventType);
-        else
-            _logger.Debug("Successfully parsed {EventType}", eventType);
 
         return result;
     }

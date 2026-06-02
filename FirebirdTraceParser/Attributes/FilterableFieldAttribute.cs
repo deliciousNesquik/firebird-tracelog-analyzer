@@ -1,14 +1,14 @@
-﻿namespace FirebirdTraceParser.Core.Attributes;
+﻿namespace FirebirdTraceParser.Attributes;
 
 /// <summary>
 /// Маркирует свойство как доступное для фильтрации.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public sealed class FilterableFieldAttribute : Attribute
+public sealed class FilterableFieldAttribute(string displayName) : Attribute
 {
     /// <summary>Отображаемое имя поля в UI</summary>
-    public string DisplayName { get; }
-    
+    public string DisplayName { get; } = displayName ?? throw new ArgumentNullException(nameof(displayName));
+
     /// <summary>Приоритет отображения (меньше = выше)</summary>
     public int Priority { get; init; } = 100;
     
@@ -17,11 +17,6 @@ public sealed class FilterableFieldAttribute : Attribute
     
     /// <summary>Тип фильтра (автоопределяется, но можно переопределить)</summary>
     public FilterType FilterType { get; init; } = FilterType.Auto;
-
-    public FilterableFieldAttribute(string displayName)
-    {
-        DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
-    }
 }
 
 /// <summary>

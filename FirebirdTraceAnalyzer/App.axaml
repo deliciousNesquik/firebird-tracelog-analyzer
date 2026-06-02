@@ -3,7 +3,7 @@
              x:Class="FirebirdTraceAnalyzer.App"
              xmlns:local="using:FirebirdTraceAnalyzer"
              xmlns:events="clr-namespace:FirebirdTraceAnalyzer.Controls.EventCards"
-             xmlns:core="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
+             xmlns:core="clr-namespace:FirebirdTraceParser.Models.Events;assembly=FirebirdTraceParser"
              RequestedThemeVariant="Default">
 
     <Application.DataTemplates>

@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
-using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Models.ValueObjects;
 
 namespace FirebirdTraceAnalyzer.Controls.EventCards;
 
@@ -149,7 +149,7 @@ public class StatementStartEventCard : TemplatedControl
         AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(Sql), "<not set>");
     
     public static readonly StyledProperty<IReadOnlyList<SqlParameters>> ParamsProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, IReadOnlyList<SqlParameters>>(nameof(Params), null);
+        AvaloniaProperty.Register<StatementStartEventCard, IReadOnlyList<SqlParameters>>(nameof(Params));
     
     public DateTime Timestamp
     {

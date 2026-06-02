@@ -1,7 +1,7 @@
-﻿namespace FirebirdTraceParser.Core.Parsing.Handlers;
+﻿namespace FirebirdTraceParser.Parsing.Handlers;
 
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Models.Events;
 
 /// <summary>
 /// Обработчик блока события.

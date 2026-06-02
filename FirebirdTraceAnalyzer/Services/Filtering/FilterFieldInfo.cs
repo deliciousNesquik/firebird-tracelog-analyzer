@@ -1,4 +1,4 @@
-﻿using FirebirdTraceParser.Core.Attributes;
+﻿using FirebirdTraceParser.Attributes;
 
 namespace FirebirdTraceAnalyzer.Services.Filtering;
 

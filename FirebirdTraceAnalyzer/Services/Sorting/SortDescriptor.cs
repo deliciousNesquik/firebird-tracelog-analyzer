@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Models.Events;
 using FirebirdTraceAnalyzer.ViewModels;
 
 namespace FirebirdTraceAnalyzer.Services.Sorting;

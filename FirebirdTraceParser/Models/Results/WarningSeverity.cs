@@ -1,4 +1,4 @@
-﻿namespace FirebirdTraceParser.Core.Models.Results;
+﻿namespace FirebirdTraceParser.Models.Results;
 
 public enum WarningSeverity
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace FirebirdTraceParser.Core.Models.Enums;
+namespace FirebirdTraceParser.Models.Enums;
 
 /// <summary>
 /// Типы событий трассировки Firebird Database.

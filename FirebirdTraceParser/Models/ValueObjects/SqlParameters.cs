@@ -1,6 +1,6 @@
-﻿using FirebirdTraceParser.Core.Parsing.Utils;
+﻿using FirebirdTraceParser.Parsing.Utils;
 
-namespace FirebirdTraceParser.Core.Models.ValueObjects;
+namespace FirebirdTraceParser.Models.ValueObjects;
 
 /// <summary>
 /// Описание одного параметра SQL‑запроса.

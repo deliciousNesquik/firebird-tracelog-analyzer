@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using FirebirdTraceParser.Core.Models.Enums;
+using FirebirdTraceParser.Models.Enums;
 
 namespace FirebirdTraceAnalyzer.Controls.EventCards;
 

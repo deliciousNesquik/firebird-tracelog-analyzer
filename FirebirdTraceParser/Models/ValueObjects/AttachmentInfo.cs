@@ -1,7 +1,7 @@
-﻿using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Parsing.Utils;
+﻿using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Parsing.Utils;
 
-namespace FirebirdTraceParser.Core.Models.ValueObjects;
+namespace FirebirdTraceParser.Models.ValueObjects;
 
 /// <summary>
 /// Информация о подключении к базе данных Firebird.

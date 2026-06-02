@@ -2,18 +2,18 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.Events;
+using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.Events;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using NLog;
 
 namespace FirebirdTraceAnalyzer.ViewModels;
 
-public partial class FiltersPanelViewModel : ObservableObject
+public partial class FiltersPanelViewModel(Action onFiltersApplied) : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private readonly Action _onFiltersApplied; // ← Переименовали для ясности
+    private readonly Action _onFiltersApplied = onFiltersApplied ?? throw new ArgumentNullException(nameof(onFiltersApplied));
     private readonly Dictionary<string, FilterState> _filterStates = new();
 
     /// <summary>Все доступные фильтры</summary>
@@ -28,20 +28,15 @@ public partial class FiltersPanelViewModel : ObservableObject
     /// <summary>Есть ли изменения (нужно применить фильтры)</summary>
     [ObservableProperty] private bool _hasUnappliedChanges;
 
-    public FiltersPanelViewModel(Action onFiltersApplied)
-    {
-        _onFiltersApplied = onFiltersApplied ?? throw new ArgumentNullException(nameof(onFiltersApplied));
-    }
-
     /// <summary>
-    ///     ✅ ЯВНОЕ применение фильтров (по кнопке)
+    /// ЯВНОЕ применение фильтров (по кнопке)
     /// </summary>
     [RelayCommand]
     private void ApplyFilters()
     {
         _onFiltersApplied();
         HasUnappliedChanges = false;
-        Logger.Info("Фильтры применены вручную");
+        Logger.Info("All activity filters apply manualy");
     }
 
     private class FilterState
@@ -55,13 +50,13 @@ public partial class FiltersPanelViewModel : ObservableObject
     /// <summary>
     ///     Загружает фильтры и подписывается на изменения.
     /// </summary>
-    // ✅ Сохраняем состояние перед обновлением
+    // Сохраняем состояние перед обновлением
     public void LoadFilters(IEnumerable<FilterDescriptor> filters)
     {
-        // 1️⃣ Сохраняем текущее состояние
+        // Сохраняем текущее состояние
         SaveCurrentFilterStates();
 
-        // 2️⃣ Отписываемся от старых
+        // Отписываемся от старых
         foreach (var filter in AvailableFilters)
         {
             filter.PropertyChanged -= OnFilterPropertyChanged;
@@ -72,15 +67,15 @@ public partial class FiltersPanelViewModel : ObservableObject
         AvailableFilters.Clear();
         FiltersByCategory.Clear();
 
-        // 3️⃣ Добавляем новые фильтры
+        // Добавляем новые фильтры
         foreach (var filter in filters)
         {
             AvailableFilters.Add(filter);
 
-            // 4️⃣ Восстанавливаем состояние
+            // Восстанавливаем состояние
             RestoreFilterState(filter);
 
-            // 5️⃣ Подписываемся на изменения
+            // Подписываемся на изменения
             filter.PropertyChanged += OnFilterPropertyChanged;
             foreach (var value in filter.AvailableValues)
                 value.PropertyChanged += OnFilterValueChanged;
@@ -149,7 +144,7 @@ public partial class FiltersPanelViewModel : ObservableObject
                 UpdateMultiSelectCounts(filter, eventsList);
         }
 
-        Logger.Debug("Счётчики фильтров обновлены для {Count} событий", eventsList.Count);
+        Logger.Debug("Filter counters updated for {Count} events", eventsList.Count);
     }
 
     private void UpdateMultiSelectCounts(FilterDescriptor filter, List<EventBase> events)
@@ -194,7 +189,7 @@ public partial class FiltersPanelViewModel : ObservableObject
         if (e.PropertyName == nameof(FilterDescriptor.IsActive))
         {
             UpdateActiveFiltersCount();
-            MarkAsChanged(); // ← Помечаем, что нужно применить
+            MarkAsChanged(); // Помечаем, что нужно применить
         }
         else if (e.PropertyName is nameof(FilterDescriptor.CurrentMinValue) or nameof(FilterDescriptor.CurrentMaxValue))
         {
@@ -223,7 +218,7 @@ public partial class FiltersPanelViewModel : ObservableObject
         UpdateActiveFiltersCount();
         HasUnappliedChanges = true; // Нужно применить сброс
 
-        Logger.Info("Все фильтры сброшены");
+        Logger.Info("All filters reset");
     }
 
     [RelayCommand]

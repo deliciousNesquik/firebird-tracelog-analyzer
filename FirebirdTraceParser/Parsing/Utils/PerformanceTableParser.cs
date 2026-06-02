@@ -1,8 +1,8 @@
-﻿namespace FirebirdTraceParser.Core.Parsing.Utils;
+﻿namespace FirebirdTraceParser.Parsing.Utils;
 
 using System.Globalization;
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Models.ValueObjects;
 using NLog;
 
 /// <summary>

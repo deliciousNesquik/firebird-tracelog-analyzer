@@ -1,6 +1,6 @@
-﻿using FirebirdTraceParser.Core.Attributes;
+﻿using FirebirdTraceParser.Attributes;
 
-namespace FirebirdTraceParser.Core.Models.ValueObjects;
+namespace FirebirdTraceParser.Models.ValueObjects;
 
 /// <summary>
 /// Общая информация о производительности выполнения SQL‑операции.

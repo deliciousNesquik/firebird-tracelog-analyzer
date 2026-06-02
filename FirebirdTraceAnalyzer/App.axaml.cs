@@ -19,7 +19,7 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Инициализируем DI контейнер
+        // Configure services HERE
         Services = Program.ConfigureServices();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace FirebirdTraceParser.Core.Parsing.Utils;
+namespace FirebirdTraceParser.Parsing.Utils;
 
 /// <summary>
 /// Расширения для упрощения парсинга.

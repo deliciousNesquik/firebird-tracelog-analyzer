@@ -130,8 +130,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="FirebirdTraceParser.Core">
-        <HintPath>Library\FirebirdTraceParser.Core.dll</HintPath>
+      <Reference Include="FirebirdTraceParser">
+        <HintPath>Library\FirebirdTraceParser.dll</HintPath>
       </Reference>
     </ItemGroup>
 </Project>

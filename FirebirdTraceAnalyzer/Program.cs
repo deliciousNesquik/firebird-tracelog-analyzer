@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Avalonia;
-using FirebirdTraceAnalyzer;
-using FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
+using FirebirdTraceParser.Infrastructure.DependencyInjection;
 using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services;
@@ -21,7 +20,7 @@ internal sealed class Program
     public static void Main(string[] args)
     {
         var logger = LogManager.Setup()
-            .LoadConfigurationFromFile("NLog.config")
+            .LoadConfigurationFromFile("nlog.config")
             .GetCurrentClassLogger();
 
         try
@@ -100,21 +99,26 @@ internal sealed class Program
             // получаем правила, которые загрузились в парсер
             var rules = provider.GetRequiredService<IReadOnlyDictionary<string, Regex>>();
             
-            
             logger.Info("{RuleCount} rule(s) was loaded", rules.Count);
 
+            // в случае если правил парсинга нет, выбрасываем ошибку
+            if (rules.Count == 0)
+            {
+                logger.Fatal("No rules were loaded");
+                throw new Exception("No rules were loaded");
+            }
+            
+            // перебираем все правила и отображаем превью до 50 символов
             foreach (var rule in rules)
             {
-                
-                var pattern = rule.Value.ToString();
-                var preview = pattern.Length > 50 ? pattern[..50] : pattern;
-                logger.Debug("Rule loaded: {RuleName} -> {Pattern}", rule.Key, preview);
+                var preview = rule.Value.ToString().Length > 50 ? $"{rule.Value.ToString()[..47]}..." : rule.Value.ToString();
+                logger.Debug($"Rule loaded: {rule.Key, -25} -> {preview}");
             }
         }
         catch (Exception ex)
         {
-            logger.Fatal(ex, "Не удалось загрузить правила парсера. Приложение будет закрыто.");
-            throw;
+            logger.Fatal(ex, "Failed to load parser rules. The application will now close.");
+            throw new Exception($"Failed to load parser rules. {ex.Message}");
         }
     }
 }

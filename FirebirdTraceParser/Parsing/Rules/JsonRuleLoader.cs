@@ -1,24 +1,19 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Exceptions;
+using FirebirdTraceParser.Exceptions;
 using Microsoft.Extensions.Caching.Memory;
 using NLog;
 
-namespace FirebirdTraceParser.Core.Parsing.Rules;
+namespace FirebirdTraceParser.Parsing.Rules;
 
-public interface IRuleLoader
+public sealed class JsonRuleLoader(IMemoryCache cache, ILogger logger) : IRuleLoader
 {
-    IReadOnlyDictionary<string, Regex> LoadRules(string configPath);
-}
-
-public sealed class JsonRuleLoader : IRuleLoader
-{
-    private readonly IMemoryCache _cache;
-    private readonly ILogger _logger;
+    private readonly IMemoryCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private const int SupportedSchemaVersion = 1;
     
-    // Маппинг флагов (аналог Python FLAG_MAP)
-    private static readonly IReadOnlyDictionary<string, RegexOptions> FlagMap = new Dictionary<string, RegexOptions>
+    // делаем маппинг флагов регулярных выражений
+    private static readonly Dictionary<string, RegexOptions> FlagMap = new()
     {
         ["IgnoreCase"] = RegexOptions.IgnoreCase,
         ["Multiline"] = RegexOptions.Multiline,
@@ -26,47 +21,44 @@ public sealed class JsonRuleLoader : IRuleLoader
         ["IgnorePatternWhitespace"] = RegexOptions.IgnorePatternWhitespace,
         ["ExplicitCapture"] = RegexOptions.ExplicitCapture
     };
-    
-    public JsonRuleLoader(IMemoryCache cache, ILogger logger)
-    {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-    
+
     public IReadOnlyDictionary<string, Regex> LoadRules(string configPath)
     {
         var fileInfo = new FileInfo(configPath);
         if (!fileInfo.Exists)
-            throw new RuleValidationException($"Файл конфигурации не найден: {configPath}");
+        {
+            _logger.Fatal("Config file not found: {ConfigPath}", configPath);
+            throw new RuleValidationException($"Config file not found: {configPath}");   
+        }
         
         var cacheKey = $"Rules_{configPath}_{fileInfo.LastWriteTimeUtc.Ticks}";
         
-        return _cache.GetOrCreate(cacheKey, entry =>
+        return _cache.GetOrCreate(cacheKey, IReadOnlyDictionary<string, Regex> (entry) =>
         {
             entry.SetSlidingExpiration(TimeSpan.FromHours(1));
             
             _logger.Info("Loading rules from: {ConfigPath}", configPath);
             
-            // 1. Загрузка JSON
+            // парсим правила из файла
             var json = File.ReadAllText(configPath);
             using var document = JsonDocument.Parse(json);
             
-            // 2. Валидация версии схемы
+            // валидируем правила из файла
             var schemaVersion = document.RootElement.GetProperty("schemaVersion").GetInt32();
             if (schemaVersion != SupportedSchemaVersion)
                 throw new SchemaVersionException(SupportedSchemaVersion, schemaVersion);
             
-            // 3. Десериализация
+            // десериализуем правила из файла
             var config = JsonSerializer.Deserialize<RuleConfiguration>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             })!;
             
-            // 4. Компиляция и валидация
+            // компилируем и валидируем по предоставленным примерам
             var compiled = CompileAndValidate(config.Rules);
             
             _logger.Info("Loaded {RuleCount} rules successfully", compiled.Count);
-            return (IReadOnlyDictionary<string, Regex>)compiled;
+            return compiled;
         })!;
     }
     
@@ -78,29 +70,31 @@ public sealed class JsonRuleLoader : IRuleLoader
         {
             try
             {
-                // Парсинг флагов (аналог Python _resolve_flags_cached)
+                // парсим флаги
                 var options = ParseFlags(rule.Flags) | RegexOptions.Compiled;
                 
-                // Компиляция regex с таймаутом
+                // компилируем регулярные выражения с тайм-аутом в секунду
                 var regex = new Regex(rule.Pattern, options, TimeSpan.FromSeconds(1));
                 
-                // Валидация обязательных групп
+                // валидируем необходимые группы которые указанны в конфиге
                 var specGroups = new HashSet<string>(rule.RequiredGroups);
                 var actualGroups = new HashSet<string>(regex.GetGroupNames().Where(g => !int.TryParse(g, out _)));
                 var missingGroups = specGroups.Except(actualGroups).ToList();
                 
                 if (missingGroups.Any())
                 {
+                    _logger.Fatal($"Rule {name} does not contain group(s): '{string.Join(", ", missingGroups)}'");
                     throw new RuleValidationException(
-                        $"Правило '{name}' не содержит группу: {string.Join(", ", missingGroups)}",
+                        $"Rule '{name}' does not contain group(s): {string.Join(", ", missingGroups)}",
                         name);
                 }
                 
-                // Валидация sample (STRICT - должно падать как в Python)
+                // валидация sample примера, в случае не совпадения падает с исключением!
                 if (!string.IsNullOrEmpty(rule.Sample) && !regex.IsMatch(rule.Sample))
                 {
+                    _logger.Fatal($"Rule '{name}' does not match sample data: '{rule.Sample}'");
                     throw new RuleValidationException(
-                        $"Правило '{name}' не совпадает с sample data",
+                        $"Rule '{name}' does not match sample data",
                         name) 
                     { 
                         SampleData = rule.Sample 
@@ -112,7 +106,8 @@ public sealed class JsonRuleLoader : IRuleLoader
             }
             catch (Exception ex) when (ex is not RuleValidationException)
             {
-                throw new RuleValidationException($"Ошибка компиляции правила '{name}': {ex.Message}", name);
+                _logger.Fatal(ex, $"Rule '{name}' failed compilation");
+                throw new RuleValidationException($"Rule failed compilation '{name}': {ex.Message}", name);
             }
         }
         
@@ -134,20 +129,4 @@ public sealed class JsonRuleLoader : IRuleLoader
         }
         return result;
     }
-}
-
-// Внутренние модели для десериализации
-internal sealed class RuleConfiguration
-{
-    public int SchemaVersion { get; set; }
-    public Dictionary<string, RuleDefinition> Rules { get; set; } = new();
-}
-
-internal sealed class RuleDefinition
-{
-    public required string Pattern { get; set; }
-    public string[]? Flags { get; set; }
-    public string Description { get; set; } = "";
-    public string[] RequiredGroups { get; set; } = Array.Empty<string>();
-    public string? Sample { get; set; }
 }

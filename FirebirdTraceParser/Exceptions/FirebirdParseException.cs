@@ -1,4 +1,4 @@
-﻿namespace FirebirdTraceParser.Core.Exceptions;
+﻿namespace FirebirdTraceParser.Exceptions;
 
 /// <summary>
 /// Базовое исключение библиотеки.

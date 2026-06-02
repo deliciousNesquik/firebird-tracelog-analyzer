@@ -1,4 +1,4 @@
-﻿namespace FirebirdTraceParser.Core.Parsing.Engine;
+﻿namespace FirebirdTraceParser.Parsing.Engine;
 
 /// <summary>
 /// Режим валидации при парсинге.

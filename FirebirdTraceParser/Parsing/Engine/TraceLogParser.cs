@@ -1,27 +1,21 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Models.Events;
-using FirebirdTraceParser.Core.Models.Results;
-using FirebirdTraceParser.Core.Parsing.Handlers;
+using FirebirdTraceParser.Models.Events;
+using FirebirdTraceParser.Models.Results;
+using FirebirdTraceParser.Parsing.Handlers;
 using NLog;
 
-namespace FirebirdTraceParser.Core.Parsing.Engine;
+namespace FirebirdTraceParser.Parsing.Engine;
 
-public sealed class TraceLogParser : ITraceLogParser
+public sealed class TraceLogParser(
+    IReadOnlyDictionary<string, Regex> rules,
+    IEventHandler handler,
+    ILogger logger)
+    : ITraceLogParser
 {
-    private readonly IReadOnlyDictionary<string, Regex> _rules;
-    private readonly IEventHandler _handler;
-    private readonly ILogger _logger;
-
-    public TraceLogParser(
-        IReadOnlyDictionary<string, Regex> rules,
-        IEventHandler handler,
-        ILogger logger)
-    {
-        _rules = rules ?? throw new ArgumentNullException(nameof(rules));
-        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IReadOnlyDictionary<string, Regex> _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+    private readonly IEventHandler _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public ParsingResult<EventBase> ParseFile(string filePath, ParseOptions? options = null)
     {

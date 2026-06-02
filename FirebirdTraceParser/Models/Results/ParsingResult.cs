@@ -1,6 +1,6 @@
-﻿using FirebirdTraceParser.Core.Models.Events;
+﻿using FirebirdTraceParser.Models.Events;
 
-namespace FirebirdTraceParser.Core.Models.Results;
+namespace FirebirdTraceParser.Models.Results;
 
 /// <summary>
 /// Результат парсинга с событиями и предупреждениями.

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using FirebirdTraceParser.Core.Models.ValueObjects;
+using FirebirdTraceParser.Models.ValueObjects;
 
-namespace FirebirdTraceParser.Core.Parsing.Utils;
+namespace FirebirdTraceParser.Parsing.Utils;
 
 public static class AttachmentInfoPool
 {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace FirebirdTraceParser.Core.Parsing.Engine;
+namespace FirebirdTraceParser.Parsing.Engine;
 
 /// <summary>
 /// Опции парсинга trace логов.

@@ -1,12 +1,11 @@
 ﻿using System.Text.RegularExpressions;
-using FirebirdTraceParser.Core.Parsing.Engine;
-using FirebirdTraceParser.Core.Parsing.Handlers;
-using FirebirdTraceParser.Core.Parsing.Rules;
-using Microsoft.Extensions.Caching.Memory;
+using FirebirdTraceParser.Parsing.Engine;
+using FirebirdTraceParser.Parsing.Handlers;
+using FirebirdTraceParser.Parsing.Rules;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
-namespace FirebirdTraceParser.Core.Infrastructure.DependencyInjection;
+namespace FirebirdTraceParser.Infrastructure.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
@@ -14,41 +13,40 @@ public static class ServiceCollectionExtensions
     /// Добавляет все службы парсера Firebird Trace Log.
     /// </summary>
     /// <param name="services">Коллекция служб.</param>
-    /// <param name="rulesPath">Путь к файлу правил JSON.</param>
+    /// <param name="rulesPath">Путь к файлу правил для парсера.</param>
     /// <param name="nlogConfigPath">Путь к конфигурации NLog (опционально).</param>
     public static IServiceCollection AddFirebirdTraceParser(
         this IServiceCollection services,
         string rulesPath,
         string? nlogConfigPath = null)
     {
-        // 1. Настройка NLog (если путь не указан, ищем в текущей директории)
+        // настраиваем логгер, если путь не передан ищем в текущей директории
         var configPath = nlogConfigPath ?? "nlog.config";
+        
         if (File.Exists(configPath))
-        {
             LogManager.Setup().LoadConfigurationFromFile(configPath);
-        }
 
-        // 2. Регистрация NLog.ILogger для библиотеки парсера
-        services.AddSingleton<NLog.ILogger>(provider =>
+        // регистрируем логгер для дальнейшего логирования процессов
+        services.AddSingleton<ILogger>(provider =>
             LogManager.GetLogger("FirebirdTraceParser"));
 
-        // 3. Кэширование
+        // регистрируем стандартное кеширование
         services.AddMemoryCache();
-
-        // 4. Rule Loader (Singleton)
+        
+        // сервис загрузки правил
         services.AddSingleton<IRuleLoader, JsonRuleLoader>();
 
-        // 5. Загрузка правил (Singleton с ленивой инициализацией)
+        // лениво загружаем правила
         services.AddSingleton<IReadOnlyDictionary<string, Regex>>(provider =>
         {
             var loader = provider.GetRequiredService<IRuleLoader>();
             return loader.LoadRules(rulesPath);
         });
 
-        // 6. Event Handler (Singleton - stateless)
+        // регистрируем стандартный обработчик событий
         services.AddSingleton<IEventHandler, DefaultEventHandler>();
 
-        // 7. Парсер (Transient - для параллельного использования)
+        // регистрируем парсер (Transient - для параллельного использования)
         services.AddTransient<ITraceLogParser, TraceLogParser>();
 
         return services;

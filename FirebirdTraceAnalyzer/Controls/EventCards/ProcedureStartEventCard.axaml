@@ -1,7 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:events="using:FirebirdTraceAnalyzer.Controls.EventCards"
-        xmlns:models="clr-namespace:FirebirdTraceParser.Core.Models.ValueObjects;assembly=FirebirdTraceParser.Core"
+        xmlns:models="clr-namespace:FirebirdTraceParser.Models.ValueObjects;assembly=FirebirdTraceParser"
         xmlns:controls="using:FirebirdTraceAnalyzer.Controls">
     <Design.PreviewWith>
         <Border Padding="20">

@@ -1,7 +1,7 @@
-﻿using FirebirdTraceParser.Core.Models.Enums;
-using FirebirdTraceParser.Core.Attributes;
+﻿using FirebirdTraceParser.Models.Enums;
+using FirebirdTraceParser.Attributes;
 
-namespace FirebirdTraceParser.Core.Models.Events;
+namespace FirebirdTraceParser.Models.Events;
 
 /// <summary>
 /// Базовая модель события трассировки Firebird.

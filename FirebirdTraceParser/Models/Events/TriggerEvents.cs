@@ -1,9 +1,7 @@
-﻿using System.Runtime.InteropServices;
-using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.ValueObjects;
-using FirebirdTraceParser.Core.Parsing.Utils;
+﻿using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.ValueObjects;
 
-namespace FirebirdTraceParser.Core.Models.Events;
+namespace FirebirdTraceParser.Models.Events;
 
 /// <summary>
 /// Базовый класс для событий триггеров.

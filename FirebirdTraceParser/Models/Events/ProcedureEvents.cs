@@ -1,7 +1,7 @@
-﻿using FirebirdTraceParser.Core.Attributes;
-using FirebirdTraceParser.Core.Models.ValueObjects;
+﻿using FirebirdTraceParser.Attributes;
+using FirebirdTraceParser.Models.ValueObjects;
 
-namespace FirebirdTraceParser.Core.Models.Events;
+namespace FirebirdTraceParser.Models.Events;
 
 /// <summary>
 /// Базовый класс для событий хранимых процедур.
