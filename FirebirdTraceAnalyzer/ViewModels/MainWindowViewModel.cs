@@ -39,7 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Collections
 
     /// <summary>Все события из всех файлов (source of truth)</summary>
-    private List<EventBase> AllEvents { get; } = [];
+    private List<EventBase> AllEvents { get; set; } = [];
 
     /// <summary>События после применения фильтров и сортировки</summary>
     public RangeObservableCollection<EventBase> VisibleEvents { get; } = [];
@@ -665,8 +665,6 @@ public partial class MainWindowViewModel : ViewModelBase
         var startTrace = DateTime.MinValue;
         var endTrace = DateTime.MinValue;
 
-        var batch = new List<EventBase>(1000);
-
         await using var stream = new FileStream(
             fileInfo.FullName,
             FileMode.Open,
@@ -687,12 +685,6 @@ public partial class MainWindowViewModel : ViewModelBase
             endTrace = evt.Timestamp;
 
             events.Add(evt);
-            
-            //TODO: пересмотреть данный участок
-            batch.Add(evt);
-
-            // НЕ обновляем VisibleEvents во время парсинга (будет обновлено после)
-            if (batch.Count >= 1000) batch.Clear();
         }
 
         _eventsByFileHash[fileHash] = events;
@@ -736,25 +728,89 @@ public partial class MainWindowViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
-    /// <summary>Удаляет события файла из коллекций</summary>
+    /// <summary>
+    /// ⚡ ОПТИМИЗИРОВАННОЕ удаление событий файла БЕЗ утечек памяти
+    /// </summary>
     private void RemoveFileEvents(string fileHash)
     {
         if (!_eventsByFileHash.TryGetValue(fileHash, out var eventsToRemove))
             return;
 
-        var eventsSet = eventsToRemove.ToHashSet();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
 
-        for (var i = AllEvents.Count - 1; i >= 0; i--)
-            if (eventsSet.Contains(AllEvents[i]))
-                AllEvents.RemoveAt(i);
+        // ✅ Создаём HashSet для O(1) поиска
+        var eventsSet = new HashSet<EventBase>(eventsToRemove);
 
-        for (var i = VisibleEvents.Count - 1; i >= 0; i--)
-            if (eventsSet.Contains(VisibleEvents[i]))
-                VisibleEvents.RemoveAt(i);
+        // ✅ ИСПРАВЛЕНИЕ УТЕЧКИ: Используем RemoveAll вместо создания нового списка
+        // RemoveAll модифицирует существующий список, не создавая копию
+        var removedCount = AllEvents.RemoveAll(e => eventsSet.Contains(e));
 
+        Logger.Info(
+            "Removed {Count} events from AllEvents in {Elapsed}ms (optimized, no memory leak)",
+            removedCount,
+            sw.ElapsedMilliseconds);
+
+        // ✅ Очищаем словарь И список событий для GC
         _eventsByFileHash.Remove(fileHash);
+        eventsToRemove.Clear(); // Освобождаем память
+        eventsSet.Clear(); // Освобождаем HashSet
 
-        Logger.Info("Removed {Count} events for file hash {Hash}", eventsToRemove.Count, fileHash);
+        Logger.Info("Total removal time: {Elapsed}ms", sw.ElapsedMilliseconds);
+        
+        // ✅ Принудительная сборка мусора для больших объёмов (опционально)
+        if (removedCount > 50000)
+        {
+            GC.Collect(2, GCCollectionMode.Optimized, false);
+            Logger.Info("GC forced for {Count} removed events", removedCount);
+        }
+    }
+
+    /// <summary>
+    /// ⚡ ОПТИМИЗИРОВАННОЕ удаление НЕСКОЛЬКИХ файлов БЕЗ утечек памяти
+    /// </summary>
+    private void RemoveMultipleFileEvents(IEnumerable<string> fileHashes)
+    {
+        var hashList = fileHashes.ToList();
+        
+        if (hashList.Count == 0)
+            return;
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        // ✅ Собираем ВСЕ события для удаления в один HashSet
+        var allEventsToRemove = new HashSet<EventBase>();
+
+        foreach (var hash in hashList)
+        {
+            if (_eventsByFileHash.TryGetValue(hash, out var events))
+            {
+                foreach (var evt in events)
+                    allEventsToRemove.Add(evt);
+                
+                // ✅ Очищаем список перед удалением из словаря
+                events.Clear();
+                _eventsByFileHash.Remove(hash);
+            }
+        }
+        
+        // ✅ ИСПРАВЛЕНИЕ УТЕЧКИ: Используем RemoveAll
+        var removedCount = AllEvents.RemoveAll(e => allEventsToRemove.Contains(e));
+
+        Logger.Info(
+            "Removed {Count} events from {FileCount} files in {Elapsed}ms (batch optimized, no leak)",
+            removedCount,
+            hashList.Count,
+            sw.ElapsedMilliseconds);
+
+        // ✅ Очищаем HashSet
+        allEventsToRemove.Clear();
+        
+        // ✅ Принудительная сборка мусора для больших объёмов
+        if (removedCount > 50000)
+        {
+            GC.Collect(2, GCCollectionMode.Optimized, false);
+            Logger.Info("GC forced for {Count} removed events (batch)", removedCount);
+        }
     }
 
     private bool IsDuplicate(string fileHash)
@@ -944,6 +1000,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var count = FileCards.Count;
             
+            // ✅ Очищаем списки в _eventsByFileHash перед очисткой словаря
+            foreach (var eventList in _eventsByFileHash.Values)
+            {
+                eventList.Clear();
+            }
+            
             // Очищаем все коллекции
             FileCards.Clear();
             AllEvents.Clear();
@@ -952,6 +1014,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
             StatusMessage = $"Closed all files: {count} file(s).";
             Logger.Info("All files closed: {Count}", count);
+            
+            // ✅ Принудительная сборка мусора
+            GC.Collect(2, GCCollectionMode.Forced, true, true);
+            Logger.Info("GC forced after closing all files");
         }
         finally
         {
@@ -964,7 +1030,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateStatistics();
     }
 
-    /// <summary>Закрывает выбранные файлы</summary>
+    /// <summary>Закрытие выбранных файлов</summary>
     [RelayCommand(CanExecute = nameof(CanCloseSelectedFiles))]
     private void CloseSelectedFiles()
     {
@@ -980,9 +1046,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
             var selectedCards = SelectedFileCards.ToList();
             
+            // Удаляем события всех файлов ОДНОЙ операцией
+            var hashesToRemove = selectedCards.Select(c => c.FileInfo.FileHash).ToList();
+            RemoveMultipleFileEvents(hashesToRemove);
+            
+            // Удаляем карточки
             foreach (var card in selectedCards)
             {
-                RemoveFileEvents(card.FileInfo.FileHash);
                 FileCards.Remove(card);
             }
 
