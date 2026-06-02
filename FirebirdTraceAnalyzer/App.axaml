@@ -1,0 +1,446 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="FirebirdTraceAnalyzer.App"
+             xmlns:local="using:FirebirdTraceAnalyzer"
+             xmlns:events="clr-namespace:FirebirdTraceAnalyzer.Controls.EventCards"
+             xmlns:core="clr-namespace:FirebirdTraceParser.Core.Models.Events;assembly=FirebirdTraceParser.Core"
+             RequestedThemeVariant="Default">
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <Application.DataTemplates>
+        <DataTemplate DataType="core:TraceInitEvent">
+            <events:TraceInitEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                SessionId="{Binding Session.SessionId}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:TraceFinishEvent">
+            <events:TraceFiniEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                SessionId="{Binding Session.SessionId}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:AttachDatabaseEvent">
+
+            <events:AttachDatabaseEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}" />
+        </DataTemplate>
+
+
+        <DataTemplate DataType="core:DetachDatabaseEvent">
+            <events:DetachDatabaseEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:StatementStartEvent">
+            <events:StatementStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:StatementRestartEvent">
+            <events:StatementRestartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                RestartCount="{Binding RestartCount}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:StatementFinishEvent">
+            <events:StatementFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:FailedStatementFinishEvent">
+            <events:FailedStatementFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                StatementId="{Binding StatementId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Sql="{Binding Sql}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+
+
+        <DataTemplate DataType="core:ProcedureStartEvent">
+            <events:ProcedureStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:ProcedureFinishEvent">
+            <events:ProcedureFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:FailedProcedureFinishEvent">
+            <events:FailedProcedureFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                ProcedureName="{Binding ProcedureName}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                Params="{Binding Parameters}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:TriggerStartEvent">
+            <events:TriggerStartEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}" />
+        </DataTemplate>
+
+        <DataTemplate DataType="core:TriggerFinishEvent">
+            <events:TriggerFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:FailedTriggerFinishEvent">
+            <events:FailedTriggerFinishEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                DatabasePath="{Binding Attachment.DatabasePath}"
+                Protocol="{Binding Attachment.Protocol}"
+                Address="{Binding Attachment.Address}"
+                Port="{Binding Attachment.Port}"
+                ProcessPath="{Binding Attachment.ProcessPath}"
+                ProcessId="{Binding Attachment.ProcessId}"
+                Charset="{Binding Attachment.Charset}"
+                User="{Binding Attachment.User}"
+                Role="{Binding Attachment.Role}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                TriggerName="{Binding TriggerName}"
+                Table="{Binding Table}"
+                Timing="{Binding Timing}"
+                Event="{Binding Event}"
+                TransactionId="{Binding Transaction.TransactionId}"
+                IsolationLevel="{Binding Transaction.IsolationLevel}"
+                ConsistencyMode="{Binding Transaction.ConsistencyMode}"
+                LockMode="{Binding Transaction.LockMode}"
+                AccessMode="{Binding Transaction.AccessMode}"
+                ExecuteMs="{Binding Performance.ExecuteMs}"
+                ReadCount="{Binding Performance.ReadCount}"
+                WriteCount="{Binding Performance.WriteCount}"
+                FetchCount="{Binding Performance.FetchCount}"
+                MarkCount="{Binding Performance.MarkCount}" />
+        </DataTemplate>
+        
+        <DataTemplate DataType="core:ErrorEvent">
+
+            <events:ErrorEventCard
+                Timestamp="{Binding Timestamp}"
+                TraceId="{Binding TraceId}"
+                HexTraceId="{Binding HexTraceId}"
+                AttachmentId="{Binding Attachment.AttachmentId}"
+                Component="{Binding Component}"
+                Errors="{Binding Errors}"/>
+        </DataTemplate>
+    </Application.DataTemplates>
+    
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <ResourceDictionary.ThemeDictionaries>
+
+                <ResourceDictionary x:Key="Light">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://FirebirdTraceAnalyzer/Themes/Light.axaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://FirebirdTraceAnalyzer/Themes/Dark.axaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Icons -->
+            <x:String x:Key="AppIcon">
+                avares://FirebirdTraceAnalyzer/Assets/app.ico
+            </x:String>
+
+            <x:String x:Key="SearchIcon">
+                avares://FirebirdTraceAnalyzer/Assets/search.svg
+            </x:String>
+
+            <x:String x:Key="SortIcon">
+                avares://FirebirdTraceAnalyzer/Assets/sort.svg
+            </x:String>
+
+            <x:String x:Key="FilterIcon">
+                avares://FirebirdTraceAnalyzer/Assets/filter.svg
+            </x:String>
+            
+            <x:String x:Key="CopyIcon">
+                avares://FirebirdTraceAnalyzer/Assets/copy.svg
+            </x:String>
+
+        </ResourceDictionary>
+    </Application.Resources>         
+             
+    <Application.Styles>
+        
+        
+        <FluentTheme />
+        
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/FilterCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/FileCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/FocusTextBlock.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/TraceInitEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/TraceFiniEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/AttachDatabaseEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/DetachDatabaseEventCard.axaml" />
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/StatementStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/StatementRestartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/StatementFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/FailedStatementFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/ProcedureStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/ProcedureFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/FailedProcedureFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/TriggerStartEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/TriggerFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/FailedTriggerFinishEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/EventCards/ErrorEventCard.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Controls/InfoTip.axaml"/>
+        <StyleInclude Source="avares://FirebirdTraceAnalyzer/Styles/Menu.axaml"/>
+        
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+
+        <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        
+    </Application.Styles>
+</Application>

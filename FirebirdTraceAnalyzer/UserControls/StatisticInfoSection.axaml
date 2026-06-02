@@ -1,0 +1,24 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:FirebirdTraceAnalyzer.ViewModels"
+             xmlns:controls="clr-namespace:FirebirdTraceAnalyzer.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="FirebirdTraceAnalyzer.UserControls.StatisticInfoSection"
+             x:DataType="vm:StatisticsInfoSectionViewModel">
+    
+    <ItemsControl ItemsSource="{Binding StatisticInfoModels}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" ItemSpacing="20" />
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <controls:FocusTextBlock Header="{Binding Header}" Value="{Binding Value}" />
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    
+</UserControl>

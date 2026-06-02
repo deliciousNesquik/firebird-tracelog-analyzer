@@ -1,0 +1,27 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:FirebirdTraceAnalyzer.Controls">
+    <Design.PreviewWith>
+        <StackPanel Orientation="Horizontal" Spacing="20">
+            <controls:FocusTextBlock Header="Событий:" Value="650.021"/>    
+            <controls:FocusTextBlock Header="Отфильтрованно:" Value="234.021"/>    
+            <controls:FocusTextBlock Header="Время парсинга:" Value="2 мин 32 сек"/>    
+        </StackPanel>
+        
+    </Design.PreviewWith>
+
+    <Style Selector="controls|FocusTextBlock">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="{TemplateBinding Header}" FontWeight="400" VerticalAlignment="Center"/>
+                    <Border CornerRadius="10" Background="{DynamicResource Primary}" Padding="6 2 6 2" VerticalAlignment="Center">
+                        <TextBlock Text="{TemplateBinding Value}" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>    
+                    </Border>
+                    
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

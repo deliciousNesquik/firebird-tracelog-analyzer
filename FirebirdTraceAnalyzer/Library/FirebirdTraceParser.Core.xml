@@ -1,0 +1,442 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FirebirdTraceParser.Core</name>
+    </assembly>
+    <members>
+        <member name="T:FirebirdTraceParser.Core.Attributes.FilterableFieldAttribute">
+            <summary>
+            Маркирует свойство как доступное для фильтрации.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.FilterableFieldAttribute.DisplayName">
+            <summary>Отображаемое имя поля в UI</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.FilterableFieldAttribute.Priority">
+            <summary>Приоритет отображения (меньше = выше)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.FilterableFieldAttribute.Category">
+            <summary>Категория фильтра (например, "Общие", "Подключение")</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.FilterableFieldAttribute.FilterType">
+            <summary>Тип фильтра (автоопределяется, но можно переопределить)</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Attributes.FilterType">
+            <summary>
+            Типы фильтров для автоматического создания UI.
+            </summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.Auto">
+            <summary>Автоматическое определение по типу свойства</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.EnumMultiSelect">
+            <summary>Enum → список чекбоксов</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.StringMultiSelect">
+            <summary>String → множественный выбор + поиск</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.NumericRange">
+            <summary>Числовой диапазон (int, long, decimal)</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.DateTimeRange">
+            <summary>Диапазон дат</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.Boolean">
+            <summary>Boolean → переключатель</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Attributes.FilterType.TextSearch">
+            <summary>Полнотекстовый поиск (для SQL, длинных текстов)</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Attributes.SortableFieldAttribute">
+            <summary>
+            Маркирует свойство как доступное для сортировки.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.SortableFieldAttribute.DisplayName">
+            <summary>Отображаемое имя поля в UI</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.SortableFieldAttribute.Priority">
+            <summary>Приоритет отображения (меньше = выше)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.SortableFieldAttribute.Category">
+            <summary>Категория сортировки (например, "Общие", "Производительность")</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Attributes.SortableFieldAttribute.IsDefault">
+            <summary>Является ли сортировкой по умолчанию</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Exceptions.FirebirdParseException">
+            <summary>
+            Базовое исключение библиотеки.
+            Соответствует концепции RuleConfigError в Python.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Exceptions.RuleValidationException">
+            <summary>
+            Ошибка валидации правил парсинга.
+            Аналог Python RuleConfigError.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Exceptions.ParseException">
+            <summary>
+            Ошибка парсинга блока событий.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Exceptions.SchemaVersionException">
+            <summary>
+            Несовпадение версии схемы правил.
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Infrastructure.DependencyInjection.ServiceCollectionExtensions.AddFirebirdTraceParser(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String)">
+            <summary>
+            Добавляет все службы парсера Firebird Trace Log.
+            </summary>
+            <param name="services">Коллекция служб.</param>
+            <param name="rulesPath">Путь к файлу правил JSON.</param>
+            <param name="nlogConfigPath">Путь к конфигурации NLog (опционально).</param>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Infrastructure.DependencyInjection.ServiceCollectionExtensions.AddFirebirdTraceParser(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.Action{FirebirdTraceParser.Core.Parsing.Engine.ParseOptions},System.String)">
+            <summary>
+            Добавляет парсер с кастомными опциями.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Enums.EventType">
+            <summary>
+            Типы событий трассировки Firebird Database.
+            </summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.TraceInit">
+            <summary>Инициализация trace‑сессии</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.TraceFinish">
+            <summary>Завершение trace‑сессии</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.AttachDatabase">
+            <summary>Подключение к базе данных</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.DetachDatabase">
+            <summary>Отключение от базы данных</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteStatementStart">
+            <summary>Начало выполнения statement</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteStatementRestart">
+            <summary>Повторное выполнение statement</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteStatementFinish">
+            <summary>Завершение выполнения statement</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteProcedureStart">
+            <summary>Начало выполнения процедуры</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteProcedureRestart">
+            <summary>Повторное выполнение процедуры</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteProcedureFinish">
+            <summary>Завершение выполнения процедуры</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteTriggerStart">
+            <summary>Начало выполнения триггера</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.ExecuteTriggerFinish">
+            <summary>Завершение выполнения триггера</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.FailedExecuteStatementFinish">
+            <summary>Ошибка завершения выполнения statement</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.FailedExecuteProcedureFinish">
+            <summary>Ошибка завершения выполнения процедуры</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.FailedExecuteTriggerFinish">
+            <summary>Ошибка завершения выполнения триггера</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Models.Enums.EventType.Error">
+            <summary>Любая ошибка возникшая в определенном модуле</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.ErrorEvent">
+            <summary>
+            Событие ошибки на уровне API Firebird (ERROR AT).
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.ErrorEvent.Component">
+            <summary>Компонент, в котором произошла ошибка (например, "JResultSet::fetchNext")</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.ErrorEvent.Errors">
+            <summary>Цепочка ошибок (может быть несколько строк "код: сообщение")</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.ErrorInfo">
+            <summary>
+            Информация об одной ошибке в цепочке
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.EventBase">
+            <summary>
+            Базовая модель события трассировки Firebird.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.EventBase.Timestamp">
+            <summary>Время события в формате ISO 8601</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.EventBase.TraceId">
+            <summary>Идентификатор trace‑сессии (decimal)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.EventBase.HexTraceId">
+            <summary>Идентификатор trace‑сессии (hexadecimal)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Events.EventBase.EventType">
+            <summary>Тип события трассировки</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.ProcedureEventBase">
+            <summary>
+            Базовый класс для событий хранимых процедур.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.ProcedureStartEvent">
+            <summary>
+            Событие начала выполнения хранимой процедуры.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.ProcedureFinishEvent">
+            <summary>
+            Событие завершения выполнения хранимой процедуры.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.StatementEventBase">
+            <summary>
+            Базовый класс для событий SQL statement.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.StatementStartEvent">
+            <summary>
+            Событие начала выполнения statement.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.StatementFinishEvent">
+            <summary>
+            Событие завершения выполнения statement.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.TraceInitEvent">
+            <summary>
+            Событие начала trace‑сессии.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.TraceFinishEvent">
+            <summary>
+            Событие завершения trace‑сессии.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.AttachDatabaseEvent">
+            <summary>
+            Событие подключения к БД.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.DetachDatabaseEvent">
+            <summary>
+            Событие отключения от БД.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.TriggerEventBase">
+            <summary>
+            Базовый класс для событий триггеров.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.TriggerStartEvent">
+            <summary>
+            Событие начала выполнения триггера.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Events.TriggerFinishEvent">
+            <summary>
+            Событие завершения выполнения триггера.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Results.ParsingResult`1">
+            <summary>
+            Результат парсинга с событиями и предупреждениями.
+            </summary>
+            <typeparam name="T">Тип события (EventBase или производные).</typeparam>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Results.ParsingResult`1.Events">
+            <summary>Успешно распарсенные события</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Results.ParsingResult`1.Warnings">
+            <summary>Предупреждения и ошибки парсинга</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Results.ParsingResult`1.HasErrors">
+            <summary>Есть ли критические ошибки</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.Results.ParsingResult`1.SkippedBlocks">
+            <summary>Количество пропущенных блоков</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.Results.ParsingWarning">
+            <summary>
+            Предупреждение о проблеме парсинга.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.AttachmentInfo">
+            <summary>
+            Информация о подключении к базе данных Firebird.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.AttachmentInfo.ProcessPath">
+            <summary>Путь к исполняемому файлу клиента (опционально)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.AttachmentInfo.ProcessId">
+            <summary>ID процесса клиента (опционально)</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo">
+            <summary>
+            Общая информация о производительности выполнения SQL‑операции.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo.ExecuteMs">
+            <summary>Время выполнения запроса в миллисекундах</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo.FetchCount">
+            <summary>Количество выданных записей (fetch)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo.ReadCount">
+            <summary>Количество операций чтения</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo.WriteCount">
+            <summary>Количество операций записи</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceInfo.MarkCount">
+            <summary>Количество внутренних отметок (mark)</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceTableItem">
+            <summary>
+            Статистика по одной таблице.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceTable">
+            <summary>
+            Таблица статистики производительности.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.PerformanceTable.Items">
+            <summary>Список статистик по таблицам</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.SqlParameters">
+            <summary>
+            Описание одного параметра SQL‑запроса.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.SqlParameters.Name">
+            <summary>Имя параметра (например, param0, param1)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.SqlParameters.Dtype">
+            <summary>Тип параметра в терминах Firebird (bigint, varchar, etc.)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.SqlParameters.Value">
+            <summary>Значение параметра в строковом представлении</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.TraceSessionInfo">
+            <summary>
+            Информация о глобальной сессии трассировки Firebird.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.TraceSessionInfo.SessionId">
+            <summary>Идентификатор глобальной trace‑сессии</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Models.ValueObjects.TransactionInfo">
+            <summary>
+            Информация о транзакции Firebird.
+            Соответствует Python TransactionInfo.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.TransactionInfo.IsolationLevel">
+            <summary>Уровень изоляции (READ_COMMITTED, SNAPSHOT, etc.)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.TransactionInfo.ConsistencyMode">
+            <summary>Режим консистентности (READ_CONSISTENCY, etc.)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.TransactionInfo.LockMode">
+            <summary>Режим блокировки (WAIT, NOWAIT)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Models.ValueObjects.TransactionInfo.AccessMode">
+            <summary>Режим доступа (READ_WRITE, READ_ONLY)</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions">
+            <summary>
+            Опции парсинга trace логов.
+            </summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions.Encoding">
+            <summary>Кодировка файла (по умолчанию UTF-8)</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions.ValidationMode">
+            <summary>Режим валидации блоков</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions.BatchSize">
+            <summary>Размер батча для потоковой обработки</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions.RegexTimeout">
+            <summary>Тайм-аут для regex операций</summary>
+        </member>
+        <member name="P:FirebirdTraceParser.Core.Parsing.Engine.ParseOptions.ParsePerformanceTables">
+            <summary>Включить парсинг таблиц производительности</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Engine.ValidationMode">
+            <summary>
+            Режим валидации при парсинге.
+            </summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Parsing.Engine.ValidationMode.Strict">
+            <summary>Строгий режим: любая ошибка парсинга блока - warning</summary>
+        </member>
+        <member name="F:FirebirdTraceParser.Core.Parsing.Engine.ValidationMode.Relaxed">
+            <summary>Мягкий режим: пропускаются только критические ошибки</summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Handlers.DefaultEventHandler">
+            <summary>
+                Обработчик событий по умолчанию.
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Handlers.DefaultEventHandler.ParseEventMetadata(System.Text.RegularExpressions.Match)">
+            <summary>
+                Извлекает общие метаданные заголовка события (timestamp, trace_id, hex_trace_id).
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Handlers.DefaultEventHandler.CreateDefaultPerformance">
+            <summary>
+                Создает PerformanceInfo по умолчанию (все нули).
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Handlers.DefaultEventHandler.ParseSqlParameter(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Text.RegularExpressions.Regex})">
+            <summary>
+                Парсит одну строку SQL-параметра и возвращает объект SqlParameters или null.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Handlers.IEventHandler">
+            <summary>
+            Обработчик блока события.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Utils.ParsingExtensions">
+            <summary>
+            Расширения для упрощения парсинга.
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Utils.ParsingExtensions.GetGroupValue(System.Text.RegularExpressions.Match,System.String,System.String)">
+            <summary>
+            Безопасное извлечение значения группы regex.
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Utils.ParsingExtensions.GetGroupInt(System.Text.RegularExpressions.Match,System.String,System.Int32)">
+            <summary>
+            Безопасное извлечение числового значения группы.
+            </summary>
+        </member>
+        <member name="M:FirebirdTraceParser.Core.Parsing.Utils.ParsingExtensions.HasRequiredGroups(System.Text.RegularExpressions.Regex,System.String[])">
+            <summary>
+            Проверка наличия обязательных групп в regex.
+            </summary>
+        </member>
+        <member name="T:FirebirdTraceParser.Core.Parsing.Utils.PerformanceTableParser">
+            <summary>
+            Парсер таблицы производительности (fixed-width колонки по заголовку).
+            </summary>
+        </member>
+    </members>
+</doc>
