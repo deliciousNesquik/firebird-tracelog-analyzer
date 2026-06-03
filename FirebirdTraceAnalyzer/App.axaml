@@ -408,6 +408,18 @@
             <x:String x:Key="WarningIcon">
                 avares://FirebirdTraceAnalyzer/Assets/warning.svg
             </x:String>
+            
+            <x:String x:Key="FileSearchIcon">
+                avares://FirebirdTraceAnalyzer/Assets/file-search.svg
+            </x:String>
+            
+            <x:String x:Key="FolderIcon">
+                avares://FirebirdTraceAnalyzer/Assets/folder.svg
+            </x:String>
+            
+            <x:String x:Key="TrashIcon">
+                avares://FirebirdTraceAnalyzer/Assets/trash.svg
+            </x:String>
 
         </ResourceDictionary>
     </Application.Resources>         
