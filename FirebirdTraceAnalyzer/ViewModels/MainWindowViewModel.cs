@@ -1,12 +1,11 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Security.Cryptography;
+using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FirebirdTraceParser.Models.Events;
-using FirebirdTraceParser.Parsing.Engine;
-using FirebirdTraceParser.Parsing.Utils;
 using FirebirdTraceAnalyzer.Core;
 using FirebirdTraceAnalyzer.Enums;
 using FirebirdTraceAnalyzer.Interfaces;
@@ -15,6 +14,11 @@ using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Searching;
 using FirebirdTraceAnalyzer.Services.Sorting;
+using FirebirdTraceAnalyzer.Views;
+using FirebirdTraceParser.Models.Events;
+using FirebirdTraceParser.Parsing.Engine;
+using FirebirdTraceParser.Parsing.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NLog;
 
@@ -39,7 +43,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Collections
 
     /// <summary>Все события из всех файлов (source of truth)</summary>
-    private List<EventBase> AllEvents { get; set; } = [];
+    private List<EventBase> AllEvents { get; } = [];
 
     /// <summary>События после применения фильтров и сортировки</summary>
     public RangeObservableCollection<EventBase> VisibleEvents { get; } = [];
@@ -89,12 +93,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private SortDescriptor? _selectedSort;
     [ObservableProperty] private bool _isSortDescending;
-    
-    [ObservableProperty] 
-    private string _searchText = string.Empty;
 
-    [ObservableProperty] 
-    private bool _isSearchActive;
+    [ObservableProperty] private string _searchText = string.Empty;
+
+    [ObservableProperty] private bool _isSearchActive;
 
     /// <summary>ViewModel панели фильтров</summary>
     public FiltersPanelViewModel FiltersPanelViewModel { get; }
@@ -117,6 +119,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _sortingService = null!;
         _filteringService = null!;
         _searchService = null!;
+
+        _sshConnectionService = null!;
+        _remoteFileService = null!;
+
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
@@ -141,22 +147,22 @@ public partial class MainWindowViewModel : ViewModelBase
         IFilteringService filteringService,
         ISearchService searchService,
         IOptions<AppSettings> appSettings,
-        IOptions<UiSectionSettings> uiSettings)
+        IOptions<UiSectionSettings> uiSettings,
+        ISshConnectionService sshConnectionService,
+        IRemoteFileService remoteFileService)
     {
-        
-        
         Logger.Info("Object(s) pool have been reset(s).");
         StringPool.Reset();
         TraceSessionInfoPool.Reset();
         AttachmentInfoPool.Reset();
-        
+
         Logger.Info("Event(s) list(s) are clear");
         VisibleEvents.Clear();
         AllEvents.Clear();
         Logger.Debug($"VisibleEvents count: {VisibleEvents.Count}");
         Logger.Debug($"AllEvents count: {AllEvents.Count}");
-        
-        
+
+
         // Dependency Injection
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
@@ -165,6 +171,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
         _appSettings = appSettings.Value ?? throw new ArgumentNullException(nameof(appSettings));
         _uiSettings = uiSettings.Value ?? throw new ArgumentNullException(nameof(uiSettings));
+
+        _sshConnectionService = sshConnectionService ?? throw new ArgumentNullException(nameof(sshConnectionService));
+        _remoteFileService = remoteFileService ?? throw new ArgumentNullException(nameof(remoteFileService));
+
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
@@ -377,7 +387,7 @@ public partial class MainWindowViewModel : ViewModelBase
     #region Filtering
 
     /// <summary>
-    /// Обновляет доступные фильтры на основе ТЕКУЩИХ (отфильтрованных) событий
+    ///     Обновляет доступные фильтры на основе ТЕКУЩИХ (отфильтрованных) событий
     /// </summary>
     private void UpdateAvailableFilters()
     {
@@ -392,16 +402,16 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Применяет все активные фильтры и обновляет UI
+    ///     Применяет все активные фильтры и обновляет UI
     /// </summary>
     private void ApplyAllFilters()
     {
         try
         {
             _isBatchUpdate = true;
-            
+
             Logger.Info("Starting to use filters and search...");
-            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
 
             IEnumerable<EventBase> query = AllEvents;
 
@@ -410,7 +420,7 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 var searchMode = IsClassicSearch ? SearchType.Classic : SearchType.Regex;
                 query = _searchService.Search(query, SearchText, searchMode);
-                
+
                 var searchResults = query.ToList();
                 Logger.Info("Search completed in {Elapsed}ms, found: {Count}",
                     sw.ElapsedMilliseconds, searchResults.Count);
@@ -464,10 +474,10 @@ public partial class MainWindowViewModel : ViewModelBase
             UpdateStatistics();
 
             var statusParts = new List<string>();
-            
+
             if (IsSearchActive)
                 statusParts.Add($"Search: '{SearchText}'");
-            
+
             statusParts.Add($"{filteredList.Count:N0} of {AllEvents.Count:N0}");
 
             StatusMessage = string.Join(" • ", statusParts);
@@ -484,29 +494,29 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     #endregion
-    
+
     #region Search
 
     /// <summary>
-    /// Выполняет поиск (вызывается кнопкой)
+    ///     Выполняет поиск (вызывается кнопкой)
     /// </summary>
     [RelayCommand]
     private void ExecuteSearch()
     {
         IsSearchActive = !string.IsNullOrWhiteSpace(SearchText);
-        
+
         if (!IsSearchActive)
         {
             StatusMessage = "Search query is empty";
             Logger.Warn("Attempted search with empty query");
         }
-        
+
         // Применяем фильтры + поиск
         ApplyAllFilters();
     }
 
     /// <summary>
-    /// Сбрасывает поиск
+    ///     Сбрасывает поиск
     /// </summary>
     [RelayCommand]
     private void ClearSearch()
@@ -514,13 +524,13 @@ public partial class MainWindowViewModel : ViewModelBase
         SearchText = string.Empty;
         IsSearchActive = false;
         ApplyAllFilters();
-        
+
         StatusMessage = "Search reset";
         Logger.Info("Search reset");
     }
 
     #endregion
-    
+
     #region File Operations
 
     private bool CanOpenFile()
@@ -642,10 +652,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // После загрузки всех файлов — ОДНО обновление
-        if (addedCount > 0)
-        {
-            ApplyAllFilters(); // ← Применяет фильтры + обновляет сортировки + статистику
-        }
+        if (addedCount > 0) ApplyAllFilters(); // ← Применяет фильтры + обновляет сортировки + статистику
 
         StatusMessage = BuildFileAddingStatusMessage(addedCount, duplicateCount);
     }
@@ -729,14 +736,14 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// ⚡ ОПТИМИЗИРОВАННОЕ удаление событий файла БЕЗ утечек памяти
+    ///     ⚡ ОПТИМИЗИРОВАННОЕ удаление событий файла БЕЗ утечек памяти
     /// </summary>
     private void RemoveFileEvents(string fileHash)
     {
         if (!_eventsByFileHash.TryGetValue(fileHash, out var eventsToRemove))
             return;
 
-        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
 
         // ✅ Создаём HashSet для O(1) поиска
         var eventsSet = new HashSet<EventBase>(eventsToRemove);
@@ -756,7 +763,7 @@ public partial class MainWindowViewModel : ViewModelBase
         eventsSet.Clear(); // Освобождаем HashSet
 
         Logger.Info("Total removal time: {Elapsed}ms", sw.ElapsedMilliseconds);
-        
+
         // ✅ Принудительная сборка мусора для больших объёмов (опционально)
         if (removedCount > 50000)
         {
@@ -766,33 +773,31 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// ⚡ ОПТИМИЗИРОВАННОЕ удаление НЕСКОЛЬКИХ файлов БЕЗ утечек памяти
+    ///     ⚡ ОПТИМИЗИРОВАННОЕ удаление НЕСКОЛЬКИХ файлов БЕЗ утечек памяти
     /// </summary>
     private void RemoveMultipleFileEvents(IEnumerable<string> fileHashes)
     {
         var hashList = fileHashes.ToList();
-        
+
         if (hashList.Count == 0)
             return;
 
-        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
 
         // ✅ Собираем ВСЕ события для удаления в один HashSet
         var allEventsToRemove = new HashSet<EventBase>();
 
         foreach (var hash in hashList)
-        {
             if (_eventsByFileHash.TryGetValue(hash, out var events))
             {
                 foreach (var evt in events)
                     allEventsToRemove.Add(evt);
-                
+
                 // ✅ Очищаем список перед удалением из словаря
                 events.Clear();
                 _eventsByFileHash.Remove(hash);
             }
-        }
-        
+
         // ✅ ИСПРАВЛЕНИЕ УТЕЧКИ: Используем RemoveAll
         var removedCount = AllEvents.RemoveAll(e => allEventsToRemove.Contains(e));
 
@@ -804,7 +809,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // ✅ Очищаем HashSet
         allEventsToRemove.Clear();
-        
+
         // ✅ Принудительная сборка мусора для больших объёмов
         if (removedCount > 50000)
         {
@@ -824,6 +829,339 @@ public partial class MainWindowViewModel : ViewModelBase
         return new FileCardViewModel(fileInfo, RemoveTraceFileAsync,
             card => ReparseTraceFileAsync(card, CancellationToken.None));
     }
+
+    #endregion
+
+    #region Remote File Operation
+
+    [RelayCommand(CanExecute = nameof(CanOpenFile))]
+    private async Task OpenRemoteFileAsync(CancellationToken cancellationToken)
+    {
+        IsFileLoading = true;
+        OpenRemoteFileCommand.NotifyCanExecuteChanged();
+        OpenLocalFileCommand.NotifyCanExecuteChanged();
+
+        CancellationTokenSource? cts = null;
+
+        try
+        {
+            cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _loadingCts = cts;
+
+            // Показываем диалог подключения
+            var connectionDialog = CreateRemoteConnectionDialog();
+
+            var connectionResult = await connectionDialog.ShowDialog<bool>(
+                App.Services?.GetRequiredService<IWindowProvider>().GetCurrent() as Window);
+
+            if (!connectionResult)
+            {
+                StatusMessage = "Connection cancelled.";
+                return;
+            }
+
+            var settings = _sshConnectionService.CurrentSettings;
+            if (settings == null)
+            {
+                StatusMessage = "No connection settings available.";
+                return;
+            }
+
+            StatusMessage = "Fetching file list from server...";
+            Logger.Info("Fetching files from {Directory}", settings.RemoteDirectory);
+
+            // Получаем список файлов
+            var remoteFiles = await _remoteFileService.GetFilesAsync(
+                settings.RemoteDirectory,
+                cts.Token);
+
+            if (remoteFiles.Count == 0)
+            {
+                StatusMessage = "No trace files found on server.";
+                Logger.Warn("No files found in {Directory}", settings.RemoteDirectory);
+                return;
+            }
+
+            // Показываем диалог выбора файлов
+            var selectionDialog = CreateFileSelectionDialog(settings, remoteFiles);
+
+            var selectedFiles = await selectionDialog.ShowDialog<IReadOnlyList<RemoteFileInfo>?>(
+                App.Services?.GetRequiredService<IWindowProvider>().GetCurrent() as Window);
+
+            if (selectedFiles == null || selectedFiles.Count == 0)
+            {
+                StatusMessage = "No files selected.";
+                _sshConnectionService.Disconnect();
+                return;
+            }
+
+            // Загружаем файлы с прогрессом
+            var downloadedPaths = await DownloadFilesWithProgressAsync(
+                selectedFiles,
+                settings.DeleteAfterProcessing,
+                cts.Token);
+
+            // Обрабатываем загруженные файлы
+            await ProcessDownloadedFilesAsync(downloadedPaths, cts.Token);
+
+            StatusMessage = $"Successfully processed {downloadedPaths.Count} remote file(s).";
+            Logger.Info("Remote files processed: {Count}", downloadedPaths.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Remote file loading cancelled.";
+            Logger.Info("Remote file loading cancelled by user.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error loading remote files");
+            StatusMessage = $"Remote loading error: {ex.Message}";
+        }
+        finally
+        {
+            _sshConnectionService.Disconnect();
+
+            if (cts != null)
+            {
+                _loadingCts = null;
+                cts.Dispose();
+            }
+
+            IsFileLoading = false;
+            LoadProgress = 0;
+            OpenRemoteFileCommand.NotifyCanExecuteChanged();
+            OpenLocalFileCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private RemoteConnectionDialog CreateRemoteConnectionDialog()
+    {
+        var viewModel = new RemoteConnectionDialogViewModel(
+            App.Services!.GetRequiredService<IWindowProvider>(),
+            _sshConnectionService,
+            App.Services.GetService<ICredentialStorageService>());
+
+        return new RemoteConnectionDialog(viewModel);
+    }
+
+    private RemoteFileSelectionDialog CreateFileSelectionDialog(
+        SshConnectionSettings settings,
+        IReadOnlyList<RemoteFileInfo> files)
+    {
+        var viewModel = new RemoteFileSelectionViewModel();
+        viewModel.Initialize(
+            settings.Hostname,
+            settings.Port,
+            settings.RemoteDirectory,
+            files);
+
+        viewModel.DeleteAfterProcessing = settings.DeleteAfterProcessing;
+
+        // Обработчик события на запрос обновления списка файлов
+        viewModel.RefreshRequested += async (_, _) =>
+        {
+            try
+            {
+                Logger.Info("Refreshing file list from server...");
+                viewModel.StatusMessage = "Fetching updated file list...";
+
+                // Получаем новый список файлов с сервера
+                var updatedFiles = await _remoteFileService.GetFilesAsync(
+                    settings.RemoteDirectory,
+                    CancellationToken.None);
+
+                // Обновляем список в ViewModel
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    viewModel.UpdateFileList(updatedFiles);
+                    viewModel.IsLoading = false;
+                });
+
+                Logger.Info("File list refreshed successfully: {Count} files", updatedFiles.Count);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error refreshing file list");
+            
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    viewModel.StatusMessage = $"Refresh failed: {ex.Message}";
+                    viewModel.IsLoading = false;
+                });
+            }
+        };
+
+        return new RemoteFileSelectionDialog(viewModel);
+    }
+
+    private async Task<IReadOnlyList<string>> DownloadFilesWithProgressAsync(
+        IReadOnlyList<RemoteFileInfo> files,
+        bool deleteAfterDownload,
+        CancellationToken cancellationToken)
+    {
+        var progressViewModel = new DownloadProgressViewModel();
+        progressViewModel.Initialize(files);
+
+        var progressWindow = new DownloadProgressWindow(progressViewModel);
+
+        var downloadedPaths = new List<string>();
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "FirebirdTraceAnalyzer", Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDirectory);
+
+        // Показываем окно прогресса (неблокирующее)
+        progressWindow.Show();
+
+        try
+        {
+            IProgress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)> progress = new Progress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)>(p =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    progressViewModel.UpdateProgress(p.FileIndex, p.TotalFiles, p.BytesTransferred,
+                        p.TotalBytes);
+                });
+            });
+
+            // Подписываемся на отмену
+            progressViewModel.CancelRequested += (_, _) => { _loadingCts?.Cancel(); };
+
+            for (var i = 0; i < files.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var file = files[i];
+
+                await Dispatcher.UIThread.InvokeAsync(() => { progressViewModel.FileStarted(file.FileName); });
+
+                var fileProgress = new Progress<(long BytesTransferred, long TotalBytes)>(p =>
+                {
+                    progress.Report((i, files.Count, p.BytesTransferred, p.TotalBytes));
+                });
+
+                var localPath = await _remoteFileService.DownloadFileAsync(
+                    file,
+                    tempDirectory,
+                    fileProgress,
+                    cancellationToken);
+
+                downloadedPaths.Add(localPath);
+
+                await Dispatcher.UIThread.InvokeAsync(() => { progressViewModel.FileCompleted(file.FileName); });
+            }
+
+            // Удаляем с сервера если нужно
+            if (deleteAfterDownload)
+            {
+                StatusMessage = "Deleting files from server...";
+                var remotePaths = files.Select(f => f.FullPath).ToList();
+                await _remoteFileService.DeleteFilesAsync(remotePaths, cancellationToken);
+                Logger.Info("Deleted {Count} files from server", remotePaths.Count);
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() => { progressViewModel.DownloadCompleted(); });
+
+            // Ждём 2 секунды перед закрытием окна прогресса
+            await Task.Delay(2000, cancellationToken);
+            progressWindow.Close();
+
+            return downloadedPaths;
+        }
+        catch (Exception ex)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => { progressViewModel.DownloadFailed(ex.Message); });
+
+            throw;
+        }
+    }
+
+    private async Task ProcessDownloadedFilesAsync(
+        IReadOnlyList<string> downloadedPaths,
+        CancellationToken cancellationToken)
+    {
+        var addedCount = 0;
+
+        try
+        {
+            _isBatchUpdate = true;
+
+            foreach (var path in downloadedPaths)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var fileInfo = new FileInfo(path);
+
+                if (!fileInfo.Exists)
+                {
+                    Logger.Warn("Downloaded file not found: {Path}", path);
+                    continue;
+                }
+
+                StatusMessage = $"Processing: {fileInfo.Name}";
+
+                var fileHash = await CalculateFileHashAsync(path, cancellationToken);
+
+                if (IsDuplicate(fileHash))
+                {
+                    Logger.Warn("Duplicate file skipped: {FilePath}", path);
+
+                    // Удаляем дубликат
+                    try
+                    {
+                        File.Delete(path);
+                    }
+                    catch
+                    {
+                        /* ignore */
+                    }
+
+                    continue;
+                }
+
+                var traceModel = await ParseFileAsync(fileInfo, fileHash, cancellationToken);
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                    FileCards.Add(CreateFileCardViewModel(traceModel)));
+
+                addedCount++;
+
+                // Удаляем временный файл после обработки
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(ex, "Failed to delete temp file: {Path}", path);
+                }
+            }
+        }
+        finally
+        {
+            _isBatchUpdate = false;
+
+            // Очищаем временную директорию
+            try
+            {
+                var tempDir = Path.GetDirectoryName(downloadedPaths.FirstOrDefault());
+                if (!string.IsNullOrEmpty(tempDir) && Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "Failed to delete temp directory");
+            }
+        }
+
+        if (addedCount > 0) ApplyAllFilters();
+
+        StatusMessage = $"Processed {addedCount} remote file(s).";
+    }
+
+    #endregion
+
+    #region SSH Dependencies
+
+    private readonly ISshConnectionService _sshConnectionService;
+    private readonly IRemoteFileService _remoteFileService;
 
     #endregion
 
@@ -999,13 +1337,10 @@ public partial class MainWindowViewModel : ViewModelBase
             _isBatchUpdate = true;
 
             var count = FileCards.Count;
-            
+
             // ✅ Очищаем списки в _eventsByFileHash перед очисткой словаря
-            foreach (var eventList in _eventsByFileHash.Values)
-            {
-                eventList.Clear();
-            }
-            
+            foreach (var eventList in _eventsByFileHash.Values) eventList.Clear();
+
             // Очищаем все коллекции
             FileCards.Clear();
             AllEvents.Clear();
@@ -1014,7 +1349,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             StatusMessage = $"Closed all files: {count} file(s).";
             Logger.Info("All files closed: {Count}", count);
-            
+
             // ✅ Принудительная сборка мусора
             GC.Collect(2, GCCollectionMode.Forced, true, true);
             Logger.Info("GC forced after closing all files");
@@ -1045,16 +1380,13 @@ public partial class MainWindowViewModel : ViewModelBase
             _isBatchUpdate = true;
 
             var selectedCards = SelectedFileCards.ToList();
-            
+
             // Удаляем события всех файлов ОДНОЙ операцией
             var hashesToRemove = selectedCards.Select(c => c.FileInfo.FileHash).ToList();
             RemoveMultipleFileEvents(hashesToRemove);
-            
+
             // Удаляем карточки
-            foreach (var card in selectedCards)
-            {
-                FileCards.Remove(card);
-            }
+            foreach (var card in selectedCards) FileCards.Remove(card);
 
             StatusMessage = $"Closed selected files: {selectedCards.Count} file(s).";
             Logger.Info("Selected files closed: {Count}", selectedCards.Count);

@@ -37,7 +37,7 @@
                     Header="_Remote File [R]"
                     InputGesture="Ctrl+Alt+O"
                     HotKey="Ctrl+Alt+O"
-                    IsEnabled="False" />
+                    Command="{Binding OpenRemoteFileCommand}" />
 
                 <MenuItem
                     Header="_Cancel Loading [C]"

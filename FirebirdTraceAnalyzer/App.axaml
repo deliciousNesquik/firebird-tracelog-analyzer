@@ -396,6 +396,18 @@
             <x:String x:Key="CopyIcon">
                 avares://FirebirdTraceAnalyzer/Assets/copy.svg
             </x:String>
+            
+            <x:String x:Key="ClearIcon">
+                avares://FirebirdTraceAnalyzer/Assets/clear.svg
+            </x:String>
+            
+            <x:String x:Key="ReloadIcon">
+                avares://FirebirdTraceAnalyzer/Assets/reload.svg
+            </x:String>
+            
+            <x:String x:Key="WarningIcon">
+                avares://FirebirdTraceAnalyzer/Assets/warning.svg
+            </x:String>
 
         </ResourceDictionary>
     </Application.Resources>         

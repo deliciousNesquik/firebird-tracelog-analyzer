@@ -97,8 +97,8 @@ public class StatementStartEventCard : TemplatedControl
     public static readonly StyledProperty<string> HexTraceIdProperty =
         AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(HexTraceId), "0");
     
-    public static readonly StyledProperty<int> StatementIdProperty =
-        AvaloniaProperty.Register<StatementStartEventCard, int>(nameof(StatementId), 0);
+    public static readonly StyledProperty<long> StatementIdProperty =
+        AvaloniaProperty.Register<StatementStartEventCard, long>(nameof(StatementId), 0);
     
     public static readonly StyledProperty<string> DatabasePathProperty =
         AvaloniaProperty.Register<StatementStartEventCard, string>(nameof(DatabasePath), "<not set>");
@@ -169,7 +169,7 @@ public class StatementStartEventCard : TemplatedControl
         set => SetValue(HexTraceIdProperty, value);
     }
     
-    public int StatementId
+    public long StatementId
     {
         get => GetValue(StatementIdProperty);
         set => SetValue(StatementIdProperty, value);

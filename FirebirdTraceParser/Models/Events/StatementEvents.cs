@@ -14,7 +14,7 @@ public class StatementEventBase : EventBase
     
     [SortableField("Statement ID", Priority = 2, Category = "Statements")]
     [FilterableField("Statement ID", Category = "Statements", FilterType =  FilterType.StringMultiSelect)]
-    public int? StatementId { get; init; }
+    public long? StatementId { get; init; }
     public required string Sql { get; init; }
     public required IReadOnlyList<SqlParameters> Parameters { get; init; }
 }

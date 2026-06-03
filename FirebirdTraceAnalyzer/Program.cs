@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 using Avalonia;
-using FirebirdTraceParser.Infrastructure.DependencyInjection;
 using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services;
@@ -8,6 +7,7 @@ using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Searching;
 using FirebirdTraceAnalyzer.Services.Sorting;
 using FirebirdTraceAnalyzer.ViewModels;
+using FirebirdTraceParser.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
@@ -79,9 +79,19 @@ internal sealed class Program
         services.AddSingleton<ISortingService, SortingService>();
         services.AddSingleton<IFilteringService, FilteringService>();
         services.AddSingleton<ISearchService, SearchService>();
+        
+        // SSH сервисы
+        services.AddSingleton<ISshConnectionService, SshConnectionService>();
+        services.AddSingleton<IRemoteFileService, RemoteFileService>();
+        services.AddSingleton<ICredentialStorageService, CredentialStorageService>();
 
         // добавляем ViewModels главного окна
         services.AddTransient<MainWindowViewModel>();
+        
+        // view model для ssh удаленного скачивания файлов
+        services.AddTransient<RemoteConnectionDialogViewModel>();
+        services.AddTransient<RemoteFileSelectionViewModel>();
+        services.AddTransient<DownloadProgressViewModel>();
 
         // собираем все в провайдера
         var serviceProvider = services.BuildServiceProvider();

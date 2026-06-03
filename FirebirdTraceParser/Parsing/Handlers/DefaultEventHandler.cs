@@ -656,7 +656,7 @@ public sealed class DefaultEventHandler : IEventHandler
     private sealed record StatementData(
         AttachmentInfo? Attachment,
         TransactionInfo? Transaction,
-        int? StatementId,
+        long? StatementId,
         string? Sql,
         IReadOnlyList<SqlParameters> Params,
         PerformanceInfo? Performance,
@@ -688,7 +688,7 @@ public sealed class DefaultEventHandler : IEventHandler
     {
         var attachment = ParseAttachmentInfo(lines, rules);
         TransactionInfo? transaction = null;
-        int? statementId = null;
+        long? statementId = null;
         string? sql = null;
         var paramsList = new List<SqlParameters>();
         PerformanceInfo? performance = null;
@@ -708,7 +708,7 @@ public sealed class DefaultEventHandler : IEventHandler
             var sm = rules["statement"].Match(line);
             if (sm.Success)
             {
-                statementId = int.Parse(sm.Groups["statement_id"].ValueSpan);
+                statementId = long.Parse(sm.Groups["statement_id"].ValueSpan);
                 continue;
             }
 
