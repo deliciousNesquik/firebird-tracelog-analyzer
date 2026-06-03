@@ -4,6 +4,7 @@ using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services;
 using FirebirdTraceAnalyzer.Services.Filtering;
+using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Searching;
 using FirebirdTraceAnalyzer.Services.Sorting;
 using FirebirdTraceAnalyzer.ViewModels;
@@ -84,6 +85,10 @@ internal sealed class Program
         services.AddSingleton<ISshConnectionService, SshConnectionService>();
         services.AddSingleton<IRemoteFileService, RemoteFileService>();
         services.AddSingleton<ICredentialStorageService, CredentialStorageService>();
+        
+        // сервисы отчетов
+        services.AddSingleton<IReportTemplateService, ReportTemplateService>();
+        services.AddSingleton<IReportGenerationService, ReportGenerationService>();
 
         // добавляем ViewModels главного окна
         services.AddTransient<MainWindowViewModel>();

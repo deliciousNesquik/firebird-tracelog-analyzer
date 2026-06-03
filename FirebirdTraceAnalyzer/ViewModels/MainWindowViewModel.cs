@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -11,7 +12,9 @@ using FirebirdTraceAnalyzer.Enums;
 using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Mocks;
 using FirebirdTraceAnalyzer.Models;
+using FirebirdTraceAnalyzer.Models.Reports;
 using FirebirdTraceAnalyzer.Services.Filtering;
+using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Searching;
 using FirebirdTraceAnalyzer.Services.Sorting;
 using FirebirdTraceAnalyzer.Views;
@@ -490,6 +493,173 @@ public partial class MainWindowViewModel : ViewModelBase
         finally
         {
             _isBatchUpdate = false;
+        }
+    }
+
+    #endregion
+
+    #region Report Generation
+
+    /// <summary>
+    ///     Создаёт метаданные для генерации отчёта
+    /// </summary>
+    /// <param name="preparedEvents">События, подготовленные для отчёта</param>
+    /// <returns>Метаданные отчёта</returns>
+    public ReportMetadata CreateReportMetadata(IReadOnlyList<EventBase> preparedEvents)
+    {
+        return new ReportMetadata
+        {
+            Events = preparedEvents,
+            Files = FileCards.Select(c => c.FileInfo).ToList(),
+            TotalEventsCount = AllEvents.Count,
+            ActiveFilters = GetActiveFiltersDescription(),
+            ActiveSort = GetActiveSortDescription(),
+            GeneratedAt = DateTime.Now,
+            ApplicationVersion = GetApplicationVersion()
+        };
+    }
+
+    /// <summary>
+    ///     Получает описание активных фильтров
+    /// </summary>
+    private string? GetActiveFiltersDescription()
+    {
+        var activeFilters = FiltersPanelViewModel.AvailableFilters
+            .Where(f => f.IsActive)
+            .Select(f => f.DisplayName)
+            .ToList();
+
+        if (activeFilters.Count == 0)
+            return null;
+
+        return string.Join(", ", activeFilters);
+    }
+
+    /// <summary>
+    ///     Получает описание активной сортировки
+    /// </summary>
+    private string? GetActiveSortDescription()
+    {
+        if (SelectedSort == null)
+            return null;
+
+        var direction = IsSortDescending ? "DESC" : "ASC";
+        return $"{SelectedSort.DisplayName} ({direction})";
+    }
+
+    /// <summary>
+    ///     Получает версию приложения
+    /// </summary>
+    private static string GetApplicationVersion()
+    {
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        return version?.ToString() ?? "1.0.0";
+    }
+
+    [RelayCommand]
+    private async Task GenerateQuickReportAsync(string templateId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            IsFileLoading = true;
+            StatusMessage = "Generating report...";
+            Logger.Info("Quick report requested: {TemplateId}", templateId);
+
+            // Получаем сервисы
+            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
+            var generationService = App.Services?.GetRequiredService<IReportGenerationService>();
+
+            if (templateService == null || generationService == null)
+            {
+                StatusMessage = "Report services not available";
+                Logger.Error("Report services not registered in DI");
+                return;
+            }
+
+            // Загружаем шаблон
+            var template = await templateService.GetTemplateByIdAsync(templateId);
+            if (template == null)
+            {
+                StatusMessage = $"Template not found: {templateId}";
+                Logger.Warn("Template not found: {TemplateId}", templateId);
+                return;
+            }
+
+            // Подготавливаем события для отчёта
+            var currentSortField = GetCurrentSortField();
+            var preparedEvents = generationService.PrepareEventsForReport(
+                VisibleEvents,
+                template,
+                currentSortField,
+                IsSortDescending);
+
+            if (preparedEvents.Count == 0)
+            {
+                StatusMessage = "No events to include in report";
+                Logger.Warn("No events match report criteria");
+                return;
+            }
+
+            // Создаём метаданные
+            var metadata = CreateReportMetadata(preparedEvents);
+
+            // Генерируем отчёт
+            var generatedReport = await generationService.GenerateReportAsync(
+                template,
+                metadata,
+                template.DefaultFormat,
+                null,
+                cancellationToken);
+
+            StatusMessage = $"Report generated: {generatedReport.FilePath}";
+            Logger.Info("Report generated successfully: {Path}", generatedReport.FilePath);
+
+            // Показываем уведомление с предложением открыть
+            await ShowReportGeneratedNotificationAsync(generatedReport);
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Report generation cancelled";
+            Logger.Info("Report generation cancelled by user");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Report generation error: {ex.Message}";
+            Logger.Error(ex, "Error generating report");
+        }
+        finally
+        {
+            IsFileLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private Task OpenReportDesignerAsync(CancellationToken cancellationToken)
+    {
+        // TODO: Открыть окно дизайнера отчётов
+        StatusMessage = "Report designer coming soon...";
+        Logger.Info("Report designer requested");
+        return Task.CompletedTask;
+    }
+
+    private async Task ShowReportGeneratedNotificationAsync(GeneratedReport report)
+    {
+        // Здесь можно показать диалог с кнопками "Open" и "Open Folder"
+        // Пока просто логируем
+        Logger.Info("Report ready: {Path} ({Size} bytes)", report.FilePath, report.FileSize);
+
+        // Можно автоматически открыть файл
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = report.FilePath,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to open report file");
         }
     }
 
@@ -982,7 +1152,7 @@ public partial class MainWindowViewModel : ViewModelBase
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error refreshing file list");
-            
+
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     viewModel.StatusMessage = $"Refresh failed: {ex.Message}";
@@ -1013,14 +1183,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            IProgress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)> progress = new Progress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)>(p =>
-            {
-                Dispatcher.UIThread.Post(() =>
+            IProgress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)> progress =
+                new Progress<(int FileIndex, int TotalFiles, long BytesTransferred, long TotalBytes)>(p =>
                 {
-                    progressViewModel.UpdateProgress(p.FileIndex, p.TotalFiles, p.BytesTransferred,
-                        p.TotalBytes);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        progressViewModel.UpdateProgress(p.FileIndex, p.TotalFiles, p.BytesTransferred,
+                            p.TotalBytes);
+                    });
                 });
-            });
 
             // Подписываемся на отмену
             progressViewModel.CancelRequested += (_, _) => { _loadingCts?.Cancel(); };
@@ -1524,6 +1695,50 @@ public partial class MainWindowViewModel : ViewModelBase
             (0, > 0) => "No files loaded: all files are duplicates.",
             _ => "No files selected."
         };
+    }
+
+    /// <summary>
+    ///     Получает текущее поле сортировки (путь к свойству)
+    /// </summary>
+    /// <returns>Путь к свойству или null, если сортировка не применена</returns>
+    public string? GetCurrentSortField()
+    {
+        if (SelectedSort == null)
+            return null;
+
+        // Для встроенных сортировок по полям, Id имеет формат "field_property_path"
+        // Например: "field_performance_executems"
+
+        if (SelectedSort.Id.StartsWith("field_"))
+        {
+            // Извлекаем путь из ID
+            var pathPart = SelectedSort.Id.Substring("field_".Length);
+
+            // Преобразуем обратно: "performance_executems" -> "Performance.ExecuteMs"
+            return ConvertIdToPropertyPath(pathPart);
+        }
+
+        // Для кастомных сортировок возвращаем null
+        // (они не соответствуют напрямую полям)
+        return null;
+    }
+
+    /// <summary>
+    ///     Преобразует ID сортировки в путь к свойству
+    /// </summary>
+    /// <param name="idPart">Часть ID после "field_"</param>
+    /// <returns>Путь к свойству</returns>
+    private static string ConvertIdToPropertyPath(string idPart)
+    {
+        // "performance_executems" -> ["performance", "executems"]
+        var parts = idPart.Split('_');
+
+        // Преобразуем в PascalCase и соединяем точкой
+        var pathParts = parts.Select(p =>
+            char.ToUpper(p[0]) + p.Substring(1).ToLower()
+        );
+
+        return string.Join(".", pathParts);
     }
 
     #endregion
