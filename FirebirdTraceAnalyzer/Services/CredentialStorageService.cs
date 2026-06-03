@@ -17,6 +17,7 @@ public class CredentialStorageService : ICredentialStorageService
 
     public CredentialStorageService()
     {
+        //TODO: обработать исключение случая, когда платформа не может вернуть путь до настроек приложения  
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         _storageDirectory = Path.Combine(appDataPath, "FirebirdTraceAnalyzer", "Credentials");
 
@@ -129,10 +130,10 @@ public class CredentialStorageService : ICredentialStorageService
         {
             // Используем ProtectedData на Windows
             var passwordBytes = Encoding.UTF8.GetBytes(password);
-            var encryptedBytes = System.Security.Cryptography.ProtectedData.Protect(
+            var encryptedBytes = ProtectedData.Protect(
                 passwordBytes,
                 null,
-                System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                DataProtectionScope.CurrentUser);
             
             return Convert.ToBase64String(encryptedBytes);
         }
@@ -151,10 +152,10 @@ public class CredentialStorageService : ICredentialStorageService
         if (OperatingSystem.IsWindows())
         {
             var encryptedBytes = Convert.FromBase64String(encryptedPassword);
-            var decryptedBytes = System.Security.Cryptography.ProtectedData.Unprotect(
+            var decryptedBytes = ProtectedData.Unprotect(
                 encryptedBytes,
                 null,
-                System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                DataProtectionScope.CurrentUser);
             
             return Encoding.UTF8.GetString(decryptedBytes);
         }
