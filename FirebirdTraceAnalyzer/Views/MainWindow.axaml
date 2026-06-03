@@ -78,6 +78,70 @@
                 </MenuItem>
 
             </MenuItem>
+            
+            <MenuItem Header="_Reports [E]">
+    
+                <!-- Быстрые отчёты (предустановленные шаблоны) -->
+                <MenuItem Header="_Quick Reports">
+                    <MenuItem 
+                        Header="Top 5 Slowest Statements"
+                        CommandParameter="top5_statements" />
+                    <!--Command="{Binding GenerateQuickReportCommand}"-->
+        
+                    <MenuItem 
+                        Header="Top 10 Slowest Procedures"
+                        CommandParameter="top10_procedures" />
+                    <!--Command="{Binding GenerateQuickReportCommand}"-->
+        
+                    <MenuItem 
+                        Header="User Activity Summary"
+                        CommandParameter="user_activity" />
+                    <!--Command="{Binding GenerateQuickReportCommand}"-->
+        
+                    <MenuItem 
+                        Header="Database Connections Timeline"
+                        CommandParameter="connections_timeline" />
+                    <!--Command="{Binding GenerateQuickReportCommand}"-->
+                </MenuItem>
+
+                <Separator />
+
+                <!-- Пользовательские отчёты -->
+                <MenuItem 
+                    Header="_Custom Report..."
+                    InputGesture="Ctrl+R"
+                    HotKey="Ctrl+R"/>
+                <!--Command="{Binding OpenReportDesignerCommand}" -->
+
+                <Separator />
+
+                <!-- Управление шаблонами -->
+                <MenuItem Header="_Manage Templates">
+                    <MenuItem 
+                        Header="Create New Template..."/>
+                    <!--Command="{Binding CreateReportTemplateCommand}"-->
+        
+                    <MenuItem 
+                        Header="Edit Template..."/>
+                    <!--Command="{Binding EditReportTemplateCommand}" -->
+        
+                    <MenuItem 
+                        Header="Import Template..."/>
+                    <!--Command="{Binding ImportReportTemplateCommand}"-->
+        
+                    <MenuItem 
+                        Header="Export Template..."/>
+                    <!--Command="{Binding ExportReportTemplateCommand}"-->
+                </MenuItem>
+
+                <Separator />
+
+                <!-- История отчётов -->
+                <MenuItem 
+                    Header="_Recent Reports"/>
+                <!--Command="{Binding OpenRecentReportsCommand}"-->
+
+            </MenuItem>
 
             <MenuItem Header="_Window [W]">
                 <MenuItem
