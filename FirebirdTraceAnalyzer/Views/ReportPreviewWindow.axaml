@@ -39,14 +39,9 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <ComboBox SelectedValue="{Binding SelectedFormat}"
-                              SelectedValueBinding="{Binding Tag, RelativeSource={RelativeSource Self}}"
-                              Width="150" Height="40">
-                        <ComboBoxItem Content="PDF" Tag="{x:Static enums:ReportFormat.PDF}" />
-                        <ComboBoxItem Content="Word (DOCX)" Tag="{x:Static enums:ReportFormat.DOCX}" />
-                        <ComboBoxItem Content="Excel (XLSX)" Tag="{x:Static enums:ReportFormat.XLSX}" />
-                        <ComboBoxItem Content="CSV" Tag="{x:Static enums:ReportFormat.CSV}" />
-                    </ComboBox>
+                    <ComboBox ItemsSource="{Binding AvailableFormats}"
+                              SelectedItem="{Binding SelectedFormat}"
+                              Width="150" Height="40" />
 
                     <Button Width="40" Height="40"
                             Command="{Binding ExportReportCommand}"

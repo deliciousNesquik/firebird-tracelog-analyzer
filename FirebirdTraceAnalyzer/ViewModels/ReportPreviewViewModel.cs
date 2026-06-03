@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceAnalyzer.Enums.Reports;
@@ -15,7 +12,7 @@ using NLog;
 namespace FirebirdTraceAnalyzer.ViewModels;
 
 /// <summary>
-/// ViewModel для превью отчёта
+///     ViewModel для превью отчёта
 /// </summary>
 public partial class ReportPreviewViewModel : ViewModelBase
 {
@@ -25,32 +22,27 @@ public partial class ReportPreviewViewModel : ViewModelBase
 
     #region Observable Properties
 
-    [ObservableProperty]
-    private ReportTemplate? _template;
+    [ObservableProperty] private ReportTemplate? _template;
 
-    [ObservableProperty]
-    private ReportMetadata? _metadata;
+    [ObservableProperty] private ReportMetadata? _metadata;
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] private bool _isLoading;
 
-    [ObservableProperty]
-    private string _statusMessage = "Ready";
+    [ObservableProperty] private string _statusMessage = "Ready";
 
-    [ObservableProperty]
-    private ReportFormat _selectedFormat = ReportFormat.PDF;
+    [ObservableProperty] private ReportFormat _selectedFormat = ReportFormat.PDF;
+
+    public List<ReportFormat> AvailableFormats { get; } = Enum.GetValues<ReportFormat>().ToList();
 
     #endregion
 
     #region Preview Data
 
     /// <summary>Заголовок отчёта</summary>
-    [ObservableProperty]
-    private string _previewTitle = string.Empty;
+    [ObservableProperty] private string _previewTitle = string.Empty;
 
     /// <summary>Подзаголовок отчёта</summary>
-    [ObservableProperty]
-    private string _previewSubtitle = string.Empty;
+    [ObservableProperty] private string _previewSubtitle = string.Empty;
 
     /// <summary>Переменные заголовка с их значениями</summary>
     public ObservableCollection<PreviewVariableItem> HeaderVariables { get; } = new();
@@ -65,8 +57,7 @@ public partial class ReportPreviewViewModel : ViewModelBase
     public ObservableCollection<PreviewStatItem> Statistics { get; } = new();
 
     /// <summary>Футер</summary>
-    [ObservableProperty]
-    private string _footerText = string.Empty;
+    [ObservableProperty] private string _footerText = string.Empty;
 
     #endregion
 
@@ -74,14 +65,14 @@ public partial class ReportPreviewViewModel : ViewModelBase
     {
         _generationService = null!;
     }
-    
+
     public ReportPreviewViewModel(IReportGenerationService generationService)
     {
         _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
     }
 
     /// <summary>
-    /// Инициализирует превью с шаблоном и метаданными
+    ///     Инициализирует превью с шаблоном и метаданными
     /// </summary>
     public async Task InitializeAsync(
         ReportTemplate template,
@@ -113,10 +104,87 @@ public partial class ReportPreviewViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Генерирует превью данные
-    /// </summary>
     private Task GeneratePreviewAsync(CancellationToken cancellationToken)
+    {
+        if (Template == null || Metadata == null)
+            return Task.CompletedTask;
+
+        // Вся работа с ObservableCollection ДОЛЖНА происходить в UI-потоке.
+        // Если расчеты GetVariableValue тяжелые, мы вынесем их, 
+        // но коллекции трогаем только через Dispatcher.
+        return Task.Run(() =>
+        {
+            // 1. Сначала собираем все данные в обычные, потокобезопасные списки в фоне
+            var title = Template.Header.Title;
+            var subtitle = Template.Header.Subtitle ?? string.Empty;
+
+            var variables = Template.Header.Variables
+                .Where(v => v.IsVisible)
+                .OrderBy(v => v.DisplayOrder)
+                .Select(variable => new PreviewVariableItem
+                {
+                    Label = variable.DisplayName,
+                    Value = GetVariableValue(variable)
+                }).ToList();
+
+            var columns = Template.Body.VisibleFields
+                .OrderBy(f => f.Order)
+                .Select(field => new PreviewColumnItem
+                {
+                    Header = field.DisplayName,
+                    PropertyPath = field.PropertyPath,
+                    Format = field.Format,
+                    Alignment = field.Alignment
+                }).ToList();
+
+            var events = Metadata.Events.ToList();
+
+            var stats = new List<PreviewStatItem>();
+            if (Template.Body.ShowSummary)
+            {
+                stats.Add(new PreviewStatItem { Label = "Total Files", Value = Metadata.Files.Count.ToString() });
+                stats.Add(new PreviewStatItem
+                    { Label = "Total Events (before filters)", Value = Metadata.TotalEventsCount.ToString("N0") });
+                stats.Add(new PreviewStatItem
+                    { Label = "Events in Report", Value = Metadata.Events.Count.ToString("N0") });
+
+                if (!string.IsNullOrWhiteSpace(Metadata.ActiveFilters))
+                    stats.Add(new PreviewStatItem { Label = "Active Filters", Value = Metadata.ActiveFilters });
+
+                if (!string.IsNullOrWhiteSpace(Metadata.ActiveSort))
+                    stats.Add(new PreviewStatItem { Label = "Active Sort", Value = Metadata.ActiveSort });
+            }
+
+            var footer = Template.Footer.Show ? Template.Footer.Text : string.Empty;
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // 2. Синхронно и безопасно обновляем UI-элементы в главном потоке
+            Dispatcher.UIThread.Post(() =>
+            {
+                PreviewTitle = title;
+                PreviewSubtitle = subtitle;
+                FooterText = footer;
+
+                HeaderVariables.Clear();
+                foreach (var v in variables) HeaderVariables.Add(v);
+
+                EventColumns.Clear();
+                foreach (var c in columns) EventColumns.Add(c);
+
+                PreviewEvents.Clear();
+                foreach (var e in events) PreviewEvents.Add(e);
+
+                Statistics.Clear();
+                foreach (var s in stats) Statistics.Add(s);
+            });
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Генерирует превью данные
+    /// </summary>
+    private Task GeneratePreviewAsync1(CancellationToken cancellationToken)
     {
         if (Template == null || Metadata == null)
             return Task.CompletedTask;
@@ -142,7 +210,6 @@ public partial class ReportPreviewViewModel : ViewModelBase
             // Столбцы событий
             EventColumns.Clear();
             foreach (var field in Template.Body.VisibleFields.OrderBy(f => f.Order))
-            {
                 EventColumns.Add(new PreviewColumnItem
                 {
                     Header = field.DisplayName,
@@ -150,44 +217,37 @@ public partial class ReportPreviewViewModel : ViewModelBase
                     Format = field.Format,
                     Alignment = field.Alignment
                 });
-            }
 
             // События
             PreviewEvents.Clear();
-            foreach (var evt in Metadata.Events)
-            {
-                PreviewEvents.Add(evt);
-            }
+            foreach (var evt in Metadata.Events) PreviewEvents.Add(evt);
 
             // Статистика
             Statistics.Clear();
             if (Template.Body.ShowSummary)
             {
                 Statistics.Add(new PreviewStatItem { Label = "Total Files", Value = Metadata.Files.Count.ToString() });
-                Statistics.Add(new PreviewStatItem { Label = "Total Events (before filters)", Value = Metadata.TotalEventsCount.ToString("N0") });
-                Statistics.Add(new PreviewStatItem { Label = "Events in Report", Value = Metadata.Events.Count.ToString("N0") });
+                Statistics.Add(new PreviewStatItem
+                    { Label = "Total Events (before filters)", Value = Metadata.TotalEventsCount.ToString("N0") });
+                Statistics.Add(new PreviewStatItem
+                    { Label = "Events in Report", Value = Metadata.Events.Count.ToString("N0") });
 
                 if (!string.IsNullOrWhiteSpace(Metadata.ActiveFilters))
-                {
                     Statistics.Add(new PreviewStatItem { Label = "Active Filters", Value = Metadata.ActiveFilters });
-                }
 
                 if (!string.IsNullOrWhiteSpace(Metadata.ActiveSort))
-                {
                     Statistics.Add(new PreviewStatItem { Label = "Active Sort", Value = Metadata.ActiveSort });
-                }
             }
 
             // Футер
             FooterText = Template.Footer.Show ? Template.Footer.Text : string.Empty;
 
             cancellationToken.ThrowIfCancellationRequested();
-
         }, cancellationToken);
     }
 
     /// <summary>
-    /// Генерирует и экспортирует отчёт
+    ///     Генерирует и экспортирует отчёт
     /// </summary>
     [RelayCommand]
     private async Task ExportReportAsync(CancellationToken cancellationToken)
@@ -216,7 +276,7 @@ public partial class ReportPreviewViewModel : ViewModelBase
             // Открываем файл
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = generatedReport.FilePath,
                     UseShellExecute = true
@@ -239,7 +299,7 @@ public partial class ReportPreviewViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Получает значение переменной
+    ///     Получает значение переменной
     /// </summary>
     private string GetVariableValue(ReportVariable variable)
     {
@@ -252,26 +312,26 @@ public partial class ReportPreviewViewModel : ViewModelBase
             ReportVariableType.FilePaths => string.Join(", ", Metadata.Files.Select(f => f.FilePath)),
             ReportVariableType.FileCount => Metadata.Files.Count.ToString(),
             ReportVariableType.FileSizeTotal => FormatFileSize(Metadata.Files.Sum(f => f.FileSize)),
-            
+
             ReportVariableType.TotalEventsCount => Metadata.TotalEventsCount.ToString("N0"),
             ReportVariableType.FilteredEventsCount => Metadata.Events.Count.ToString("N0"),
             ReportVariableType.VisibleEventsCount => Metadata.Events.Count.ToString("N0"),
-            
-            ReportVariableType.TraceStartTime => Metadata.Files.Count > 0 
-                ? Metadata.Files.Min(f => f.StartTrace).ToString("yyyy-MM-dd HH:mm:ss") 
+
+            ReportVariableType.TraceStartTime => Metadata.Files.Count > 0
+                ? Metadata.Files.Min(f => f.StartTrace).ToString("yyyy-MM-dd HH:mm:ss")
                 : "N/A",
-            ReportVariableType.TraceEndTime => Metadata.Files.Count > 0 
-                ? Metadata.Files.Max(f => f.EndTrace).ToString("yyyy-MM-dd HH:mm:ss") 
+            ReportVariableType.TraceEndTime => Metadata.Files.Count > 0
+                ? Metadata.Files.Max(f => f.EndTrace).ToString("yyyy-MM-dd HH:mm:ss")
                 : "N/A",
             ReportVariableType.TraceDuration => GetTraceDuration(),
-            
+
             ReportVariableType.ActiveFilters => Metadata.ActiveFilters ?? "None",
             ReportVariableType.ActiveSort => Metadata.ActiveSort ?? "None",
-            
+
             ReportVariableType.GeneratedDate => Metadata.GeneratedAt.ToString("yyyy-MM-dd HH:mm:ss"),
             ReportVariableType.GeneratedBy => Environment.UserName,
             ReportVariableType.ApplicationVersion => Metadata.ApplicationVersion,
-            
+
             _ => "N/A"
         };
     }
