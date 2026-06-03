@@ -420,6 +420,10 @@
             <x:String x:Key="TrashIcon">
                 avares://FirebirdTraceAnalyzer/Assets/trash.svg
             </x:String>
+            
+            <x:String x:Key="ExportIcon">
+                avares://FirebirdTraceAnalyzer/Assets/export.svg
+            </x:String>
 
         </ResourceDictionary>
     </Application.Resources>         
