@@ -46,8 +46,8 @@ public sealed class ReportTemplate
     /// <summary>Формат по умолчанию</summary>
     public ReportFormat DefaultFormat { get; init; } = ReportFormat.PDF;
     
-    /// <summary>Фильтр по типам событий (опционально)</summary>
-    public List<string>? EventTypeFilter { get; init; }
+    /// <summary>Фильтры для применения к событиям (опционально)</summary>
+    public List<ReportFilterConfig>? Filters { get; init; }
     
     /// <summary>Поле для сортировки</summary>
     public string? SortByField { get; init; }

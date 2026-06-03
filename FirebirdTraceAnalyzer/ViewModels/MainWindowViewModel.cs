@@ -634,6 +634,183 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private async Task CreateReportTemplateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
+            var generationService = App.Services?.GetRequiredService<IReportGenerationService>();
+            var filteringService = App.Services?.GetRequiredService<IFilteringService>();
+            var sortingService = App.Services?.GetRequiredService<ISortingService>();
+
+            if (templateService == null || generationService == null ||
+                filteringService == null || sortingService == null)
+            {
+                StatusMessage = "Report services not available";
+                return;
+            }
+
+            // Создаём ViewModel для дизайнера
+            var designerViewModel = new ReportDesignerViewModel(
+                templateService,
+                generationService,
+                filteringService,
+                sortingService);
+
+            // Загружаем доступные поля и фильтры из текущих событий
+            if (VisibleEvents.Count > 0)
+            {
+                designerViewModel.LoadAvailableFields(VisibleEvents);
+                designerViewModel.LoadAvailableFilters(VisibleEvents);
+                designerViewModel.LoadAvailableSorts(VisibleEvents);
+            }
+
+            // Открываем окно дизайнера
+            var window = new ReportDesignerWindow(designerViewModel);
+            var result = await window.ShowDialog<ReportTemplate?>(
+                App.Services?.GetRequiredService<IWindowProvider>().GetCurrent() as Window);
+
+            if (result != null)
+            {
+                StatusMessage = $"Template created: {result.Name}";
+                Logger.Info("Report template created: {Name}", result.Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error creating template");
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditReportTemplateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
+
+            if (templateService == null)
+            {
+                StatusMessage = "Template service not available";
+                return;
+            }
+
+            // Получаем список шаблонов
+            var templates = await templateService.GetAllTemplatesAsync();
+
+            // TODO: Показать диалог выбора шаблона для редактирования
+            // После выбора открыть ReportDesignerWindow с загруженным шаблоном
+
+            StatusMessage = "Template editing coming soon...";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error editing template");
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportReportTemplateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
+
+            if (templateService == null)
+            {
+                StatusMessage = "Template service not available";
+                return;
+            }
+
+            // Открываем диалог выбора файла
+            var topLevel = App.Services?.GetRequiredService<IWindowProvider>().GetCurrent();
+            if (topLevel?.StorageProvider == null) return;
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+                new FilePickerOpenOptions
+                {
+                    Title = "Import Report Template",
+                    AllowMultiple = false,
+                    FileTypeFilter = new[]
+                    {
+                        new FilePickerFileType("Report Template")
+                        {
+                            Patterns = new[] { "*.json" }
+                        }
+                    }
+                });
+
+            if (files.Count == 0)
+                return;
+
+            var filePath = files[0].Path.LocalPath;
+            var importedTemplate = await templateService.ImportTemplateAsync(filePath);
+
+            StatusMessage = $"Template imported: {importedTemplate.Name}";
+            Logger.Info("Template imported: {Name}", importedTemplate.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error importing template");
+            StatusMessage = $"Import error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportReportTemplateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
+
+            if (templateService == null)
+            {
+                StatusMessage = "Template service not available";
+                return;
+            }
+
+            // TODO: Показать диалог выбора шаблона для экспорта
+            // После выбора открыть диалог сохранения файла
+
+            StatusMessage = "Template export coming soon...";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error exporting template");
+            StatusMessage = $"Export error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentReportsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var historyViewModel = new ReportHistoryViewModel();
+            await historyViewModel.LoadReportsCommand.ExecuteAsync(null);
+
+            var window = new Window
+            {
+                Title = "Recent Reports",
+                Width = 800,
+                Height = 600,
+                Content = new UserControls.ReportHistoryView { DataContext = historyViewModel },
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            await window.ShowDialog(
+                App.Services?.GetRequiredService<IWindowProvider>().GetCurrent() as Window);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error opening recent reports");
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
     private Task OpenReportDesignerAsync(CancellationToken cancellationToken)
     {
         // TODO: Открыть окно дизайнера отчётов

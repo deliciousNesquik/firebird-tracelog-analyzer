@@ -196,7 +196,7 @@ public class ReportTemplateService : IReportTemplateService
                 SupportedFormats = template.SupportedFormats,
                 DefaultFormat = template.DefaultFormat,
             
-                EventTypeFilter = template.EventTypeFilter,
+                Filters = template.Filters,
                 SortByField = template.SortByField,
                 SortDescending = template.SortDescending,
                 EventLimit = template.EventLimit,

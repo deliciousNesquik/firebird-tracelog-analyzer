@@ -97,23 +97,17 @@ public class ReportGenerationService : IReportGenerationService
         Logger.Info("Preparing events for report: {TemplateName}", template.Name);
         Logger.Debug("Input events count: {Count}", events.Count);
 
-        // ✅ ШАГ 1: Применяем фильтр по типам событий (если указан в шаблоне)
-        if (template.EventTypeFilter != null && template.EventTypeFilter.Count > 0)
+        // ✅ ШАГ 1: Применяем фильтры из шаблона (если указаны)
+        if (template.Filters != null && template.Filters.Count > 0)
         {
-            var allowedTypes = new HashSet<string>(template.EventTypeFilter);
+            events = ApplyTemplateFilters(events, template.Filters);
 
-            events = events
-                .Where(e => allowedTypes.Contains(e.GetType().Name))
-                .ToList();
-
-            Logger.Debug("After event type filter: {Count} events (filtered by: {Types})",
-                events.Count, string.Join(", ", template.EventTypeFilter));
+            Logger.Debug("After template filters: {Count} events", events.Count);
         }
 
         // ✅ ШАГ 2: Проверяем и применяем сортировку (если отличается от текущей)
         if (!string.IsNullOrWhiteSpace(template.SortByField))
         {
-            // Проверяем, совпадает ли текущая сортировка с требуемой
             var needsResorting = currentSortField != template.SortByField ||
                                  currentSortDescending != template.SortDescending;
 
@@ -142,6 +136,88 @@ public class ReportGenerationService : IReportGenerationService
         Logger.Info("Events prepared: {Count} events ready for report", events.Count);
 
         return events;
+    }
+
+    /// <summary>
+    ///     Применяет фильтры из шаблона к событиям
+    /// </summary>
+    private List<EventBase> ApplyTemplateFilters(List<EventBase> events, List<ReportFilterConfig> filters)
+    {
+        var activeFilters = filters.Where(f => f.IsActive).ToList();
+
+        if (activeFilters.Count == 0)
+            return events;
+
+        Logger.Info("Applying {Count} template filter(s)", activeFilters.Count);
+
+        var filteredEvents = events.Where(evt =>
+        {
+            // Событие должно пройти ВСЕ активные фильтры
+            return activeFilters.All(filter => CheckFilter(evt, filter));
+        }).ToList();
+
+        return filteredEvents;
+    }
+
+    /// <summary>
+    ///     Проверяет, проходит ли событие через фильтр
+    /// </summary>
+    private bool CheckFilter(EventBase evt, ReportFilterConfig filter)
+    {
+        // Для фильтров с выбранными значениями (Enum/String)
+        if (filter.SelectedValues != null && filter.SelectedValues.Count > 0)
+        {
+            var propertyPath = ExtractPropertyPathFromFilterId(filter.FilterId);
+            var value = GetPropertyValue(evt, propertyPath);
+
+            if (value == null)
+                return false;
+
+            return filter.SelectedValues.Contains(value);
+        }
+
+        // Для Range фильтров (Numeric/DateTime)
+        if (filter.MinValue != null || filter.MaxValue != null)
+        {
+            var propertyPath = ExtractPropertyPathFromFilterId(filter.FilterId);
+            var value = GetPropertyValue(evt, propertyPath);
+
+            if (value == null)
+                return false;
+
+            if (value is not IComparable comparable)
+                return false;
+
+            if (filter.MinValue != null && comparable.CompareTo(filter.MinValue) < 0)
+                return false;
+
+            if (filter.MaxValue != null && comparable.CompareTo(filter.MaxValue) > 0)
+                return false;
+
+            return true;
+        }
+
+        // Если фильтр не имеет условий, пропускаем событие
+        return true;
+    }
+
+    /// <summary>
+    ///     Извлекает путь к свойству из ID фильтра
+    ///     Например: "filter_EventType" -> "EventType"
+    ///     "filter_Attachment_User" -> "Attachment.User"
+    /// </summary>
+    private string ExtractPropertyPathFromFilterId(string filterId)
+    {
+        // Убираем префикс "filter_"
+        var pathPart = filterId.StartsWith("filter_")
+            ? filterId.Substring("filter_".Length)
+            : filterId;
+
+        // Преобразуем "attachment_user" -> "Attachment.User"
+        var parts = pathPart.Split('_');
+        var pathParts = parts.Select(p => char.ToUpper(p[0]) + p.Substring(1));
+
+        return string.Join(".", pathParts);
     }
 
     /// <summary>

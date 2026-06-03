@@ -5,6 +5,7 @@ using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
+using FirebirdTraceAnalyzer.Services.Reports.Exporters;
 using FirebirdTraceAnalyzer.Services.Searching;
 using FirebirdTraceAnalyzer.Services.Sorting;
 using FirebirdTraceAnalyzer.ViewModels;
@@ -89,6 +90,23 @@ internal sealed class Program
         // сервисы отчетов
         services.AddSingleton<IReportTemplateService, ReportTemplateService>();
         services.AddSingleton<IReportGenerationService, ReportGenerationService>();
+        
+        services.AddTransient<ReportDesignerViewModel>();
+        services.AddTransient<ReportPreviewViewModel>();
+        services.AddTransient<ReportHistoryViewModel>();
+
+        
+        services.AddSingleton<PdfReportExporter>();
+        services.AddSingleton<IReportExporter>(provider => provider.GetRequiredService<PdfReportExporter>());
+
+        services.AddSingleton<CsvReportExporter>();
+        services.AddSingleton<IReportExporter>(provider => provider.GetRequiredService<CsvReportExporter>());
+
+        services.AddSingleton<DocxReportExporter>();
+        services.AddSingleton<IReportExporter>(provider => provider.GetRequiredService<DocxReportExporter>());
+
+        services.AddSingleton<XlsxReportExporter>();
+        services.AddSingleton<IReportExporter>(provider => provider.GetRequiredService<XlsxReportExporter>());
 
         // добавляем ViewModels главного окна
         services.AddTransient<MainWindowViewModel>();
