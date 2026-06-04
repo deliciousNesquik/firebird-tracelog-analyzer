@@ -39,22 +39,37 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <Button Content="💾 Save Template"
-                            Command="{Binding SaveTemplateCommand}"
+                    <Button Height="40" Command="{Binding SaveTemplateCommand}"
                             Background="{DynamicResource Primary}"
                             Foreground="White"
-                            Padding="16,8" />
+                            Padding="10,0">
+                        <Button.Content>
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                                <Svg Grid.Column="0" VerticalAlignment="Center" Height="30"
+                                     Path="{DynamicResource SaveIcon}"
+                                     Css="{DynamicResource ThemeIconStroke}" />
+                                <TextBlock FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Grid.Column="1" Text="Save Template"/>
+                            </Grid>
+                        </Button.Content>
+                    </Button>
                     
-                    <Button Content="👁 Preview"
-                            Command="{Binding GeneratePreviewCommand}"
-                            Padding="16,8" />
+                    <Button Height="40" Command="{Binding GeneratePreviewCommand}" Padding="10 0">
+                        <Button.Content>
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                                <Svg Grid.Column="0" VerticalAlignment="Center" Height="30"
+                                     Path="{DynamicResource PreviewIcon}"
+                                     Css="{DynamicResource ThemeIconFill}" />
+                                <TextBlock FontSize="16" FontWeight="Bold" VerticalAlignment="Center" Grid.Column="1" Text="Preview"/>
+                            </Grid>
+                        </Button.Content>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Content -->
-        <ScrollViewer Grid.Row="1" Padding="20">
-            <StackPanel Spacing="20">
+        <ScrollViewer Grid.Row="1" >
+            <StackPanel Spacing="20" Margin="20">
 
                 <!-- Template Info -->
                 <Border BorderBrush="{DynamicResource BorderColor}"
@@ -63,7 +78,7 @@
                         Padding="16">
                     
                     <StackPanel Spacing="12">
-                        <TextBlock Text="📋 Template Information"
+                        <TextBlock Text="Template Information"
                                    FontWeight="SemiBold"
                                    FontSize="14" />
 
@@ -71,7 +86,7 @@
                             <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
                                 <TextBlock Text="Template Name *" FontSize="12" />
                                 <TextBox Text="{Binding TemplateName}"
-                                         Watermark="Enter template name..." />
+                                         PlaceholderText="Enter template name..." />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
@@ -103,7 +118,7 @@
                         Padding="16">
                     
                     <StackPanel Spacing="12">
-                        <TextBlock Text="📄 Header Settings"
+                        <TextBlock Text="Header Settings"
                                    FontWeight="SemiBold"
                                    FontSize="14" />
 
@@ -116,11 +131,12 @@
                             <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
                                 <TextBlock Text="Subtitle" FontSize="12" />
                                 <TextBox Text="{Binding ReportSubtitle}"
-                                         Watermark="Optional..." />
+                                         PlaceholderText="Optional..." />
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="0" Spacing="8" Orientation="Horizontal">
                                 <CheckBox Content="Show Logo"
+                                          IsEnabled="False"
                                           IsChecked="{Binding ShowLogo}" />
                                 <CheckBox Content="Show Generated Date"
                                           IsChecked="{Binding ShowGeneratedDate}" />
@@ -169,7 +185,7 @@
                         Padding="16">
                     
                     <StackPanel Spacing="12">
-                        <TextBlock Text="📊 Body Settings"
+                        <TextBlock Text="Body Settings"
                                    FontWeight="SemiBold"
                                    FontSize="14" />
 
@@ -191,7 +207,7 @@
                                 <NumericUpDown Value="{Binding EventLimit}"
                                                Minimum="1"
                                                Maximum="10000"
-                                               Watermark="No limit..."
+                                               PlaceholderText="No limit..."
                                                AllowSpin="True"
                                                Increment="5" />
                             </StackPanel>
@@ -318,7 +334,7 @@
                         Padding="16">
                     
                     <StackPanel Spacing="12">
-                        <TextBlock Text="📤 Export Formats"
+                        <TextBlock Text="Export Formats"
                                    FontWeight="SemiBold"
                                    FontSize="14" />
 
