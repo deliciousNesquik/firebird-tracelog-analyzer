@@ -84,6 +84,8 @@ internal sealed class Program
         services.AddSingleton<IFilteringService, FilteringService>();
         services.AddSingleton<ISearchService, SearchService>();
         
+        services.AddSingleton<IFieldDiscoveryService, FieldDiscoveryService>();
+        
         // SSH сервисы
         services.AddSingleton<ISshConnectionService, SshConnectionService>();
         services.AddSingleton<IRemoteFileService, RemoteFileService>();

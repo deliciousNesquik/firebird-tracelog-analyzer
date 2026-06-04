@@ -226,7 +226,7 @@
                                                 
                                                 <TextBox Grid.Column="2"
                                                          Text="{Binding Format}"
-                                                         Watermark="Format..."
+                                                         PlaceholderText="Format..."
                                                          FontSize="11"
                                                          IsEnabled="{Binding IsVisible}" />
                                                 
@@ -234,7 +234,7 @@
                                                                Value="{Binding WidthPercent}"
                                                                Minimum="5"
                                                                Maximum="100"
-                                                               Watermark="Width%"
+                                                               PlaceholderText="Width%"
                                                                ShowButtonSpinner="False"
                                                                FontSize="11"
                                                                IsEnabled="{Binding IsVisible}" />

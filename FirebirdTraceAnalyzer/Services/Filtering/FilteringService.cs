@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceParser.Attributes;
 using FirebirdTraceParser.Models.Events;
@@ -12,20 +13,19 @@ public sealed class FilteringService : IFilteringService
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly IEventPropertyAccessor _propertyAccessor;
+    private readonly IFieldDiscoveryService _fieldDiscovery;
 
-    // Кэш метаданных полей по типу события
-    private readonly Dictionary<Type, List<FilterFieldInfo>> _fieldCache = new();
-
-    // Пользовательские фильтры
     private readonly Dictionary<string, FilterDescriptor> _customFilters = new();
 
-    // Кэш последних созданных фильтров (для оптимизации)
     private List<FilterDescriptor>? _lastGeneratedFilters;
     private HashSet<Type>? _lastEventTypes;
 
-    public FilteringService(IEventPropertyAccessor propertyAccessor)
+    public FilteringService(
+        IEventPropertyAccessor propertyAccessor,
+        IFieldDiscoveryService fieldDiscovery)
     {
         _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+        _fieldDiscovery = fieldDiscovery ?? throw new ArgumentNullException(nameof(fieldDiscovery));
     }
 
     public void RegisterCustomFilter(FilterDescriptor descriptor)
@@ -45,7 +45,6 @@ public sealed class FilteringService : IFilteringService
                 .ToList();
         }
 
-        // Проверяем, изменились ли типы событий
         var currentEventTypes = eventList
             .Select(e => e.GetType())
             .ToHashSet();
@@ -54,21 +53,19 @@ public sealed class FilteringService : IFilteringService
             _lastGeneratedFilters != null && 
             currentEventTypes.SetEquals(_lastEventTypes))
         {
-            // Типы не изменились — обновляем только счётчики
             Logger.Debug("Event types haven't changed, we'll reuse filters");
             UpdateFilterValues(_lastGeneratedFilters, eventList);
             return _lastGeneratedFilters;
         }
 
-        // Типы изменились — пересоздаём фильтры
         Logger.Info("Event types have changed, we are generating new filters");
 
         var availableFilters = new List<FilterDescriptor>(_customFilters.Values);
 
-        // Собираем только ОБЩИЕ поля (пересечение типов)
-        var commonFields = AnalyzeCommonFields(eventList);
+        // Используем новый сервис для получения фильтруемых полей
+        var filterableFields = _fieldDiscovery.GetFilterableFields(eventList);
 
-        foreach (var field in commonFields)
+        foreach (var field in filterableFields)
         {
             var filterId = _propertyAccessor.ToFilterId(field.PropertyPath);
 
@@ -87,16 +84,12 @@ public sealed class FilteringService : IFilteringService
             .ThenBy(f => f.Priority)
             .ToList();
 
-        // Сохраняем кэш
         _lastGeneratedFilters = result;
         _lastEventTypes = currentEventTypes;
 
         return result;
     }
 
-    /// <summary>
-    /// Обновляет значения и счётчики существующих фильтров
-    /// </summary>
     private void UpdateFilterValues(List<FilterDescriptor> filters, List<EventBase> events)
     {
         foreach (var filter in filters)
@@ -127,13 +120,11 @@ public sealed class FilteringService : IFilteringService
             }
         }
 
-        // Обновляем счётчики
         foreach (var item in filter.AvailableValues)
         {
             item.Count = valueCounts.GetValueOrDefault(item.Value, 0);
         }
 
-        // Добавляем новые значения (если появились)
         var existingValues = filter.AvailableValues.Select(v => v.Value).ToHashSet();
         foreach (var (value, count) in valueCounts.Where(kv => !existingValues.Contains(kv.Key)))
         {
@@ -154,9 +145,6 @@ public sealed class FilteringService : IFilteringService
         {
             filter.MinValue = values.Min();
             filter.MaxValue = values.Max();
-
-            // НЕ сбрасываем CurrentMinValue/CurrentMaxValue — пользователь мог их изменить
-            // Только если они null
             filter.CurrentMinValue ??= filter.MinValue;
             filter.CurrentMaxValue ??= filter.MaxValue;
         }
@@ -176,90 +164,20 @@ public sealed class FilteringService : IFilteringService
         return events.Where(evt => activeFilters.All(filter => filter.FilterPredicate(evt)));
     }
 
-    /// <summary>
-    /// Собирает ОБЩИЕ поля (пересечение всех типов событий)
-    /// </summary>
-    private List<FilterFieldInfo> AnalyzeCommonFields(List<EventBase> events)
+    private FilterDescriptor? CreateFieldFilter(DiscoveredField field, List<EventBase> events)
     {
-        var eventTypes = events
-            .Select(e => e.GetType())
-            .Distinct()
-            .ToList();
+        var filterId = _propertyAccessor.ToFilterId(field.PropertyPath);
 
-        if (eventTypes.Count == 0)
-            return [];
+        var filterType = field.FilterType ?? DetermineFilterType(field.PropertyType);
 
-        // Получаем поля для каждого типа
-        var fieldsByType = eventTypes
-            .Select(GetSortableFields)
-            .ToList();
-
-        if (fieldsByType.Count == 0)
-            return [];
-
-        // Находим пересечение полей
-        var commonPaths = fieldsByType
-            .Skip(1)
-            .Aggregate(
-                new HashSet<string>(fieldsByType[0].Select(f => f.PropertyPath)),
-                (common, typeFields) =>
-                {
-                    common.IntersectWith(typeFields.Select(f => f.PropertyPath));
-                    return common;
-                });
-
-        var commonFields = fieldsByType[0]
-            .Where(f => commonPaths.Contains(f.PropertyPath))
-            .OrderBy(f => f.Priority)
-            .ToList();
-
-        Logger.Info("Find {Count} common field(s) for filtering from {TypeCount} type(s)",
-            commonFields.Count, eventTypes.Count);
-
-        return commonFields;
-    }
-
-    private List<FilterFieldInfo> GetSortableFields(Type eventType)
-    {
-        if (_fieldCache.TryGetValue(eventType, out var cached))
-            return cached;
-
-        var fields = new List<FilterFieldInfo>();
-        ScanProperties(eventType, string.Empty, fields, depth: 0);
-
-        _fieldCache[eventType] = fields;
-        return fields;
-    }
-    
-    private void ScanProperties(Type type, string pathPrefix, List<FilterFieldInfo> results, int depth = 0)
-    {
-        if (depth > 3)
-            return;
-
-        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var prop in properties)
+        return filterType switch
         {
-            var filterAttr = prop.GetCustomAttribute<FilterableFieldAttribute>();
-
-            var path = string.IsNullOrEmpty(pathPrefix)
-                ? prop.Name
-                : $"{pathPrefix}.{prop.Name}";
-
-            if (filterAttr != null)
-            {
-                results.Add(new FilterFieldInfo(
-                    path,
-                    filterAttr.DisplayName ?? prop.Name,
-                    prop.PropertyType,
-                    filterAttr.Category ?? "General",
-                    filterAttr.Priority,
-                    filterAttr.FilterType != 0 ? filterAttr.FilterType : DetermineFilterType(prop.PropertyType)));
-            }
-
-            if (ShouldScanNestedType(prop.PropertyType))
-                ScanProperties(prop.PropertyType, path, results, depth + 1);
-        }
+            FilterType.EnumMultiSelect => CreateEnumFilter(filterId, field, events),
+            FilterType.StringMultiSelect => CreateStringFilter(filterId, field, events),
+            FilterType.NumericRange => CreateNumericRangeFilter(filterId, field, events),
+            FilterType.DateTimeRange => CreateDateTimeRangeFilter(filterId, field, events),
+            _ => null
+        };
     }
 
     private FilterType DetermineFilterType(Type propertyType)
@@ -292,38 +210,9 @@ public sealed class FilteringService : IFilteringService
                type == typeof(byte);
     }
 
-    private static bool ShouldScanNestedType(Type type)
-    {
-        if (type.IsPrimitive || type == typeof(string) || type.IsEnum)
-            return false;
+    #region Create Filters
 
-        if (type.IsGenericType)
-            return false;
-
-        if (type.Namespace?.StartsWith("System") == true)
-            return false;
-
-        return type.IsClass &&
-               type.Namespace?.StartsWith("FirebirdTraceParser") == true;
-    }
-
-    private FilterDescriptor? CreateFieldFilter(FilterFieldInfo field, List<EventBase> events)
-    {
-        var filterId = _propertyAccessor.ToFilterId(field.PropertyPath);
-
-        return field.FilterType switch
-        {
-            FilterType.EnumMultiSelect => CreateEnumFilter(filterId, field, events),
-            FilterType.StringMultiSelect => CreateStringFilter(filterId, field, events),
-            FilterType.NumericRange => CreateNumericRangeFilter(filterId, field, events),
-            FilterType.DateTimeRange => CreateDateTimeRangeFilter(filterId, field, events),
-            _ => null
-        };
-    }
-
-    #region Создание фильтров
-
-    private FilterDescriptor CreateEnumFilter(string id, FilterFieldInfo field, List<EventBase> events)
+    private FilterDescriptor CreateEnumFilter(string id, DiscoveredField field, List<EventBase> events)
     {
         var valueCounts = new Dictionary<object, int>();
 
@@ -356,13 +245,12 @@ public sealed class FilteringService : IFilteringService
         foreach (var item in availableValues)
             descriptor.AvailableValues.Add(item);
 
-        // Инициализация FilteredValues
         descriptor.InitializeFilteredValues();
 
         return descriptor;
     }
 
-    private FilterDescriptor CreateStringFilter(string id, FilterFieldInfo field, List<EventBase> events)
+    private FilterDescriptor CreateStringFilter(string id, DiscoveredField field, List<EventBase> events)
     {
         var valueCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
@@ -394,13 +282,12 @@ public sealed class FilteringService : IFilteringService
         foreach (var item in availableValues)
             descriptor.AvailableValues.Add(item);
 
-        // Инициализация FilteredValues
         descriptor.InitializeFilteredValues();
         
         return descriptor;
     }
 
-    private FilterDescriptor CreateNumericRangeFilter(string id, FilterFieldInfo field, List<EventBase> events)
+    private FilterDescriptor CreateNumericRangeFilter(string id, DiscoveredField field, List<EventBase> events)
     {
         var values = events
             .Select(evt => _propertyAccessor.GetValue(evt, field.PropertyPath))
@@ -429,7 +316,6 @@ public sealed class FilteringService : IFilteringService
             CurrentMaxValue = max
         };
 
-        // Динамический предикат (читает текущие значения)
         descriptor.UpdatePredicate(evt =>
         {
             var value = _propertyAccessor.GetValue(evt, descriptor.PropertyPath) as IComparable;
@@ -451,15 +337,13 @@ public sealed class FilteringService : IFilteringService
         return descriptor;
     }
 
-    private FilterDescriptor CreateDateTimeRangeFilter(string id, FilterFieldInfo field, List<EventBase> events)
+    private FilterDescriptor CreateDateTimeRangeFilter(string id, DiscoveredField field, List<EventBase> events)
     {
         var values = events
             .Select(evt => _propertyAccessor.GetValue(evt, field.PropertyPath))
             .Where(v => v != null)
             .Cast<DateTime>()
             .ToList();
-        
-        
 
         if (values.Count == 0)
             return null!;
@@ -505,7 +389,7 @@ public sealed class FilteringService : IFilteringService
 
     #endregion
 
-    #region Проверка фильтров
+    #region Check Filters
 
     private bool CheckEnumFilter(EventBase evt, string propertyPath, ObservableCollection<FilterValueItem> availableValues)
     {

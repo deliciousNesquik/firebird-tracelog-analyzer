@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceAnalyzer.Enums.Reports;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services;
 using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
@@ -33,6 +34,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
     private readonly IFilteringService _filteringService;
     private readonly ISortingService _sortingService;
     private readonly IEventPropertyAccessor _propertyAccessor;
+    private readonly IFieldDiscoveryService _fieldDiscovery;
 
     private ReportDesignSessionContext? _sessionContext;
 
@@ -144,13 +146,15 @@ public partial class ReportDesignerViewModel : ViewModelBase
         IReportGenerationService generationService,
         IFilteringService filteringService,
         ISortingService sortingService,
-        IEventPropertyAccessor propertyAccessor)
+        IEventPropertyAccessor propertyAccessor,
+        IFieldDiscoveryService fieldDiscovery)
     {
         _templateService = templateService ?? throw new ArgumentNullException(nameof(templateService));
         _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
         _filteringService = filteringService ?? throw new ArgumentNullException(nameof(filteringService));
         _sortingService = sortingService ?? throw new ArgumentNullException(nameof(sortingService));
         _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+        _fieldDiscovery = fieldDiscovery ?? throw new ArgumentNullException(nameof(fieldDiscovery));
 
         InitializeAvailableOptions();
     }
@@ -162,6 +166,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
         _filteringService = null!;
         _sortingService = null!;
         _propertyAccessor = new EventPropertyAccessor();
+        _fieldDiscovery = null!;
 
         InitializeAvailableOptions();
     }
@@ -210,25 +215,24 @@ public partial class ReportDesignerViewModel : ViewModelBase
             return;
         }
 
-        // Получаем доступные поля через сервис сортировки
-        var sorts = _sortingService.GetAvailableSorts(eventList);
+        // Получаем ВСЕ доступные поля (объединение всех типов)
+        var allFields = _fieldDiscovery.GetAllAvailableFields(eventList);
 
         var order = 1;
-        foreach (var sort in sorts.Where(s => s.Id.StartsWith("field_")))
+        foreach (var field in allFields)
         {
-            var propertyPath = ExtractPropertyPath(sort.Id);
-
             AvailableFields.Add(new EventFieldItem
             {
-                PropertyPath = propertyPath,
-                DisplayName = sort.DisplayName,
+                PropertyPath = field.PropertyPath,
+                DisplayName = field.DisplayName,
                 IsVisible = false,
                 Order = order++,
-                Alignment = TextAlignment.Left
+                Alignment = TextAlignment.Left,
+                Format = field.Format
             });
         }
 
-        Logger.Info("Loaded {Count} available fields", AvailableFields.Count);
+        Logger.Info("Loaded {Count} available fields for reporting", AvailableFields.Count);
     }
 
     /// <summary>
