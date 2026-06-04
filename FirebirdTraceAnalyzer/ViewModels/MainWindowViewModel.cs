@@ -503,8 +503,6 @@ public partial class MainWindowViewModel : ViewModelBase
     #endregion
 
     #region Report Generation
-
-    public ObservableCollection<ReportTemplate> CustomReports { get; set; }
     
     /// <summary>
     ///     Создаёт метаданные для генерации отчёта
