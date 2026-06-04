@@ -157,16 +157,31 @@
 
                                     <!-- Table Body -->
                                     <ItemsControl Grid.Row="1"
-                                                  ItemsSource="{Binding PreviewEvents}">
+                                                  ItemsSource="{Binding PreviewEventRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border BorderBrush="#E0E0E0"
                                                         BorderThickness="0,0,0,1">
-                                                    
-                                                    <TextBlock Text="[Event data rendering - implement based on EventColumns]"
-                                                               Padding="12,8"
-                                                               FontSize="11"
-                                                               Foreground="#666" />
+                                                    <ItemsControl ItemsSource="{Binding Cells}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Padding="12,8"
+                                                                        MinWidth="100"
+                                                                        BorderBrush="#E0E0E0"
+                                                                        BorderThickness="0,0,1,0">
+                                                                    <TextBlock Text="{Binding}"
+                                                                               FontSize="11"
+                                                                               Foreground="#333"
+                                                                               TextWrapping="Wrap" />
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -175,7 +190,7 @@
                             </ScrollViewer>
                         </Border>
 
-                        <TextBlock Text="{Binding PreviewEvents.Count, StringFormat='Total events: {0}'}"
+                        <TextBlock Text="{Binding PreviewEventRows.Count, StringFormat='Total events: {0}'}"
                                    FontSize="11"
                                    FontStyle="Italic"
                                    Foreground="#999" />

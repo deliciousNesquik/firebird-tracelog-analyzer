@@ -652,7 +652,13 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            // Загружаем доступные поля и фильтры из текущих событий
+            designerViewModel.SetSessionContext(new ReportDesignSessionContext
+            {
+                SourceEvents = VisibleEvents.ToList(),
+                Files = FileCards.Select(c => c.FileInfo).ToList(),
+                TotalEventsCount = AllEvents.Count
+            });
+
             if (VisibleEvents.Count > 0)
             {
                 designerViewModel.LoadAvailableFields(VisibleEvents);

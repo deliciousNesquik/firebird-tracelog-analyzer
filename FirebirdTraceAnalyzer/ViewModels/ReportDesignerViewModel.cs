@@ -14,6 +14,7 @@ using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Sorting;
+using Microsoft.Extensions.DependencyInjection;
 using FirebirdTraceParser.Attributes;
 using FirebirdTraceParser.Models.Events;
 using NLog;
@@ -32,6 +33,8 @@ public partial class ReportDesignerViewModel : ViewModelBase
     private readonly IFilteringService _filteringService;
     private readonly ISortingService _sortingService;
     private readonly IEventPropertyAccessor _propertyAccessor;
+
+    private ReportDesignSessionContext? _sessionContext;
 
     #region Observable Properties - Template Info
 
@@ -123,6 +126,18 @@ public partial class ReportDesignerViewModel : ViewModelBase
 
     /// <summary>Событие успешного сохранения шаблона</summary>
     public event EventHandler<ReportTemplate>? TemplateSaved;
+
+    /// <summary>
+    /// Передаёт события и файлы из главного окна для превью и экспорта.
+    /// </summary>
+    public void SetSessionContext(ReportDesignSessionContext context)
+    {
+        _sessionContext = context ?? throw new ArgumentNullException(nameof(context));
+        Logger.Info(
+            "Report session context set: {EventCount} source event(s), {FileCount} file(s)",
+            context.SourceEvents.Count,
+            context.Files.Count);
+    }
 
     public ReportDesignerViewModel(
         IReportTemplateService templateService,
@@ -563,14 +578,33 @@ public partial class ReportDesignerViewModel : ViewModelBase
             IsLoading = true;
             StatusMessage = "Preparing preview...";
 
-            // 1. Собираем шаблон (аналогично SaveTemplate)
+            if (_sessionContext == null || _sessionContext.SourceEvents.Count == 0)
+            {
+                StatusMessage = "Load trace files in the main window before preview";
+                Logger.Warn("Preview requested without session context or events");
+                return;
+            }
+
             var currentTemplate = CreateTemplateFromCurrentSettings();
 
-            // 2. Подготавливаем метаданные
-            var metadata = CreateReportMetadata(new List<EventBase>()); // Передайте сюда актуальные события
+            var preparedEvents = _generationService.PrepareEventsForReport(
+                _sessionContext.SourceEvents,
+                currentTemplate,
+                currentTemplate.SortByField,
+                currentTemplate.SortDescending);
 
-            // 4. Открываем окно превью
-            var previewVm = new ReportPreviewViewModel(_generationService);
+            if (preparedEvents.Count == 0)
+            {
+                StatusMessage = "No events match the template filters";
+                Logger.Warn("Preview: no events after PrepareEventsForReport");
+                return;
+            }
+
+            var metadata = CreateReportMetadata(preparedEvents);
+
+            var previewVm = App.Services?.GetRequiredService<ReportPreviewViewModel>()
+                ?? throw new InvalidOperationException("Report preview service is not available");
+
             await previewVm.InitializeAsync(currentTemplate, metadata, cancellationToken);
 
             var previewWindow = new Views.ReportPreviewWindow(previewVm);
@@ -639,6 +673,19 @@ public partial class ReportDesignerViewModel : ViewModelBase
                 Text = "Preview Mode",
                 ShowPageNumbers = true
             },
+            Filters = AvailableFilters
+                .Where(f => f.IsActive)
+                .Select(f => new ReportFilterConfig
+                {
+                    FilterId = f.FilterId,
+                    PropertyPath = f.PropertyPath,
+                    DisplayName = f.DisplayName,
+                    IsActive = true,
+                    SelectedValues = f.SelectedValues?.ToList(),
+                    MinValue = f.MinValue,
+                    MaxValue = f.MaxValue
+                })
+                .ToList(),
             SortByField = SelectedSort?.PropertyPath,
             SortDescending = SortDescending,
             EventLimit = EventLimit,
@@ -646,20 +693,28 @@ public partial class ReportDesignerViewModel : ViewModelBase
         };
     }
     
-    private ReportMetadata CreateReportMetadata(IEnumerable<EventBase> events)
+    private ReportMetadata CreateReportMetadata(IReadOnlyList<EventBase> preparedEvents)
     {
-        var eventList = events.ToList();
-    
+        var sortDescription = SelectedSort == null
+            ? null
+            : $"{SelectedSort.DisplayName} ({(SortDescending ? "DESC" : "ASC")})";
+
         return new ReportMetadata
         {
             GeneratedAt = DateTime.Now,
-            ApplicationVersion = "1.0.0", // Или возьмите из настроек
-            Events = eventList,
-            TotalEventsCount = eventList.Count,
-            Files = new List<TraceFileInfoModel>(), // Здесь должны быть данные о файлах трассировки
+            ApplicationVersion = GetApplicationVersion(),
+            Events = preparedEvents,
+            TotalEventsCount = _sessionContext?.TotalEventsCount ?? preparedEvents.Count,
+            Files = _sessionContext?.Files ?? [],
             ActiveFilters = string.Join(", ", AvailableFilters.Where(f => f.IsActive).Select(f => f.DisplayName)),
-            ActiveSort = SelectedSort?.DisplayName
+            ActiveSort = sortDescription
         };
+    }
+
+    private static string GetApplicationVersion()
+    {
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        return version?.ToString() ?? "1.0.0";
     }
 
     #region Helper Methods
