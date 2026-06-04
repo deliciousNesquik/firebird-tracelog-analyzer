@@ -476,41 +476,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
                         .ToList()
                 },
 
-                Body = new ReportBody
-                {
-                    DisplayStyle = DisplayStyle,
-                    ShowSummary = ShowSummary,
-                    VisibleFields = AvailableFields
-                        .Where(f => f.IsVisible)
-                        .Select(f => new EventField
-                        {
-                            Name = f.PropertyPath.Replace(".", "_"),
-                            DisplayName = f.DisplayName,
-                            PropertyPath = f.PropertyPath,
-                            Format = f.Format,
-                            WidthPercent = f.WidthPercent,
-                            Order = f.Order,
-                            Alignment = f.Alignment
-                        })
-                        .ToList(),
-                    Sections = new List<ReportSection>
-                    {
-                        new()
-                        {
-                            Title = "Events",
-                            ContentType = SectionContentType.Events,
-                            ShowTitle = true,
-                            Order = 1
-                        },
-                        new()
-                        {
-                            Title = "Summary Statistics",
-                            ContentType = SectionContentType.Statistics,
-                            ShowTitle = ShowSummary,
-                            Order = 2
-                        }
-                    }
-                },
+                Body = BuildReportBodyFromCurrentSettings(),
 
                 Footer = new ReportFooter
                 {
@@ -628,6 +594,45 @@ public partial class ReportDesignerViewModel : ViewModelBase
         }
     }
     
+  private ReportBody BuildReportBodyFromCurrentSettings()
+    {
+        return new ReportBody
+        {
+            DisplayStyle = DisplayStyle,
+            ShowSummary = ShowSummary,
+            VisibleFields = AvailableFields
+                .Where(f => f.IsVisible)
+                .Select(f => new EventField
+                {
+                    Name = f.PropertyPath.Replace(".", "_"),
+                    DisplayName = f.DisplayName,
+                    PropertyPath = f.PropertyPath,
+                    Format = f.Format,
+                    WidthPercent = f.WidthPercent,
+                    Order = f.Order,
+                    Alignment = f.Alignment
+                })
+                .ToList(),
+            Sections =
+            [
+                new ReportSection
+                {
+                    Title = "Events",
+                    ContentType = SectionContentType.Events,
+                    ShowTitle = true,
+                    Order = 1
+                },
+                new ReportSection
+                {
+                    Title = "Summary Statistics",
+                    ContentType = SectionContentType.Statistics,
+                    ShowTitle = ShowSummary,
+                    Order = 2
+                }
+            ]
+        };
+    }
+
     /// <summary>
     /// Создает временный объект шаблона на основе текущих настроек UI без сохранения в БД
     /// </summary>
@@ -652,21 +657,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
                         DisplayOrder = v.DisplayOrder 
                     }).ToList()
             },
-            Body = new ReportBody
-            {
-                DisplayStyle = DisplayStyle,
-                ShowSummary = ShowSummary,
-                VisibleFields = AvailableFields
-                    .Where(f => f.IsVisible)
-                    .Select(f => new EventField
-                    {
-                        DisplayName = f.DisplayName,
-                        PropertyPath = f.PropertyPath,
-                        Order = f.Order,
-                        Format = f.Format,
-                        Alignment = f.Alignment
-                    }).ToList()
-            },
+            Body = BuildReportBodyFromCurrentSettings(),
             Footer = new ReportFooter
             {
                 Show = true,
