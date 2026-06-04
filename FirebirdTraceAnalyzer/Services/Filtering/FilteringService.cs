@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceParser.Attributes;
 using FirebirdTraceParser.Models.Events;
 using NLog;
@@ -10,6 +11,8 @@ public sealed class FilteringService : IFilteringService
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly IEventPropertyAccessor _propertyAccessor;
+
     // Кэш метаданных полей по типу события
     private readonly Dictionary<Type, List<FilterFieldInfo>> _fieldCache = new();
 
@@ -19,6 +22,11 @@ public sealed class FilteringService : IFilteringService
     // Кэш последних созданных фильтров (для оптимизации)
     private List<FilterDescriptor>? _lastGeneratedFilters;
     private HashSet<Type>? _lastEventTypes;
+
+    public FilteringService(IEventPropertyAccessor propertyAccessor)
+    {
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+    }
 
     public void RegisterCustomFilter(FilterDescriptor descriptor)
     {
@@ -62,7 +70,7 @@ public sealed class FilteringService : IFilteringService
 
         foreach (var field in commonFields)
         {
-            var filterId = $"filter_{field.PropertyPath.Replace(".", "_").ToLower()}";
+            var filterId = _propertyAccessor.ToFilterId(field.PropertyPath);
 
             if (_customFilters.ContainsKey(filterId))
                 continue;
@@ -111,7 +119,7 @@ public sealed class FilteringService : IFilteringService
 
         foreach (var evt in events)
         {
-            var value = GetPropertyValue(evt, filter.PropertyPath);
+            var value = _propertyAccessor.GetValue(evt, filter.PropertyPath);
             if (value != null)
             {
                 valueCounts.TryGetValue(value, out var count);
@@ -137,7 +145,7 @@ public sealed class FilteringService : IFilteringService
     private void UpdateRangeFilter(FilterDescriptor filter, List<EventBase> events)
     {
         var values = events
-            .Select(evt => GetPropertyValue(evt, filter.PropertyPath))
+            .Select(evt => _propertyAccessor.GetValue(evt, filter.PropertyPath))
             .Where(v => v != null)
             .Cast<IComparable>()
             .ToList();
@@ -301,7 +309,7 @@ public sealed class FilteringService : IFilteringService
 
     private FilterDescriptor? CreateFieldFilter(FilterFieldInfo field, List<EventBase> events)
     {
-        var filterId = $"filter_{field.PropertyPath.Replace(".", "_").ToLower()}";
+        var filterId = _propertyAccessor.ToFilterId(field.PropertyPath);
 
         return field.FilterType switch
         {
@@ -321,7 +329,7 @@ public sealed class FilteringService : IFilteringService
 
         foreach (var evt in events)
         {
-            var value = GetPropertyValue(evt, field.PropertyPath);
+            var value = _propertyAccessor.GetValue(evt, field.PropertyPath);
             if (value != null)
             {
                 valueCounts.TryGetValue(value, out var count);
@@ -360,7 +368,7 @@ public sealed class FilteringService : IFilteringService
 
         foreach (var evt in events)
         {
-            var value = GetPropertyValue(evt, field.PropertyPath)?.ToString();
+            var value = _propertyAccessor.GetValue(evt, field.PropertyPath)?.ToString();
             if (!string.IsNullOrWhiteSpace(value))
             {
                 valueCounts.TryGetValue(value, out var count);
@@ -395,7 +403,7 @@ public sealed class FilteringService : IFilteringService
     private FilterDescriptor CreateNumericRangeFilter(string id, FilterFieldInfo field, List<EventBase> events)
     {
         var values = events
-            .Select(evt => GetPropertyValue(evt, field.PropertyPath))
+            .Select(evt => _propertyAccessor.GetValue(evt, field.PropertyPath))
             .Where(v => v != null)
             .Cast<IComparable>()
             .ToList();
@@ -424,7 +432,7 @@ public sealed class FilteringService : IFilteringService
         // Динамический предикат (читает текущие значения)
         descriptor.UpdatePredicate(evt =>
         {
-            var value = GetPropertyValue(evt, descriptor.PropertyPath) as IComparable;
+            var value = _propertyAccessor.GetValue(evt, descriptor.PropertyPath) as IComparable;
             if (value == null)
                 return false;
 
@@ -446,7 +454,7 @@ public sealed class FilteringService : IFilteringService
     private FilterDescriptor CreateDateTimeRangeFilter(string id, FilterFieldInfo field, List<EventBase> events)
     {
         var values = events
-            .Select(evt => GetPropertyValue(evt, field.PropertyPath))
+            .Select(evt => _propertyAccessor.GetValue(evt, field.PropertyPath))
             .Where(v => v != null)
             .Cast<DateTime>()
             .ToList();
@@ -476,7 +484,7 @@ public sealed class FilteringService : IFilteringService
 
         descriptor.UpdatePredicate(evt =>
         {
-            var value = GetPropertyValue(evt, descriptor.PropertyPath);
+            var value = _propertyAccessor.GetValue(evt, descriptor.PropertyPath);
             if (value is not DateTime dateTime)
                 return false;
 
@@ -509,7 +517,7 @@ public sealed class FilteringService : IFilteringService
         if (selectedValues.Count == 0)
             return true;
 
-        var value = GetPropertyValue(evt, propertyPath);
+        var value = _propertyAccessor.GetValue(evt, propertyPath);
         return value != null && selectedValues.Contains(value);
     }
 
@@ -523,29 +531,11 @@ public sealed class FilteringService : IFilteringService
         if (selectedValues.Count == 0)
             return true;
 
-        var value = GetPropertyValue(evt, propertyPath)?.ToString();
+        var value = _propertyAccessor.GetValue(evt, propertyPath)?.ToString();
         return value != null && selectedValues.Contains(value);
     }
 
     #endregion
-
-    private object? GetPropertyValue(object obj, string propertyPath)
-    {
-        var parts = propertyPath.Split('.');
-        var current = obj;
-
-        foreach (var part in parts)
-        {
-            if (current == null) return null;
-
-            var prop = current.GetType().GetProperty(part);
-            if (prop == null) return null;
-
-            current = prop.GetValue(current);
-        }
-
-        return current;
-    }
 
     private string GetEnumDisplayName(object enumValue)
     {

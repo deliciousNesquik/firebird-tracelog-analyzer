@@ -98,16 +98,7 @@
                         Command="{Binding GenerateQuickReportCommand}"
                         CommandParameter="builtin_error_report" />
                 </MenuItem>
-
-                <Separator />
-
-                <!-- Custom Report -->
-                <MenuItem 
-                    Header="_Custom Report..."
-                    InputGesture="Ctrl+R"
-                    HotKey="Ctrl+R"
-                    Command="{Binding OpenReportDesignerCommand}" />
-
+                
                 <Separator />
 
                 <!-- Manage Templates -->
@@ -118,6 +109,7 @@
         
                     <MenuItem 
                         Header="Edit Template..."
+                        IsEnabled="True"
                         Command="{Binding EditReportTemplateCommand}" />
         
                     <MenuItem 
@@ -126,6 +118,7 @@
         
                     <MenuItem 
                         Header="Export Template..."
+                        IsEnabled="False"
                         Command="{Binding ExportReportTemplateCommand}" />
                 </MenuItem>
 
@@ -137,70 +130,6 @@
                     Command="{Binding OpenRecentReportsCommand}" />
 
             </MenuItem>
-            
-            <!--<MenuItem Header="_Reports [E]">
-    
-                ~1~ Быстрые отчёты (предустановленные шаблоны) @1@
-                <MenuItem Header="_Quick Reports">
-                    <MenuItem 
-                        Header="Top 5 Slowest Statements"
-                        CommandParameter="top5_statements" />
-                    ~1~Command="{Binding GenerateQuickReportCommand}"@1@
-        
-                    <MenuItem 
-                        Header="Top 10 Slowest Procedures"
-                        CommandParameter="top10_procedures" />
-                    ~1~Command="{Binding GenerateQuickReportCommand}"@1@
-        
-                    <MenuItem 
-                        Header="User Activity Summary"
-                        CommandParameter="user_activity" />
-                    ~1~Command="{Binding GenerateQuickReportCommand}"@1@
-        
-                    <MenuItem 
-                        Header="Database Connections Timeline"
-                        CommandParameter="connections_timeline" />
-                    ~1~Command="{Binding GenerateQuickReportCommand}"@1@
-                </MenuItem>
-
-                <Separator />
-
-                ~1~ Пользовательские отчёты @1@
-                <MenuItem 
-                    Header="_Custom Report..."
-                    InputGesture="Ctrl+R"
-                    HotKey="Ctrl+R"/>
-                ~1~Command="{Binding OpenReportDesignerCommand}" @1@
-
-                <Separator />
-
-                ~1~ Управление шаблонами @1@
-                <MenuItem Header="_Manage Templates">
-                    <MenuItem 
-                        Header="Create New Template..."/>
-                    ~1~Command="{Binding CreateReportTemplateCommand}"@1@
-        
-                    <MenuItem 
-                        Header="Edit Template..."/>
-                    ~1~Command="{Binding EditReportTemplateCommand}" @1@
-        
-                    <MenuItem 
-                        Header="Import Template..."/>
-                    ~1~Command="{Binding ImportReportTemplateCommand}"@1@
-        
-                    <MenuItem 
-                        Header="Export Template..."/>
-                    ~1~Command="{Binding ExportReportTemplateCommand}"@1@
-                </MenuItem>
-
-                <Separator />
-
-                ~1~ История отчётов @1@
-                <MenuItem 
-                    Header="_Recent Reports"/>
-                ~1~Command="{Binding OpenRecentReportsCommand}"@1@
-
-            </MenuItem>-->
 
             <MenuItem Header="_Window [W]">
                 <MenuItem

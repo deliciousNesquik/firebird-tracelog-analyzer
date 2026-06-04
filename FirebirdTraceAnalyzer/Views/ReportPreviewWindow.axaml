@@ -123,11 +123,7 @@
                             <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                           MaxHeight="400">
                                 
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
-                                    </Grid.RowDefinitions>
+                                <Grid RowDefinitions="Auto,*">
 
                                     <!-- Table Header -->
                                     <Border Grid.Row="0"
@@ -164,8 +160,6 @@
                                                   ItemsSource="{Binding PreviewEvents}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                
-                                                <!--Background="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource AlternatingRowConverter}}"-->
                                                 <Border BorderBrush="#E0E0E0"
                                                         BorderThickness="0,0,0,1">
                                                     

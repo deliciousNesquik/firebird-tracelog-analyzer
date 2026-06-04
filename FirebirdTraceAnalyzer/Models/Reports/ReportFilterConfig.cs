@@ -7,6 +7,12 @@ public sealed class ReportFilterConfig
 {
     /// <summary>ID фильтра (например, "filter_eventtype")</summary>
     public required string FilterId { get; init; }
+
+    /// <summary>
+    /// Путь к свойству события (например, <c>EventType</c>, <c>Attachment.User</c>).
+    /// Имеет приоритет над <see cref="FilterId"/> при применении фильтра в отчёте.
+    /// </summary>
+    public string? PropertyPath { get; init; }
     
     /// <summary>Название фильтра (для отображения)</summary>
     public required string DisplayName { get; init; }

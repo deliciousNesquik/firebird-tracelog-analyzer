@@ -10,10 +10,10 @@ using CommunityToolkit.Mvvm.Input;
 using FirebirdTraceAnalyzer.Enums.Reports;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Sorting;
-using FirebirdTraceAnalyzer.Views;
 using FirebirdTraceParser.Attributes;
 using FirebirdTraceParser.Models.Events;
 using NLog;
@@ -31,6 +31,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
     private readonly IReportGenerationService _generationService;
     private readonly IFilteringService _filteringService;
     private readonly ISortingService _sortingService;
+    private readonly IEventPropertyAccessor _propertyAccessor;
 
     #region Observable Properties - Template Info
 
@@ -127,12 +128,14 @@ public partial class ReportDesignerViewModel : ViewModelBase
         IReportTemplateService templateService,
         IReportGenerationService generationService,
         IFilteringService filteringService,
-        ISortingService sortingService)
+        ISortingService sortingService,
+        IEventPropertyAccessor propertyAccessor)
     {
         _templateService = templateService ?? throw new ArgumentNullException(nameof(templateService));
         _generationService = generationService ?? throw new ArgumentNullException(nameof(generationService));
         _filteringService = filteringService ?? throw new ArgumentNullException(nameof(filteringService));
         _sortingService = sortingService ?? throw new ArgumentNullException(nameof(sortingService));
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
 
         InitializeAvailableOptions();
     }
@@ -143,6 +146,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
         _generationService = null!;
         _filteringService = null!;
         _sortingService = null!;
+        _propertyAccessor = new EventPropertyAccessor();
 
         InitializeAvailableOptions();
     }
@@ -234,6 +238,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
             AvailableFilters.Add(new FilterConfigItem
             {
                 FilterId = filter.Id,
+                PropertyPath = filter.PropertyPath,
                 DisplayName = filter.DisplayName,
                 FilterType = filter.FilterType,
                 IsActive = false,
@@ -343,7 +348,10 @@ public partial class ReportDesignerViewModel : ViewModelBase
             {
                 foreach (var filterConfig in template.Filters)
                 {
-                    var item = AvailableFilters.FirstOrDefault(f => f.FilterId == filterConfig.FilterId);
+                    var item = AvailableFilters.FirstOrDefault(f =>
+                        (!string.IsNullOrWhiteSpace(filterConfig.PropertyPath) &&
+                         string.Equals(f.PropertyPath, filterConfig.PropertyPath, StringComparison.Ordinal)) ||
+                        string.Equals(f.FilterId, filterConfig.FilterId, StringComparison.OrdinalIgnoreCase));
                     if (item != null)
                     {
                         item.IsActive = filterConfig.IsActive;
@@ -501,6 +509,7 @@ public partial class ReportDesignerViewModel : ViewModelBase
                     .Select(f => new ReportFilterConfig
                     {
                         FilterId = f.FilterId,
+                        PropertyPath = f.PropertyPath,
                         DisplayName = f.DisplayName,
                         IsActive = true,
                         SelectedValues = f.SelectedValues?.ToList(),
@@ -688,14 +697,10 @@ public partial class ReportDesignerViewModel : ViewModelBase
 
     private string ExtractPropertyPath(string sortId)
     {
-        if (!sortId.StartsWith("field_"))
-            return sortId;
+        if (_propertyAccessor.TryResolveSortId(sortId, out var propertyPath))
+            return propertyPath;
 
-        var pathPart = sortId.Substring("field_".Length);
-        var parts = pathPart.Split('_');
-        var pathParts = parts.Select(p => char.ToUpper(p[0]) + p.Substring(1).ToLower());
-        
-        return string.Join(".", pathParts);
+        return sortId;
     }
 
     #endregion
@@ -758,6 +763,9 @@ public partial class FilterConfigItem : ObservableObject
 {
     [ObservableProperty]
     private string _filterId = string.Empty;
+
+    [ObservableProperty]
+    private string _propertyPath = string.Empty;
     
     [ObservableProperty]
     private string _displayName = string.Empty;

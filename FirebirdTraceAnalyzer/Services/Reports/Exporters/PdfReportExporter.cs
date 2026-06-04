@@ -1,5 +1,6 @@
 ﻿using FirebirdTraceAnalyzer.Enums.Reports;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceParser.Models.Events;
 using NLog;
 using QuestPDF.Fluent;
@@ -14,6 +15,12 @@ namespace FirebirdTraceAnalyzer.Services.Reports.Exporters;
 public class PdfReportExporter : IReportExporter
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly IEventPropertyAccessor _propertyAccessor;
+
+    public PdfReportExporter(IEventPropertyAccessor propertyAccessor)
+    {
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+    }
 
     static PdfReportExporter()
     {
@@ -208,7 +215,7 @@ public class PdfReportExporter : IReportExporter
             {
                 foreach (var field in fields)
                 {
-                    var value = GetPropertyValue(evt, field.PropertyPath);
+                    var value = _propertyAccessor.GetValue(evt, field.PropertyPath);
                     var formattedValue = FormatValue(value, field.Format);
 
                     table.Cell().Element(CellStyle).Text(formattedValue)
@@ -331,22 +338,6 @@ public class PdfReportExporter : IReportExporter
         var duration = end - start;
 
         return $"{duration.TotalHours:F2} hours";
-    }
-
-    private object? GetPropertyValue(object obj, string propertyPath)
-    {
-        var parts = propertyPath.Split('.');
-        var current = obj;
-
-        foreach (var part in parts)
-        {
-            if (current == null) return null;
-            var prop = current.GetType().GetProperty(part);
-            if (prop == null) return null;
-            current = prop.GetValue(current);
-        }
-
-        return current;
     }
 
     private string FormatValue(object? value, string? format)

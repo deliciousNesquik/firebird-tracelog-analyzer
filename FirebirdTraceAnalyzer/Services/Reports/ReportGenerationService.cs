@@ -1,5 +1,6 @@
 ﻿using FirebirdTraceAnalyzer.Enums.Reports;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Reports.Exporters;
 using FirebirdTraceParser.Models.Events;
 using NLog;
@@ -14,14 +15,17 @@ public class ReportGenerationService : IReportGenerationService
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly Dictionary<ReportFormat, IReportExporter> _exporters;
+    private readonly IEventPropertyAccessor _propertyAccessor;
     private readonly string _reportsDirectory;
 
     public ReportGenerationService(
         PdfReportExporter pdfExporter,
         DocxReportExporter docxExporter,
         XlsxReportExporter xlsxExporter,
-        CsvReportExporter csvExporter)
+        CsvReportExporter csvExporter,
+        IEventPropertyAccessor propertyAccessor)
     {
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
         _exporters = new Dictionary<ReportFormat, IReportExporter>
         {
             [ReportFormat.PDF] = pdfExporter,
@@ -167,8 +171,10 @@ public class ReportGenerationService : IReportGenerationService
         // Для фильтров с выбранными значениями (Enum/String)
         if (filter.SelectedValues != null && filter.SelectedValues.Count > 0)
         {
-            var propertyPath = ExtractPropertyPathFromFilterId(filter.FilterId);
-            var value = GetPropertyValue(evt, propertyPath);
+            if (!TryResolveFilterPropertyPath(filter, out var propertyPath))
+                return false;
+
+            var value = _propertyAccessor.GetValue(evt, propertyPath);
 
             if (value == null)
                 return false;
@@ -179,8 +185,10 @@ public class ReportGenerationService : IReportGenerationService
         // Для Range фильтров (Numeric/DateTime)
         if (filter.MinValue != null || filter.MaxValue != null)
         {
-            var propertyPath = ExtractPropertyPathFromFilterId(filter.FilterId);
-            var value = GetPropertyValue(evt, propertyPath);
+            if (!TryResolveFilterPropertyPath(filter, out var propertyPath))
+                return false;
+
+            var value = _propertyAccessor.GetValue(evt, propertyPath);
 
             if (value == null)
                 return false;
@@ -201,23 +209,23 @@ public class ReportGenerationService : IReportGenerationService
         return true;
     }
 
-    /// <summary>
-    ///     Извлекает путь к свойству из ID фильтра
-    ///     Например: "filter_EventType" -> "EventType"
-    ///     "filter_Attachment_User" -> "Attachment.User"
-    /// </summary>
-    private string ExtractPropertyPathFromFilterId(string filterId)
+    private bool TryResolveFilterPropertyPath(ReportFilterConfig filter, out string propertyPath)
     {
-        // Убираем префикс "filter_"
-        var pathPart = filterId.StartsWith("filter_")
-            ? filterId.Substring("filter_".Length)
-            : filterId;
+        if (!string.IsNullOrWhiteSpace(filter.PropertyPath))
+        {
+            propertyPath = filter.PropertyPath.Trim();
+            return true;
+        }
 
-        // Преобразуем "attachment_user" -> "Attachment.User"
-        var parts = pathPart.Split('_');
-        var pathParts = parts.Select(p => char.ToUpper(p[0]) + p.Substring(1));
+        if (_propertyAccessor.TryResolveFilterId(filter.FilterId, out propertyPath))
+            return true;
 
-        return string.Join(".", pathParts);
+        Logger.Warn(
+            "Cannot resolve property path for filter: FilterId={FilterId}, DisplayName={DisplayName}",
+            filter.FilterId,
+            filter.DisplayName);
+        propertyPath = string.Empty;
+        return false;
     }
 
     /// <summary>
@@ -225,43 +233,17 @@ public class ReportGenerationService : IReportGenerationService
     /// </summary>
     private List<EventBase> SortEvents(List<EventBase> events, string fieldPath, bool descending)
     {
-        var sorted = events.OrderBy(e =>
+        var list = events.ToList();
+
+        list.Sort((a, b) =>
         {
-            var value = GetPropertyValue(e, fieldPath);
-            return value;
-        }, Comparer<object?>.Create((a, b) =>
-        {
-            if (a == null && b == null) return 0;
-            if (a == null) return 1;
-            if (b == null) return -1;
+            var valueA = _propertyAccessor.GetValue(a, fieldPath);
+            var valueB = _propertyAccessor.GetValue(b, fieldPath);
+            var result = _propertyAccessor.Compare(valueA, valueB);
+            return descending ? -result : result;
+        });
 
-            if (a is IComparable comparableA && b is IComparable comparableB) return comparableA.CompareTo(comparableB);
-
-            return string.Compare(a.ToString(), b.ToString(), StringComparison.Ordinal);
-        }));
-
-        return descending ? sorted.Reverse().ToList() : sorted.ToList();
-    }
-
-    /// <summary>
-    ///     Получает значение свойства по пути (например, "Performance.ExecuteMs")
-    /// </summary>
-    private object? GetPropertyValue(object obj, string propertyPath)
-    {
-        var parts = propertyPath.Split('.');
-        var current = obj;
-
-        foreach (var part in parts)
-        {
-            if (current == null) return null;
-
-            var prop = current.GetType().GetProperty(part);
-            if (prop == null) return null;
-
-            current = prop.GetValue(current);
-        }
-
-        return current;
+        return list;
     }
 
     /// <summary>

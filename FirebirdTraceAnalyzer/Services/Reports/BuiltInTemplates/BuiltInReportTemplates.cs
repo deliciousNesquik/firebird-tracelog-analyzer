@@ -184,7 +184,10 @@ public static class BuiltInReportTemplates
             [
                 new ReportFilterConfig()
                 {
-                    DisplayName = "Event type", FilterId = "filter_EventType", IsActive = true,
+                    DisplayName = "Event type",
+                    FilterId = "filter_eventtype",
+                    PropertyPath = "EventType",
+                    IsActive = true,
                     SelectedValues = [EventType.ExecuteStatementFinish]
                 }
             ],
@@ -346,7 +349,10 @@ public static class BuiltInReportTemplates
             [
                 new ReportFilterConfig()
                 {
-                    DisplayName = "Event type", FilterId = "filter_EventType", IsActive = true,
+                    DisplayName = "Event type",
+                    FilterId = "filter_eventtype",
+                    PropertyPath = "EventType",
+                    IsActive = true,
                     SelectedValues = [EventType.ExecuteProcedureFinish]
                 }
             ],
@@ -467,7 +473,10 @@ public static class BuiltInReportTemplates
             [
                 new ReportFilterConfig()
                 {
-                    DisplayName = "Event type", FilterId = "filter_EventType", IsActive = true,
+                    DisplayName = "Event type",
+                    FilterId = "filter_eventtype",
+                    PropertyPath = "EventType",
+                    IsActive = true,
                     SelectedValues = [EventType.Error]
                 }
             ],

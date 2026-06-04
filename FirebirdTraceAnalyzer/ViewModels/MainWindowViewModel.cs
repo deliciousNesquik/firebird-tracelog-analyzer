@@ -13,6 +13,7 @@ using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Mocks;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Searching;
@@ -40,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ISortingService _sortingService;
     private readonly IFilteringService _filteringService;
     private readonly ISearchService _searchService;
+    private readonly IEventPropertyAccessor _propertyAccessor;
 
     #endregion
 
@@ -125,11 +127,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _sshConnectionService = null!;
         _remoteFileService = null!;
-
+        _propertyAccessor = new EventPropertyAccessor();
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
-        FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters);
+        FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters, _propertyAccessor);
 
         StatisticInfoModels.UpdateStatistics([
             new StatisticInfoModel("Files:", FileCards.Count.ToString()),
@@ -152,7 +154,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IOptions<AppSettings> appSettings,
         IOptions<UiSectionSettings> uiSettings,
         ISshConnectionService sshConnectionService,
-        IRemoteFileService remoteFileService)
+        IRemoteFileService remoteFileService,
+        IEventPropertyAccessor propertyAccessor)
     {
         Logger.Info("Object(s) pool have been reset(s).");
         StringPool.Reset();
@@ -177,11 +180,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
         _sshConnectionService = sshConnectionService ?? throw new ArgumentNullException(nameof(sshConnectionService));
         _remoteFileService = remoteFileService ?? throw new ArgumentNullException(nameof(remoteFileService));
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
 
 
         // Инициализация ViewModels
         StatisticInfoModels = new StatisticsInfoSectionViewModel();
-        FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters);
+        FiltersPanelViewModel = new FiltersPanelViewModel(ApplyAllFilters, _propertyAccessor);
 
         // Регистрация пользовательских сортировок
         RegisterCustomSorts();
@@ -500,6 +504,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #region Report Generation
 
+    public ObservableCollection<ReportTemplate> CustomReports { get; set; }
+    
     /// <summary>
     ///     Создаёт метаданные для генерации отчёта
     /// </summary>
@@ -638,24 +644,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var templateService = App.Services?.GetRequiredService<IReportTemplateService>();
-            var generationService = App.Services?.GetRequiredService<IReportGenerationService>();
-            var filteringService = App.Services?.GetRequiredService<IFilteringService>();
-            var sortingService = App.Services?.GetRequiredService<ISortingService>();
+            var designerViewModel = App.Services?.GetRequiredService<ReportDesignerViewModel>();
 
-            if (templateService == null || generationService == null ||
-                filteringService == null || sortingService == null)
+            if (designerViewModel == null)
             {
                 StatusMessage = "Report services not available";
                 return;
             }
-
-            // Создаём ViewModel для дизайнера
-            var designerViewModel = new ReportDesignerViewModel(
-                templateService,
-                generationService,
-                filteringService,
-                sortingService);
 
             // Загружаем доступные поля и фильтры из текущих событий
             if (VisibleEvents.Count > 0)
@@ -696,8 +691,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            // Получаем список шаблонов
-            var templates = await templateService.GetAllTemplatesAsync();
+            // Получаем список всех шаблонов
+            var allTemplates = await templateService.GetAllTemplatesAsync();
+            
+            Logger.Info($"All template(s) count: {allTemplates.Count}");
 
             // TODO: Показать диалог выбора шаблона для редактирования
             // После выбора открыть ReportDesignerWindow с загруженным шаблоном
@@ -1886,36 +1883,12 @@ public partial class MainWindowViewModel : ViewModelBase
         // Для встроенных сортировок по полям, Id имеет формат "field_property_path"
         // Например: "field_performance_executems"
 
-        if (SelectedSort.Id.StartsWith("field_"))
-        {
-            // Извлекаем путь из ID
-            var pathPart = SelectedSort.Id.Substring("field_".Length);
-
-            // Преобразуем обратно: "performance_executems" -> "Performance.ExecuteMs"
-            return ConvertIdToPropertyPath(pathPart);
-        }
+        if (_propertyAccessor.TryResolveSortId(SelectedSort.Id, out var propertyPath))
+            return propertyPath;
 
         // Для кастомных сортировок возвращаем null
         // (они не соответствуют напрямую полям)
         return null;
-    }
-
-    /// <summary>
-    ///     Преобразует ID сортировки в путь к свойству
-    /// </summary>
-    /// <param name="idPart">Часть ID после "field_"</param>
-    /// <returns>Путь к свойству</returns>
-    private static string ConvertIdToPropertyPath(string idPart)
-    {
-        // "performance_executems" -> ["performance", "executems"]
-        var parts = idPart.Split('_');
-
-        // Преобразуем в PascalCase и соединяем точкой
-        var pathParts = parts.Select(p =>
-            char.ToUpper(p[0]) + p.Substring(1).ToLower()
-        );
-
-        return string.Join(".", pathParts);
     }
 
     #endregion

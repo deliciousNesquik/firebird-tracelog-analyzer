@@ -2,6 +2,7 @@
 using CsvHelper;
 using CsvHelper.Configuration;
 using FirebirdTraceAnalyzer.Models.Reports;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceParser.Models.Events;
 using NLog;
 
@@ -13,6 +14,12 @@ namespace FirebirdTraceAnalyzer.Services.Reports.Exporters;
 public class CsvReportExporter : IReportExporter
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly IEventPropertyAccessor _propertyAccessor;
+
+    public CsvReportExporter(IEventPropertyAccessor propertyAccessor)
+    {
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+    }
 
     public async Task ExportAsync(
         ReportTemplate template,
@@ -122,7 +129,7 @@ public class CsvReportExporter : IReportExporter
 
             foreach (var field in fields)
             {
-                var value = GetPropertyValue(evt, field.PropertyPath);
+                var value = _propertyAccessor.GetValue(evt, field.PropertyPath);
                 var formattedValue = FormatValue(value, field.Format);
                 csv.WriteField(formattedValue);
             }
@@ -210,24 +217,6 @@ public class CsvReportExporter : IReportExporter
         var duration = end - start;
 
         return $"{duration.TotalHours:F2} hours";
-    }
-
-    private object? GetPropertyValue(object obj, string propertyPath)
-    {
-        var parts = propertyPath.Split('.');
-        var current = obj;
-
-        foreach (var part in parts)
-        {
-            if (current == null) return null;
-
-            var prop = current.GetType().GetProperty(part);
-            if (prop == null) return null;
-
-            current = prop.GetValue(current);
-        }
-
-        return current;
     }
 
     private string FormatValue(object? value, string? format)

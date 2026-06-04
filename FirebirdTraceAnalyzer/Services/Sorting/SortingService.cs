@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceParser.Attributes;
 using FirebirdTraceParser.Models.Events;
 using NLog;
@@ -9,12 +10,19 @@ public sealed class SortingService : ISortingService
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly IEventPropertyAccessor _propertyAccessor;
+
     private readonly Dictionary<Type, List<SortFieldInfo>> _fieldCache = new();
     private readonly Dictionary<string, SortDescriptor> _customSorts = new();
 
     // Кэш последних сортировок
     private List<SortDescriptor>? _lastGeneratedSorts;
     private HashSet<Type>? _lastEventTypes;
+
+    public SortingService(IEventPropertyAccessor propertyAccessor)
+    {
+        _propertyAccessor = propertyAccessor ?? throw new ArgumentNullException(nameof(propertyAccessor));
+    }
 
     public void RegisterCustomSort(SortDescriptor descriptor)
     {
@@ -55,7 +63,7 @@ public sealed class SortingService : ISortingService
 
         foreach (var field in commonFields)
         {
-            var sortId = $"field_{field.PropertyPath.Replace(".", "_").ToLower()}";
+            var sortId = _propertyAccessor.ToSortId(field.PropertyPath);
 
             if (_customSorts.ContainsKey(sortId))
                 continue;
@@ -177,7 +185,7 @@ public sealed class SortingService : ISortingService
     private SortDescriptor CreateFieldSort(SortFieldInfo field)
     {
         return new SortDescriptor(
-            $"field_{field.PropertyPath.Replace(".", "_").ToLower()}",
+            _propertyAccessor.ToSortId(field.PropertyPath),
             field.DisplayName,
             CreatePropertyComparer(field.PropertyPath),
             field.IsDefault,
@@ -189,40 +197,12 @@ public sealed class SortingService : ISortingService
     {
         return (a, b, descending) =>
         {
-            var valueA = GetPropertyValue(a, propertyPath);
-            var valueB = GetPropertyValue(b, propertyPath);
-
-            if (valueA == null && valueB == null) return 0;
-            if (valueA == null) return 1;
-            if (valueB == null) return -1;
-
-            int result;
-
-            if (valueA is IComparable comparableA)
-                result = comparableA.CompareTo(valueB);
-            else
-                result = string.Compare(valueA.ToString(), valueB.ToString(), StringComparison.Ordinal);
+            var valueA = _propertyAccessor.GetValue(a, propertyPath);
+            var valueB = _propertyAccessor.GetValue(b, propertyPath);
+            var result = _propertyAccessor.Compare(valueA, valueB);
 
             return descending ? -result : result;
         };
-    }
-
-    private object? GetPropertyValue(object obj, string propertyPath)
-    {
-        var parts = propertyPath.Split('.');
-        var current = obj;
-
-        foreach (var part in parts)
-        {
-            if (current == null) return null;
-
-            var prop = current.GetType().GetProperty(part);
-            if (prop == null) return null;
-
-            current = prop.GetValue(current);
-        }
-
-        return current;
     }
 
     public IEnumerable<EventBase> ApplySort(

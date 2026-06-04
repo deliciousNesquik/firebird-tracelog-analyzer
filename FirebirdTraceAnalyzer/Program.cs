@@ -3,6 +3,7 @@ using Avalonia;
 using FirebirdTraceAnalyzer.Interfaces;
 using FirebirdTraceAnalyzer.Models;
 using FirebirdTraceAnalyzer.Services;
+using FirebirdTraceAnalyzer.Services.EventProperties;
 using FirebirdTraceAnalyzer.Services.Filtering;
 using FirebirdTraceAnalyzer.Services.Reports;
 using FirebirdTraceAnalyzer.Services.Reports.Exporters;
@@ -76,6 +77,7 @@ internal sealed class Program
         );
 
         // добавляем сервисы для ui приложения
+        services.AddSingleton<IEventPropertyAccessor, EventPropertyAccessor>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
         services.AddSingleton<IWindowProvider, WindowProvider>();
         services.AddSingleton<ISortingService, SortingService>();
