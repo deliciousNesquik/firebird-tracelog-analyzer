@@ -61,6 +61,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Сортировки, сгруппированные по категориям</summary>
     public ObservableCollection<IGrouping<string, SortDescriptor>> AvailableSortsByCategory { get; } = [];
+    
+    /// <summary>Встроенные шаблоны отчетов</summary>
+    public ObservableCollection<ReportTemplate> BuiltInReports { get; } = [];
+
+    /// <summary>Пользовательские шаблоны отчетов</summary>
+    public ObservableCollection<ReportTemplate> CustomReports { get; } = [];
 
     #endregion
 
@@ -142,6 +148,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         LoadSettings();
         StatusMessage = "Ready to go (Design Time).";
+        
+        // Загрузка шаблонов отчетов
+        _ = LoadReportTemplatesAsync();
     }
 
     /// <summary>Runtime конструктор (DI)</summary>
@@ -195,6 +204,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         StatusMessage = "Ready to go!";
         Logger.Info("MainWindowViewModel initialized.");
+        
+        // Загрузка шаблонов отчетов
+        _ = LoadReportTemplatesAsync();
     }
 
     #endregion
@@ -559,6 +571,54 @@ public partial class MainWindowViewModel : ViewModelBase
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         return version?.ToString() ?? "1.0.0";
     }
+    
+    /// <summary>
+    /// Загружает списки шаблонов отчетов из сервиса в UI
+    /// </summary>
+    private async Task LoadReportTemplatesAsync()
+    {
+        try
+        {
+            var templateService = App.Services?.GetService<IReportTemplateService>();
+            if (templateService == null) return;
+
+            // 1. Загрузка встроенных отчетов
+            var builtIn = templateService.GetBuiltInTemplates();
+            BuiltInReports.Clear();
+            foreach (var template in builtIn)
+            {
+                BuiltInReports.Add(template);
+            }
+
+            // 2. Загрузка пользовательских отчетов
+            await RefreshCustomReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to load report templates for the menu.");
+        }
+    }
+
+    /// <summary>
+    /// Обновляет только пользовательские отчеты (удобно вызывать после создания/импорта)
+    /// </summary>
+    private async Task RefreshCustomReportsAsync()
+    {
+        var templateService = App.Services?.GetService<IReportTemplateService>();
+        if (templateService == null) return;
+
+        var custom = await templateService.GetCustomTemplatesAsync();
+        
+        await Dispatcher.UIThread.InvokeAsync(() => 
+        {
+            CustomReports.Clear();
+            foreach (var template in custom)
+            {
+                CustomReports.Add(template);
+            }
+        });
+    }
+    
 
     [RelayCommand]
     private async Task GenerateQuickReportAsync(string templateId, CancellationToken cancellationToken)
@@ -673,6 +733,8 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 StatusMessage = $"Template created: {result.Name}";
                 Logger.Info("Report template created: {Name}", result.Name);
+                
+                await RefreshCustomReportsAsync();
             }
         }
         catch (Exception ex)
@@ -751,6 +813,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
             StatusMessage = $"Template imported: {importedTemplate.Name}";
             Logger.Info("Template imported: {Name}", importedTemplate.Name);
+            
+            await RefreshCustomReportsAsync();
         }
         catch (Exception ex)
         {
